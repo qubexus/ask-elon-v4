@@ -37,6 +37,7 @@ import mailer  # noqa: E402
 import storage  # noqa: E402
 import lookup  # noqa: E402
 import notes  # noqa: E402
+import account_ids  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -123,6 +124,7 @@ def rate_limit(key: str, limit: int, window_s: int):
 # ---------------- Auth ----------------
 class GoogleIn(BaseModel):
     id_token: str
+    locale: Optional[str] = None
 
 
 async def current_user(request: Request) -> dict:
@@ -155,13 +157,15 @@ async def user_from_token(token: str) -> dict:
 
 
 async def create_user(email: str, name: str, picture: Optional[str], password_hash: Optional[str] = None,
-                      onboarded: bool = False) -> str:
+                      onboarded: bool = False, locale: Optional[str] = None) -> str:
     user_id = new_id("user")
     doc = {"user_id": user_id, "email": email, "name": name, "picture": picture, "employer": "", "job_title": "",
-           "locale": "pl", "is_member": email in ADMIN_EMAILS, "role": "admin" if email in ADMIN_EMAILS else "user",
-           "onboarded": onboarded, "created_at": now()}
+           "locale": locale if locale in ("pl", "en", "ro") else "pl", "is_member": email in ADMIN_EMAILS,
+           "role": "admin" if email in ADMIN_EMAILS else "user", "onboarded": onboarded, "created_at": now()}
     if password_hash:
         doc["password_hash"] = password_hash
+    # Customer account ID (initials, join month, sequence, check digit, nationality letter); fixed for life.
+    doc["account_id"] = await account_ids.new_account_id(db, doc)
     await db.users.insert_one(doc)
     for i, (t, d, s, st) in enumerate(SEED_CASES):
         await db.cases.insert_one({
@@ -211,7 +215,7 @@ async def auth_google(body: GoogleIn, request: Request):
         user_id = existing["user_id"]
         await db.users.update_one({"user_id": user_id}, {"$set": {"picture": data.get("picture"), "google_sub": data.get("sub")}})
     else:
-        user_id = await create_user(email, data.get("name", ""), data.get("picture"))
+        user_id = await create_user(email, data.get("name", ""), data.get("picture"), locale=body.locale)
         await db.users.update_one({"user_id": user_id}, {"$set": {"google_sub": data.get("sub")}})
     token = await issue_session(user_id, "google")
     return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
@@ -235,6 +239,7 @@ class RegisterIn(BaseModel):
     name: str = ""
     email: EmailStr
     password: str
+    locale: Optional[str] = None
 
 
 class LoginIn(BaseModel):
@@ -287,7 +292,8 @@ async def register(body: RegisterIn, request: Request):
     check_password(body.password)
     if await db.users.find_one({"email": email}, {"_id": 1}):
         raise HTTPException(409, "Email already registered")
-    user_id = await create_user(email, body.name.strip()[:120], None, password_hash=passwords.hash(body.password))
+    user_id = await create_user(email, body.name.strip()[:120], None, password_hash=passwords.hash(body.password),
+                              locale=body.locale)
     token = await issue_password_session(user_id)
     return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
 
@@ -1671,6 +1677,8 @@ async def startup():
     await db.documents.create_index("doc_id", unique=True)
     await db.tts_cache.create_index("key", unique=True)
     await notes.ensure_indexes(db)
+    await account_ids.backfill(db, logger)
+    await account_ids.ensure_indexes(db)
     try:
         await run_in_threadpool(storage.init_storage)
     except Exception:

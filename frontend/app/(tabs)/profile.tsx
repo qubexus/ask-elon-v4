@@ -15,7 +15,7 @@ import { useAuth } from "@/src/auth";
 import { AdminAndContact } from "@/src/components/AdminAndContact";
 import { DocumentsPanel } from "@/src/components/DocumentsPanel";
 import { LanguageSwitch } from "@/src/components/LanguageSwitch";
-import { ProfileCard } from "@/src/components/ProfileCard";
+import { ProfileCard, ProfileSections } from "@/src/components/ProfileCard";
 import { ProfileForm } from "@/src/components/ProfileForm";
 import { useToast } from "@/src/components/Toast";
 import { Header } from "@/src/components/Header";
@@ -111,7 +111,7 @@ export default function Profile() {
     <View style={styles.root} testID="profile-screen">
       <Header robot="profil" title={t("profileTitle")} subtitle={t("profileSubtitle")} hideAvatar />
       <KeyboardAwareScrollView bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: bottomChrome + 28 + 32 }}>
-        {/* ask Elon card: personal · employer · contact · employment tiles */}
+        {/* ask Elon profile card: name, badges, account ID + QR */}
         <ProfileCard proOn={proOn} />
 
         <View style={styles.segment}>
@@ -127,24 +127,12 @@ export default function Profile() {
           <View style={styles.pad}><DocumentsPanel /></View>
         ) : (
         <>
-        <View style={styles.pad}>
-          {editing || !user?.profile_complete ? (
-            <ProfileForm onSaved={() => setEditing(false)} />
-          ) : (
-            <View style={[styles.section0, fx("cardShadow")]} testID="profile-view">
-              <View style={styles.viewHead}>
-                <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-                  <Text style={styles.sectionTitle}>{t("secPersonal")} · {t("secEmployer")}</Text>
-                  <Text style={styles.muted}>{t("pfEditHint")}</Text>
-                </View>
-                <Pressable testID="profile-edit-button" onPress={() => setEditing(true)} style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.8 }]}>
-                  <Ionicons name="create-outline" size={16} color={colors.brandPrimaryText} />
-                  <Text style={styles.editText}>{t("edit")}</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-        </View>
+        {editing || !user?.profile_complete ? (
+          <View style={styles.pad}><ProfileForm onSaved={() => setEditing(false)} /></View>
+        ) : (
+          /* two separate sections under the card: employer details, personal details */
+          <ProfileSections onEdit={() => setEditing(true)} />
+        )}
 
         <Pressable testID="profile-messages-row" onPress={() => router.push("/messages")} style={({ pressed }) => [styles.section, styles.msgRow, pressed ? fx("cardPressed") : fx("cardShadow")]}
           accessibilityRole="button" accessibilityLabel={unread > 0 ? `${t("msgTitle")}, ${t("msgUnreadA11y", { n: String(unread) })}` : t("msgTitle")}>
@@ -227,10 +215,6 @@ const useStyles = makeStyles((c) => ({
   segText: { color: c.muted, fontWeight: "700", fontSize: 14 },
   segTextOn: { color: c.onBrandPrimary },
   pad: { paddingHorizontal: 16, paddingTop: 16 },
-  section0: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 10, borderWidth: 1, borderColor: c.border },
-  viewHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  editBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 38, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: c.surfaceSecondary, flexShrink: 0 },
-  editText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 13 },
   section: { marginHorizontal: 16, marginTop: 16, backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 12, borderWidth: 1, borderColor: c.border },
   sectionTitle: { color: c.brandSecondaryText, fontSize: 12.5, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   muted: { color: c.muted, fontSize: 13, lineHeight: 19 },

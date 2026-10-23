@@ -72,6 +72,9 @@ const LOCALE_KEY = "union_locale";
 
 export type User = {
   user_id: string;
+  /** Customer account ID, e.g. "PK261000011T" (see backend/account_ids.py). Display grouped, copy/QR plain. */
+  account_id?: string;
+  created_at?: string;
   email: string;
   name: string;
   picture?: string;
@@ -127,12 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const exchangeGoogle = useCallback(async (idToken: string) => {
     const res = await api<{ session_token: string; user: User }>("/auth/google", {
       method: "POST",
-      body: { id_token: idToken },
+      body: { id_token: idToken, locale: localLocale },
     });
     await storage.secureSet(TOKEN_KEY, res.session_token);
     setApiToken(res.session_token);
     setUserState(res.user);
-  }, []);
+  }, [localLocale]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -186,8 +189,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
   const emailRegister = useCallback(
     async (name: string, email: string, password: string) =>
-      persist(await api("/auth/register", { method: "POST", body: { name, email, password } })),
-    [persist],
+      persist(await api("/auth/register", { method: "POST", body: { name, email, password, locale: localLocale } })),
+    [persist, localLocale],
   );
   const resetPassword = useCallback(
     async (email: string, code: string, new_password: string) =>

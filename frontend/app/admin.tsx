@@ -111,7 +111,7 @@ export default function Admin() {
             {(data as any[]).map((u) => (
               <View key={u.user_id} style={styles.card} testID={`admin-user-${u.user_id}`}>
                 <Text style={styles.cardTitle}>{u.name || "—"} {u.role === "admin" ? "· ADMIN" : ""}</Text>
-                <Text style={styles.muted}>{u.email} · {u.is_member ? "PRO" : "Free"} · {u.profile_complete ? "profil ✓" : "profil niepełny"}</Text>
+                <Text style={styles.muted}>{u.account_id ? `${u.account_id} · ` : ""}{u.email} · {u.is_member ? "PRO" : "Free"} · {u.profile_complete ? "profil ✓" : "profil niepełny"}</Text>
                 <TextInput testID={`admin-rename-${u.user_id}`} defaultValue={u.name} onEndEditing={(e) => e.nativeEvent.text !== u.name && act(() => api(`/admin/users/${u.user_id}`, { method: "PATCH", body: { name: e.nativeEvent.text } }), "Zapisano")} style={styles.input} placeholder="Imię" placeholderTextColor={colors.muted} />
                 <View style={styles.row}>
                   {btn(`admin-toggle-pro-${u.user_id}`, u.is_member ? "Odbierz PRO" : "Nadaj PRO", () => act(() => api(`/admin/users/${u.user_id}`, { method: "PATCH", body: { is_member: !u.is_member } })))}
