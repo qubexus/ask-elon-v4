@@ -153,9 +153,9 @@ export function VoiceInputButton({ onText, disabled }: { onText: (t: string) => 
           style={[styles.mic, phase === "recording" && styles.micActive, disabled && { opacity: 0.4 }]}
         >
           {phase === "transcribing" ? (
-            <ActivityIndicator color={colors.brandPrimary} size="small" />
+            <ActivityIndicator color={colors.brandPrimaryText} size="small" />
           ) : (
-            <Ionicons name={phase === "recording" ? "stop" : "mic"} size={20} color={phase === "recording" ? colors.onError : colors.brandPrimary} />
+            <Ionicons name={phase === "recording" ? "stop" : "mic"} size={20} color={phase === "recording" ? colors.onError : colors.brandPrimaryText} />
           )}
         </Pressable>
       </View>

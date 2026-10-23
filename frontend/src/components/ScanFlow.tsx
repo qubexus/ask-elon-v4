@@ -112,7 +112,7 @@ export function ScanFlow({ category, disabled, onUploaded }: { category: string;
     <View style={{ gap: 10 }}>
       {pages.length === 0 && phase !== "tips" && (
         <Pressable testID="document-camera-button" onPress={start} disabled={disabled || busy} style={({ pressed }) => [styles.camBtn, pressed && { opacity: 0.85 }]}>
-          {busy ? <ActivityIndicator color={colors.brandPrimary} /> : <Ionicons name="camera-outline" size={20} color={colors.brandPrimary} />}
+          {busy ? <ActivityIndicator color={colors.brandPrimaryText} /> : <Ionicons name="camera-outline" size={20} color={colors.brandPrimaryText} />}
           <Text style={styles.camText}>{phase === "checking" ? t("scanChecking") : t("scanCamera")}</Text>
         </Pressable>
       )}
@@ -122,7 +122,7 @@ export function ScanFlow({ category, disabled, onUploaded }: { category: string;
           <Text style={styles.cardTitle}>{t("scanTipsTitle")}</Text>
           {TIPS.map(([icon, key]) => (
             <View key={key} style={styles.tip}>
-              <View style={styles.tipIcon}><Ionicons name={icon} size={16} color={colors.brandPrimary} /></View>
+              <View style={styles.tipIcon}><Ionicons name={icon} size={16} color={colors.brandPrimaryText} /></View>
               <Text style={styles.tipText}>{t(key)}</Text>
             </View>
           ))}
@@ -182,7 +182,7 @@ export function ScanFlow({ category, disabled, onUploaded }: { category: string;
           </ScrollView>
           <View style={styles.row}>
             <Pressable testID="scan-add-page" onPress={capture} disabled={busy || pages.length >= MAX_PAGES} style={[styles.secondary, { flex: 1 }]}>
-              {phase === "checking" ? <ActivityIndicator color={colors.brandPrimary} /> : <Ionicons name="add" size={18} color={colors.brandPrimary} />}
+              {phase === "checking" ? <ActivityIndicator color={colors.brandPrimaryText} /> : <Ionicons name="add" size={18} color={colors.brandPrimaryText} />}
               <Text style={styles.secondaryText}>{phase === "checking" ? t("scanChecking") : t("scanAddPage")}</Text>
             </Pressable>
             <Pressable testID="scan-finish" onPress={send} disabled={busy} style={[styles.primary, { flex: 1 }]}>
@@ -197,8 +197,8 @@ export function ScanFlow({ category, disabled, onUploaded }: { category: string;
 }
 
 const useStyles = makeStyles((c) => ({
-  camBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: c.brandPrimarySoft },
-  camText: { color: c.brandPrimary, fontWeight: "800", fontSize: 14 },
+  camBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: c.brandPrimarySoft },
+  camText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 14 },
   card: { borderRadius: 14, padding: 14, gap: 10, backgroundColor: c.brandPrimarySoft, borderWidth: 1, borderColor: c.border },
   reject: { backgroundColor: c.surfaceSecondary, borderColor: c.error },
   cardTitle: { color: c.onSurface, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.6 },
@@ -209,9 +209,9 @@ const useStyles = makeStyles((c) => ({
   primary: { minHeight: 46, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
   primaryText: { color: c.onBrandPrimary, fontWeight: "800", fontSize: 13 },
   secondary: { minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.surfaceSecondary, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
-  secondaryText: { color: c.brandPrimary, fontWeight: "700", fontSize: 13 },
+  secondaryText: { color: c.brandPrimaryText, fontWeight: "700", fontSize: 13 },
   thumb: { width: 64, height: 86, borderRadius: 8, overflow: "hidden", backgroundColor: c.surfaceTertiary },
   thumbImg: { width: "100%", height: "100%" },
-  thumbNo: { position: "absolute", bottom: 4, left: 6, color: c.onSurfaceInverse, fontWeight: "900", fontSize: 12, textShadowColor: "#000", textShadowRadius: 3 },
+  thumbNo: { position: "absolute", bottom: 4, left: 6, color: c.onBrandPrimary, fontWeight: "900", fontSize: 12, textShadowColor: "#000", textShadowRadius: 3 },
   thumbX: { position: "absolute", top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: c.surfaceInverse, alignItems: "center", justifyContent: "center" },
 }));

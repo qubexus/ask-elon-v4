@@ -142,7 +142,7 @@ const useStyles = makeStyles((c) => ({
   segBtn: { flex: 1, minHeight: 44, borderRadius: 10, borderWidth: 1, borderColor: c.askBorder, alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   segActive: { backgroundColor: c.askOrange, borderColor: c.askOrange },
   segText: { color: c.askNavy, fontWeight: "700", fontSize: 13 },
-  segTextActive: { color: c.onBrandPrimary },
+  segTextActive: { color: c.onAccent },
   send: { marginTop: 8, minHeight: 50, borderRadius: 12, backgroundColor: c.askGreen, alignItems: "center", justifyContent: "center" },
   sendText: { color: c.onBrandPrimary, fontWeight: "900", fontSize: 15 },
   section: { color: c.askNavy, fontWeight: "900", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.8, marginTop: 8 },

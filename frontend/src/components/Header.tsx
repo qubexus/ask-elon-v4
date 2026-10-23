@@ -164,7 +164,7 @@ const useStyles = makeStyles((c) => ({
   rightGroup: { flexDirection: "row", alignItems: "center", gap: 2, flexShrink: 0 },
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   badge: { position: "absolute", top: 1, right: 0, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: c.askOrange, borderWidth: 2, borderColor: c.brandSecondary, alignItems: "center", justifyContent: "center" },
-  badgeText: { color: c.onBrandPrimary, fontSize: 11, fontWeight: "900" },
+  badgeText: { color: c.onAccent, fontSize: 11, fontWeight: "900" },
   user: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: c.askOrange },
   avatarText: { color: c.onBrandPrimary, fontWeight: "800", fontSize: 12 },

@@ -25,5 +25,5 @@ const useStyles = makeStyles((c) => ({
   wrap: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.goldSoft, borderWidth: 1, borderColor: c.gold },
   text: { flex: 1, color: c.onSurface, fontSize: 13, fontWeight: "600", lineHeight: 18 },
   cta: { minHeight: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.heritageOrange, justifyContent: "center" },
-  ctaText: { color: c.onBrandPrimary, fontWeight: "800", fontSize: 12, textTransform: "uppercase" },
+  ctaText: { color: c.onAccent, fontWeight: "800", fontSize: 12, textTransform: "uppercase" },
 }));

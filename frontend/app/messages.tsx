@@ -160,5 +160,5 @@ const useStyles = makeStyles((c) => ({
   emptyTitle: { color: c.askNavy, fontSize: 17, fontWeight: "800" },
   emptyText: { color: c.muted, fontSize: 14, textAlign: "center", lineHeight: 20 },
   retry: { minHeight: 44, paddingHorizontal: 18, borderRadius: 12, backgroundColor: c.askOrange, justifyContent: "center" },
-  retryText: { color: c.onBrandPrimary, fontWeight: "800" },
+  retryText: { color: c.onAccent, fontWeight: "800" },
 }));

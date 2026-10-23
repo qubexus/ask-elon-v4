@@ -61,13 +61,13 @@ export default function Forum() {
         </ScrollView>
       </View>
       {!posts ? (
-        <ActivityIndicator style={{ marginTop: 32 }} color={colors.brandPrimary} />
+        <ActivityIndicator style={{ marginTop: 32 }} color={colors.brandPrimaryText} />
       ) : (
         <FlatList
           data={posts}
           keyExtractor={(p) => p.post_id}
           contentContainerStyle={[styles.list, { paddingBottom: listPad }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(cat); }} tintColor={colors.brandPrimary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(cat); }} tintColor={colors.brandPrimaryText} />}
           ListEmptyComponent={<Text style={styles.empty} testID="forum-empty">{t("noPosts")}</Text>}
           renderItem={({ item, index }) => (
             <Animated.View entering={FadeInDown.delay(index * 50).duration(280)}>
@@ -112,7 +112,7 @@ const useStyles = makeStyles((c) => ({
   author: { color: c.onSurface, fontWeight: "700", fontSize: 13, flexShrink: 1 },
   time: { color: c.muted, fontSize: 12 },
   catTag: { marginLeft: "auto", flexShrink: 0, backgroundColor: c.tabActiveBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  catText: { color: c.brandPrimary, fontSize: 11, fontWeight: "800" },
+  catText: { color: c.brandPrimaryText, fontSize: 11, fontWeight: "800" },
   title: { color: c.onSurface, fontSize: 16, fontWeight: "800" },
   body: { color: c.muted, fontSize: 14, lineHeight: 20, fontWeight: "500" },
   actions: { flexDirection: "row", gap: 20, marginTop: 4 },

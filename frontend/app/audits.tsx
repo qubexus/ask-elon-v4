@@ -41,7 +41,7 @@ export default function Audits() {
     <View style={styles.root} testID="audits-screen">
       <Header back title={t("auditHistory")} subtitle="Ask Elon · PRO" />
       {!docs ? (
-        <ActivityIndicator color={colors.brandPrimary} style={{ marginTop: 32 }} />
+        <ActivityIndicator color={colors.brandPrimaryText} style={{ marginTop: 32 }} />
       ) : (
         <ScrollView
           contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}
@@ -175,5 +175,5 @@ const useStyles = makeStyles((c) => ({
   empty: { alignItems: "center", gap: 10, padding: 24 },
   emptyText: { color: c.muted, textAlign: "center", fontSize: 14 },
   secondary: { minHeight: 44, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1, borderColor: c.border, justifyContent: "center" },
-  secondaryText: { color: c.brandPrimary, fontWeight: "700" },
+  secondaryText: { color: c.brandPrimaryText, fontWeight: "700" },
 }));

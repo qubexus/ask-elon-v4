@@ -42,6 +42,6 @@ const useStyles = makeStyles((c) => ({
   seg: { flex: 1, minWidth: 0, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 6, backgroundColor: c.surfaceSecondary, borderWidth: 1.5, borderColor: c.borderStrong, paddingHorizontal: 4 },
   segActive: { backgroundColor: c.heritageOrangeSoft, borderColor: c.askOrange },
   flag: { fontSize: 14 },
-  label: { color: c.brandSecondary, fontWeight: "600", fontSize: 14, flexShrink: 1 },
+  label: { color: c.brandSecondaryText, fontWeight: "600", fontSize: 14, flexShrink: 1 },
   labelActive: { color: c.askInk, fontWeight: "800" },
 }));

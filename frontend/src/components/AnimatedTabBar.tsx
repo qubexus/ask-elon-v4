@@ -42,10 +42,10 @@ function TabItem({ name, focused, onPress }: { name: string; focused: boolean; o
   );
 }
 
-const GLOW = "0px 6px 16px rgba(19,43,65,0.28), 0px 0px 0px 6px rgba(255,122,24,0.10), 0px 0px 22px 4px rgba(255,122,24,0.28)";
+const GLOW = "0px 6px 16px rgba(0,0,0,0.45), 0px 0px 0px 6px rgba(255,106,0,0.10), 0px 0px 22px 4px rgba(255,106,0,0.28)";
 // Extra halo layer for the one-off breath: adds ~0.17 to the 0.28 glow opacity (→ ≈0.45).
-const BREATH = "0px 0px 22px 4px rgba(255,122,24,0.17)";
-const GLOW_ON = "0px 6px 16px rgba(19,43,65,0.28), 0px 0px 0px 7px rgba(255,122,24,0.20), 0px 0px 28px 8px rgba(255,122,24,0.45)";
+const BREATH = "0px 0px 22px 4px rgba(255,106,0,0.17)";
+const GLOW_ON = "0px 6px 16px rgba(0,0,0,0.45), 0px 0px 0px 7px rgba(255,106,0,0.20), 0px 0px 28px 8px rgba(255,106,0,0.45)";
 
 function ChatButton({ focused, onPress }: { focused: boolean; onPress: () => void }) {
   const t = useT();
@@ -119,7 +119,7 @@ const useStyles = makeStyles((c) => ({
     overflow: "visible",
     flexDirection: "row",
     alignItems: "flex-end",
-    backgroundColor: c.surfaceSecondary,
+    backgroundColor: c.tabBarBg,
     borderTopWidth: 1,
     borderTopColor: c.border,
     paddingTop: 6,
@@ -134,8 +134,8 @@ const useStyles = makeStyles((c) => ({
   chatItem: { flex: 1.2, alignItems: "center", minHeight: 50, justifyContent: "flex-end", overflow: "visible" },
   chatFloat: { width: 64, height: 64, borderRadius: 32, marginTop: -30, overflow: "visible" },
   chatImg: { width: 64, height: 64, borderRadius: 32 },
-  aiBadge: { position: "absolute", top: -3, right: -8, backgroundColor: c.askOrange, borderRadius: 9, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 2, borderColor: "#FFFFFF" },
-  aiBadgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
-  chatLabel: { color: c.askGreen, fontWeight: "700", marginTop: 2 },
+  aiBadge: { position: "absolute", top: -3, right: -8, backgroundColor: c.askOrange, borderRadius: 9, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 2, borderColor: c.tabBarBg },
+  aiBadgeText: { color: c.onAccent, fontSize: 10, fontWeight: "800" },
+  chatLabel: { color: c.onSurface, fontWeight: "700", marginTop: 2 },
   breath: { position: "absolute", top: 0, left: 0, width: 64, height: 64, borderRadius: 32 },
 }));

@@ -12,7 +12,7 @@ export default function TabsLayout() {
 
   if (usesNativeTabs) {
     return (
-      <NativeTabs tintColor={colors.brandPrimary}>
+      <NativeTabs tintColor={colors.brandPrimaryText}>
         <NativeTabs.Trigger name="cases">
           <NativeTabs.Trigger.Icon sf="folder.fill" />
           <NativeTabs.Trigger.Label>{t("tabCases")}</NativeTabs.Trigger.Label>

@@ -79,7 +79,7 @@ export default function Admin() {
       </View>
       <KeyboardAwareScrollView bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         {!data ? (
-          <ActivityIndicator color={colors.brandPrimary} />
+          <ActivityIndicator color={colors.brandPrimaryText} />
         ) : tab === "dash" ? (
           <View style={styles.grid} testID="admin-stats">
             {[
@@ -180,15 +180,15 @@ const useStyles = makeStyles((c) => ({
   tabRow: { height: 56, justifyContent: "center", borderBottomWidth: 1, borderBottomColor: c.divider },
   tabs: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
   chip: { height: 36, paddingHorizontal: 12, borderRadius: 999, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, flexShrink: 0 },
-  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimary },
+  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimaryBorder },
   chipText: { color: c.onSurfaceTertiary, fontWeight: "700", fontSize: 13 },
   body: { padding: 16, gap: 12 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   stat: { width: "48%", flexGrow: 1, backgroundColor: c.surfaceSecondary, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: c.border },
-  statVal: { color: c.brandPrimary, fontSize: 24, fontWeight: "900" },
+  statVal: { color: c.brandPrimaryText, fontSize: 24, fontWeight: "900" },
   statLbl: { color: c.muted, fontSize: 12, fontWeight: "700" },
   card: { backgroundColor: c.surfaceSecondary, borderRadius: 14, padding: 14, gap: 8, borderWidth: 1, borderColor: c.border },
-  unread: { borderColor: c.brandPrimary },
+  unread: { borderColor: c.brandPrimaryBorder },
   cardTitle: { color: c.onSurface, fontWeight: "800", fontSize: 14 },
   muted: { color: c.muted, fontSize: 12 },
   text: { color: c.onSurface, fontSize: 14, lineHeight: 20 },

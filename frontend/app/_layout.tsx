@@ -28,7 +28,7 @@ function Gate() {
   if (loading) {
     return (
       <View testID="auth-loading" style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}>
-        <ActivityIndicator color={colors.brandPrimary} size="large" />
+        <ActivityIndicator color={colors.brandPrimaryText} size="large" />
       </View>
     );
   }

@@ -58,7 +58,7 @@ export default function Templates() {
         </ScrollView>
       </View>
       {loading ? (
-        <View style={styles.center}><ActivityIndicator color={colors.brandPrimary} /></View>
+        <View style={styles.center}><ActivityIndicator color={colors.brandPrimaryText} /></View>
       ) : error ? (
         <View style={styles.center} testID="templates-error">
           <Text style={styles.muted}>{t("loadError")}</Text>
@@ -77,7 +77,7 @@ export default function Templates() {
                 onPress={() => router.push(`/template/${item.id}`)}
                 style={styles.card}
               >
-                <View style={styles.icon}><Ionicons name="document-text" size={22} color={colors.brandPrimary} /></View>
+                <View style={styles.icon}><Ionicons name="document-text" size={22} color={colors.brandPrimaryText} /></View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={styles.cat}>{categoryLabel(locale, item.category)}</Text>
                   <Text style={styles.title}>{templateTitle(locale, item)}</Text>
@@ -87,7 +87,7 @@ export default function Templates() {
                     <Text style={styles.ref} numberOfLines={2}>{item.statutoryReference}</Text>
                   </View>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.brandPrimary} />
+                <Ionicons name="chevron-forward" size={18} color={colors.brandPrimaryText} />
               </AccentCard>
             </Animated.View>
           )}
@@ -108,7 +108,7 @@ const useStyles = makeStyles((c) => ({
   list: { padding: 16, gap: 12 },
   card: { flexDirection: "row", alignItems: "center", gap: 12 },
   icon: { width: 44, height: 44, borderRadius: 12, backgroundColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center", alignSelf: "flex-start" },
-  cat: { color: c.brandPrimary, fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  cat: { color: c.brandPrimaryText, fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { color: c.onSurface, fontSize: 16, fontWeight: "800" },
   desc: { color: c.muted, fontSize: 13, lineHeight: 19, fontWeight: "500" },
   refRow: { flexDirection: "row", alignItems: "flex-start", gap: 5 },

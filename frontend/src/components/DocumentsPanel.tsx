@@ -182,10 +182,10 @@ export function DocumentsPanel() {
         <>
         <Pressable testID="document-dropzone" onPress={pick} disabled={uploading} style={({ pressed }) => [styles.drop, pressed && { opacity: 0.85 }]}>
           {uploading ? (
-            <ActivityIndicator color={colors.brandPrimary} />
+            <ActivityIndicator color={colors.brandPrimaryText} />
           ) : (
             <>
-              <View style={styles.dropIcon}><Ionicons name="cloud-upload-outline" size={26} color={colors.brandPrimary} /></View>
+              <View style={styles.dropIcon}><Ionicons name="cloud-upload-outline" size={26} color={colors.brandPrimaryText} /></View>
               <Text style={styles.dropTitle}>{t("dropTitle")}</Text>
               <Text style={styles.dropSub}>PDF · PNG · JPG · max 20 MB</Text>
             </>
@@ -202,13 +202,13 @@ export function DocumentsPanel() {
 
       {docs?.some((d) => d.category === "payslip") && (
         <Pressable testID="audit-history-button" onPress={() => router.push("/audits")} style={({ pressed }) => [styles.camBtn, pressed && { opacity: 0.85 }]}>
-          <Ionicons name="stats-chart-outline" size={20} color={colors.brandPrimary} />
+          <Ionicons name="stats-chart-outline" size={20} color={colors.brandPrimaryText} />
           <Text style={styles.camText}>{t("auditHistoryOpen")}</Text>
         </Pressable>
       )}
 
       {!docs ? (
-        <ActivityIndicator color={colors.brandPrimary} style={{ marginTop: 16 }} />
+        <ActivityIndicator color={colors.brandPrimaryText} style={{ marginTop: 16 }} />
       ) : docs.length === 0 ? (
         <Text style={styles.empty} testID="documents-empty">{t("noDocs")}</Text>
       ) : (
@@ -253,7 +253,7 @@ export function DocumentsPanel() {
             {!!d.summary && (
               <View style={styles.summary} testID={`document-summary-${d.doc_id}`}>
                 <View style={styles.summaryHead}>
-                  <Ionicons name="sparkles" size={14} color={colors.brandPrimary} />
+                  <Ionicons name="sparkles" size={14} color={colors.brandPrimaryText} />
                   <Text style={styles.summaryLabel}>{t("aiSummary")}</Text>
                 </View>
                 <Text style={styles.summaryText}>{d.summary}</Text>
@@ -302,7 +302,7 @@ function AuditCard({ d, isPro, onRetry }: { d: Doc; isPro: boolean; onRetry: () 
   if (!a)
     return isPro ? (
       <Pressable onPress={onRetry} style={[styles.audit, styles.auditRun]} testID={`payslip-audit-start-${d.doc_id}`}>
-        <Ionicons name="search" size={16} color={colors.brandPrimary} />
+        <Ionicons name="search" size={16} color={colors.brandPrimaryText} />
         <Text style={styles.auditRunText}>{t("auditStart")}</Text>
       </Pressable>
     ) : null;
@@ -355,8 +355,8 @@ const useStyles = makeStyles((c) => ({
   proSub: { color: c.muted, fontSize: 13, textAlign: "center", lineHeight: 19 },
   proCta: { minHeight: 48, paddingHorizontal: 20, borderRadius: 12, backgroundColor: c.brandPrimary, justifyContent: "center", marginTop: 4 },
   proCtaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6, fontSize: 13 },
-  camBtn: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  camText: { color: c.brandPrimary, fontWeight: "800", fontSize: 14 },
+  camBtn: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  camText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 14 },
   audit: { marginTop: 8, borderRadius: 14, padding: 14, gap: 10, borderWidth: 1 },
   auditRun: { flexDirection: "row", alignItems: "center", backgroundColor: c.warningSoft, borderColor: c.warningSoft },
   auditRunText: { color: c.onSurface, fontWeight: "700", fontSize: 13 },
@@ -386,10 +386,10 @@ const useStyles = makeStyles((c) => ({
   cardTitle: { color: c.onSurface, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   chips: { gap: 8, paddingRight: 8 },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: "center", borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, flexShrink: 0 },
-  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimary },
+  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimaryBorder },
   chipText: { color: c.onSurfaceTertiary, fontWeight: "600", fontSize: 13 },
   chipTextOn: { color: c.onBrandPrimary },
-  drop: { borderWidth: 2, borderStyle: "dashed", borderColor: c.brandPrimary, borderRadius: 16, backgroundColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center", paddingVertical: 24, gap: 6, minHeight: 130 },
+  drop: { borderWidth: 2, borderStyle: "dashed", borderColor: c.brandPrimaryBorder, borderRadius: 16, backgroundColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center", paddingVertical: 24, gap: 6, minHeight: 130 },
   dropIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: c.surfaceSecondary, alignItems: "center", justifyContent: "center" },
   dropTitle: { color: c.onSurface, fontWeight: "800", fontSize: 15 },
   dropSub: { color: c.muted, fontSize: 12 },
@@ -410,7 +410,7 @@ const useStyles = makeStyles((c) => ({
   statusText: { fontSize: 12, fontWeight: "700" },
   summary: { marginTop: -6, marginHorizontal: 8, padding: 12, paddingTop: 16, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, backgroundColor: c.brandPrimarySoft, gap: 6 },
   summaryHead: { flexDirection: "row", alignItems: "center", gap: 6 },
-  summaryLabel: { color: c.brandPrimary, fontWeight: "800", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6 },
+  summaryLabel: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6 },
   summaryText: { color: c.onSurface, fontSize: 13, lineHeight: 19, fontWeight: "500" },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   tag: { backgroundColor: c.surfaceSecondary, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: c.border },

@@ -56,7 +56,7 @@ export default function TemplateForm() {
     return (
       <View style={styles.root}>
         <Header back title="" />
-        <View style={styles.center}><ActivityIndicator color={colors.brandPrimary} /></View>
+        <View style={styles.center}><ActivityIndicator color={colors.brandPrimaryText} /></View>
       </View>
     );
   }
@@ -141,13 +141,13 @@ export default function TemplateForm() {
           <>
           <View style={[styles.footer, { paddingBottom: 8 }]}>
             <Pressable testID="template-send-hr-button" onPress={sendToHr} style={[styles.cta, styles.hrBtn]}>
-              <Ionicons name="mail" size={18} color={colors.onBrandPrimary} />
-              <Text style={styles.ctaText}>{t("sendHr")}</Text>
+              <Ionicons name="mail" size={18} color={colors.onAccent} />
+              <Text style={[styles.ctaText, styles.onAccentText]}>{t("sendHr")}</Text>
             </Pressable>
           </View>
           <View style={[styles.footer, { paddingTop: 0, borderTopWidth: 0, paddingBottom: insets.bottom + 16 }]}>
             <Pressable testID="template-copy-button" onPress={copy} style={styles.secondary}>
-              <Ionicons name="copy-outline" size={18} color={colors.brandPrimary} />
+              <Ionicons name="copy-outline" size={18} color={colors.brandPrimaryText} />
               <Text style={styles.secondaryText}>{t("copy")}</Text>
             </Pressable>
             <Pressable testID="template-share-button" onPress={() => Share.share({ message: letter })} style={[styles.cta, { flex: 1, marginTop: 0 }]}>
@@ -170,11 +170,12 @@ const useStyles = makeStyles((c) => ({
   step: { flex: 1, height: 40, borderRadius: 9, alignItems: "center", justifyContent: "center" },
   stepActive: { backgroundColor: c.surfaceSecondary },
   stepText: { color: c.muted, fontWeight: "600", fontSize: 14 },
-  stepTextActive: { color: c.brandPrimary },
+  stepTextActive: { color: c.brandPrimaryText },
   body: { padding: 16, gap: 16 },
   desc: { color: c.muted, fontSize: 14, lineHeight: 20 },
   auditBanner: { flexDirection: "row", gap: 8, alignItems: "center", backgroundColor: c.successSoft, borderRadius: 12, padding: 12 },
   hrBtn: { flex: 1, marginTop: 0, backgroundColor: c.heritageOrange },
+  onAccentText: { color: c.onAccent },
   auditBannerText: { flex: 1, color: c.onSurface, fontSize: 13, fontWeight: "600" },
   label: { color: c.onSurfaceTertiary, fontSize: 13, fontWeight: "700" },
   input: { backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 48, fontSize: 15, color: c.onSurface },
@@ -183,6 +184,6 @@ const useStyles = makeStyles((c) => ({
   paper: { backgroundColor: c.surfaceSecondary, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: c.border },
   letter: { color: c.onSurface, fontSize: 13, lineHeight: 20, fontFamily: "Georgia" },
   footer: { flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: c.surfaceSecondary, borderTopWidth: 1, borderTopColor: c.border },
-  secondary: { minHeight: 52, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: "transparent", flexDirection: "row", alignItems: "center", gap: 8 },
-  secondaryText: { color: c.brandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
+  secondary: { minHeight: 52, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: "transparent", flexDirection: "row", alignItems: "center", gap: 8 },
+  secondaryText: { color: c.brandPrimaryText, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
 }));

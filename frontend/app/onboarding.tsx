@@ -156,7 +156,7 @@ export default function Onboarding() {
           )}
           {typing && (
             <View style={[styles.bubble, styles.ai]} testID="onboarding-typing">
-              <ActivityIndicator size="small" color={colors.heritageGreen} />
+              <ActivityIndicator size="small" color={colors.brandPrimaryText} />
             </View>
           )}
           {cur?.options && !typing && (
@@ -171,7 +171,7 @@ export default function Onboarding() {
           {step === DOCS && !typing && (
             <View style={styles.docBtns}>
               <Pressable testID="onboarding-docs-now" onPress={() => finish(true)} disabled={busy} style={styles.cta}>
-                <Ionicons name="document-attach-outline" size={18} color={colors.onBrandPrimary} />
+                <Ionicons name="document-attach-outline" size={18} color={colors.onAccent} />
                 <Text style={styles.ctaText}>{t("ob_docsNow")}</Text>
               </Pressable>
               <Pressable testID="onboarding-docs-later" onPress={() => finish(false)} disabled={busy} style={styles.secondary}>
@@ -202,7 +202,7 @@ export default function Onboarding() {
               style={styles.input}
             />
             <Pressable testID="onboarding-send-button" onPress={() => answer(value)} disabled={busy || !value.trim()} style={[styles.send, (!value.trim() || busy) && { opacity: 0.5 }]} accessibilityLabel="Send">
-              {busy ? <ActivityIndicator color={colors.onBrandPrimary} size="small" /> : <Ionicons name="arrow-up" size={20} color={colors.onBrandPrimary} />}
+              {busy ? <ActivityIndicator color={colors.onAccent} size="small" /> : <Ionicons name="arrow-up" size={20} color={colors.onAccent} />}
             </Pressable>
           </View>
         )}
@@ -236,7 +236,7 @@ const useStyles = makeStyles((c) => ({
   chipText: { color: c.onSurface, fontWeight: "700", fontSize: 13 },
   docBtns: { gap: 10, marginTop: 6 },
   cta: { minHeight: 50, borderRadius: 12, backgroundColor: c.heritageOrange, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center" },
-  ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6, fontSize: 14 },
+  ctaText: { color: c.onAccent, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6, fontSize: 14 },
   secondary: { minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.surfaceSecondary, alignItems: "center", justifyContent: "center" },
   secondaryText: { color: c.onSurfaceTertiary, fontWeight: "700", fontSize: 14 },
   composer: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingTop: 10, backgroundColor: c.surfaceSecondary, borderTopWidth: 1, borderColor: c.border },

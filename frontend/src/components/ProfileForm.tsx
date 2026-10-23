@@ -65,7 +65,7 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
         {required && <Text style={styles.req}> *</Text>}
       </Text>
       <View style={[styles.field, required && err(k, extraOk) && styles.fieldErr, focusKey === k && fx("focusRing"), focusKey === k && styles.fieldFocus]}>
-        <Ionicons name={icon} size={18} color={colors.brandPrimary} />
+        <Ionicons name={icon} size={18} color={colors.brandPrimaryText} />
         <TextInput
           testID={`profile-${k}-input`}
           value={f[k]}
@@ -147,7 +147,7 @@ const webNoOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as any) :
 const useStyles = makeStyles((c) => ({
   wrap: { gap: 16 },
   card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: c.border, ...fx("cardShadow") },
-  cardTitle: { color: c.brandSecondary, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
+  cardTitle: { color: c.brandSecondaryText, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   label: { color: c.onSurfaceTertiary, fontSize: 13, fontWeight: "700" },
   req: { color: c.error },
   field: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.surface, borderWidth: 1, borderColor: c.borderStrong },
@@ -158,7 +158,7 @@ const useStyles = makeStyles((c) => ({
   input: { flex: 1, fontSize: 15, color: c.onSurface, paddingVertical: 10 },
   chips: { gap: 8, paddingRight: 8 },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: "center", borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, flexShrink: 0 },
-  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimary },
+  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimaryBorder },
   chipText: { color: c.onSurfaceTertiary, fontWeight: "600", fontSize: 13 },
   chipTextOn: { color: c.onBrandPrimary },
   errText: { color: c.error, fontSize: 12, fontWeight: "600" },

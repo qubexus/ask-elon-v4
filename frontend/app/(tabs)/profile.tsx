@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { SiteFooter } from "@/src/components/SiteFooter";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -117,7 +118,7 @@ export default function Profile() {
       <KeyboardAwareScrollView bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: bottomChrome + 28 + 32 }}>
         {/* Ask Elon card */}
         <View style={[styles.cardOuter, fx("profileCardGlow")]} testID="profile-card">
-          <LinearGradient colors={[colors.brandPrimary, colors.brandPrimaryDeep, colors.brandSecondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardBg}>
+          <LinearGradient colors={[colors.brandPrimary, colors.brandPrimaryDeep, colors.brand]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardBg}>
             <View style={styles.cardStripe} />
             <Image source={require("@/assets/brand/robot-watermark.png")} style={styles.watermark} contentFit="contain" accessible={false} alt="" />
             <View style={styles.cardTop}>
@@ -197,7 +198,7 @@ export default function Profile() {
               <View style={styles.viewHead}>
                 <Text style={[styles.sectionTitle, { flex: 1 }]}>{t("secPersonal")} · {t("secEmployer")}</Text>
                 <Pressable testID="profile-edit-button" onPress={() => setEditing(true)} style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.8 }]}>
-                  <Ionicons name="create-outline" size={16} color={colors.brandPrimary} />
+                  <Ionicons name="create-outline" size={16} color={colors.brandPrimaryText} />
                   <Text style={styles.editText}>{t("edit")}</Text>
                 </Pressable>
               </View>
@@ -215,7 +216,7 @@ export default function Profile() {
                 ["at-outline", t("hrEmail"), user?.hr_email],
               ] as [any, string, string | undefined][]).map(([icon, label, val]) => (
                 <View key={label} style={styles.viewRow}>
-                  <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={colors.brandPrimary} /></View>
+                  <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={colors.brandPrimaryText} /></View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.viewLabel}>{label}</Text>
                     <Text style={styles.viewVal}>{val || "—"}</Text>
@@ -256,7 +257,7 @@ export default function Profile() {
           {active ? (
             <>
               <View style={styles.activeRow} testID="membership-active">
-                <Ionicons name="checkmark-circle" size={18} color={colors.brandPrimary} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.brandPrimaryText} />
                 <Text style={styles.activeText}>
                   {t("member")}
                   {plans?.subscription?.next_billing_time ? ` · ${t("nextBilling")}: ${formatDate(plans.subscription.next_billing_time, locale)}` : ""}
@@ -276,7 +277,7 @@ export default function Profile() {
             </Pressable>
             )}
             <Pressable testID="membership-paywall-button" onPress={() => router.push("/paywall")} style={({ pressed }) => [styles.rcBtn, pressed && { opacity: 0.8 }]}>
-              <Ionicons name={isPro ? "ribbon" : "sparkles"} size={18} color={colors.brandPrimary} />
+              <Ionicons name={isPro ? "ribbon" : "sparkles"} size={18} color={colors.brandPrimaryText} />
               <Text style={styles.rcText}>{isPro ? t("pwActive") : t("pwOpen")}</Text>
             </Pressable>
             </>
@@ -290,6 +291,7 @@ export default function Profile() {
           <Text style={styles.logoutText}>{t("logout")}</Text>
         </Pressable>
         <Text style={styles.disclaimer} testID="profile-disclaimer">{t("disclaimer")}</Text>
+        <SiteFooter testID="profile-footer" />
         </>
         )}
       </KeyboardAwareScrollView>
@@ -311,13 +313,13 @@ const useStyles = makeStyles((c) => ({
   cardMid: { flexDirection: "row", alignItems: "center", gap: 14 },
   avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: c.onBrandPrimary },
   avatarFallback: { backgroundColor: c.askOrange, alignItems: "center", justifyContent: "center" },
-  initials: { color: c.askInk, fontSize: 22, fontWeight: "900" },
+  initials: { color: c.onAccent, fontSize: 22, fontWeight: "900" },
   name: { color: c.onBrandPrimary, fontSize: 20, fontWeight: "800" },
   email: { color: "rgba(255,255,255,0.78)", fontSize: 13, marginTop: 2 },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   pill: { height: 26, borderRadius: 999, paddingHorizontal: 10, alignItems: "center", justifyContent: "center", maxWidth: "100%" },
   pillPro: { backgroundColor: c.askOrange },
-  pillProText: { color: c.askInk, fontSize: 12, fontWeight: "700" },
+  pillProText: { color: c.onAccent, fontSize: 12, fontWeight: "700" },
   pillGlass: { backgroundColor: c.glassFill, borderWidth: 1, borderColor: c.glassBorder },
   pillText: { color: c.onBrandPrimary, fontSize: 12, fontWeight: "700" },
   cardFoot: { flexDirection: "row", alignItems: "flex-end", borderTopWidth: 1, borderTopColor: c.glassDivider, paddingTop: 12 },
@@ -332,35 +334,35 @@ const useStyles = makeStyles((c) => ({
   pad: { paddingHorizontal: 16, paddingTop: 16 },
   section0: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 10, borderWidth: 1, borderColor: c.border },
   viewHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  editBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 38, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: c.surfaceSecondary, flexShrink: 0 },
-  editText: { color: c.brandPrimary, fontWeight: "800", fontSize: 13 },
+  editBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 38, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: c.surfaceSecondary, flexShrink: 0 },
+  editText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 13 },
   viewRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: c.divider },
   rowIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center" },
   viewLabel: { color: c.muted, fontSize: 12, fontWeight: "500" },
   viewVal: { color: c.onSurface, fontSize: 15, fontWeight: "600", marginTop: 1 },
   section: { marginHorizontal: 16, marginTop: 16, backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 12, borderWidth: 1, borderColor: c.border },
-  sectionTitle: { color: c.brandSecondary, fontSize: 12.5, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
+  sectionTitle: { color: c.brandSecondaryText, fontSize: 12.5, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   muted: { color: c.muted, fontSize: 13, lineHeight: 19 },
   // messages row
   msgRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   msgIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: c.heritageOrangeSoft, alignItems: "center", justifyContent: "center" },
   msgBadge: { position: "absolute", top: -6, right: -6, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: c.askOrange, borderWidth: 2, borderColor: c.surfaceSecondary, alignItems: "center", justifyContent: "center" },
-  msgBadgeText: { color: c.onBrandPrimary, fontSize: 11, fontWeight: "900" },
-  msgTitle: { color: c.brandSecondary, fontSize: 15, fontWeight: "800" },
+  msgBadgeText: { color: c.onAccent, fontSize: 11, fontWeight: "900" },
+  msgTitle: { color: c.brandSecondaryText, fontSize: 15, fontWeight: "800" },
   msgSub: { color: c.muted, fontSize: 12, marginTop: 2 },
-  chev: { color: c.brandPrimary, fontSize: 26, fontWeight: "700", lineHeight: 28 },
+  chev: { color: c.brandPrimaryText, fontSize: 26, fontWeight: "700", lineHeight: 28 },
   // subscription
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  price: { color: c.brandSecondary, fontSize: 32, fontWeight: "900" },
+  price: { color: c.brandSecondaryText, fontSize: 32, fontWeight: "900" },
   per: { color: c.muted, fontSize: 15, fontWeight: "600" },
   activeRow: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: c.brandPrimarySoft, borderRadius: 12, padding: 12 },
   activeText: { color: c.onSurface, fontSize: 13, fontWeight: "600", flex: 1 },
   cancel: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.error, alignItems: "center", justifyContent: "center" },
   cancelText: { color: c.error, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
   subscribe: { height: 50, borderRadius: 14, backgroundColor: c.askOrange, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
-  subscribeText: { color: c.askInk, fontWeight: "800", fontSize: 15 },
-  rcBtn: { height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  rcText: { color: c.brandPrimary, fontWeight: "800", fontSize: 14 },
+  subscribeText: { color: c.onAccent, fontWeight: "800", fontSize: 15 },
+  rcBtn: { height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  rcText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 14 },
   logout: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 52, marginTop: 16 },
   logoutText: { color: c.error, fontWeight: "700", fontSize: 15 },
   disclaimer: { color: c.footnote, fontSize: 11, lineHeight: 16, textAlign: "center", marginHorizontal: 32, marginTop: 4 },

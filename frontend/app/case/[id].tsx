@@ -60,7 +60,7 @@ export default function CaseDetail() {
           <Pressable testID="case-retry-button" onPress={load} style={styles.secondary}><Text style={styles.secondaryText}>{t("retry")}</Text></Pressable>
         </View>
       ) : !c ? (
-        <View style={styles.center}><ActivityIndicator color={colors.brandPrimary} /></View>
+        <View style={styles.center}><ActivityIndicator color={colors.brandPrimaryText} /></View>
       ) : (
         <>
           <ScrollView contentContainerStyle={styles.body}>
@@ -71,7 +71,7 @@ export default function CaseDetail() {
             <Text style={styles.title} testID="case-detail-title">{c.title}</Text>
             {!!c.sector && (
               <View style={styles.sector}>
-                <Ionicons name="business-outline" size={16} color={colors.brandPrimary} />
+                <Ionicons name="business-outline" size={16} color={colors.brandPrimaryText} />
                 <Text style={styles.sectorText}>{c.sector}</Text>
               </View>
             )}
@@ -80,7 +80,7 @@ export default function CaseDetail() {
               <Text style={styles.desc} testID="case-detail-description">{c.description}</Text>
             </View>
             <Pressable testID="case-toggle-status-button" onPress={toggle} disabled={busy} style={styles.secondary}>
-              {busy ? <ActivityIndicator color={colors.brandPrimary} /> : (
+              {busy ? <ActivityIndicator color={colors.brandPrimaryText} /> : (
                 <Text style={styles.secondaryText}>{c.status === "open" ? t("markResolved") : t("reopen")}</Text>
               )}
             </Pressable>
@@ -113,8 +113,8 @@ const useStyles = makeStyles((c) => ({
   card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: c.border },
   label: { color: c.muted, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   desc: { color: c.onSurface, fontSize: 15, lineHeight: 23 },
-  secondary: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: "transparent", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
-  secondaryText: { color: c.brandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
+  secondary: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: "transparent", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  secondaryText: { color: c.brandPrimaryText, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
   footer: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: c.surfaceSecondary, borderTopWidth: 1, borderTopColor: c.border },
   cta: { minHeight: 52, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, ...fx("buttonShadow") },
   ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 15 },

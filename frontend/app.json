@@ -9,7 +9,7 @@
       "askelon",
       "uk.askelon.app"
     ],
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "uk.askelon.app",
@@ -22,7 +22,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#070F1A"
       },
       "package": "uk.askelon.app",
       "permissions": [
@@ -43,7 +43,7 @@
           "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#070F1A"
         }
       ],
       "expo-font",

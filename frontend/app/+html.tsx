@@ -17,6 +17,8 @@ export default function Root({ children }: PropsWithChildren) {
           If you want to enable scrolling, remove `ScrollViewStyleReset` and
           set `overflow: auto` on the body style below.
         */}
+        <meta name="theme-color" content="#070F1A" />
+        <meta name="color-scheme" content="dark" />
         <title>Ask Elon</title>
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
         <ScrollViewStyleReset />
@@ -34,6 +36,7 @@ export default function Root({ children }: PropsWithChildren) {
         style={{
           margin: 0,
           height: "100%",
+          backgroundColor: "#070F1A",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",

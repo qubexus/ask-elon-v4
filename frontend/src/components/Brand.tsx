@@ -72,7 +72,7 @@ export function useFocusRing() {
   };
 }
 
-/** TextInput that shows the orange focus ring while focused and #D6DFDA border otherwise. */
+/** TextInput that shows the orange focus ring while focused and borderStrong border otherwise. */
 export const FocusTextInput = forwardRef<TextInput, TextInputProps>(function FocusTextInput({ style, onFocus, onBlur, ...rest }, ref) {
   const styles = useStyles();
   const { colors } = useTheme();
@@ -108,14 +108,14 @@ const useStyles = makeStyles((c) => ({
     gap: 8,
   },
   fabPressed: { transform: [{ scale: 0.97 }] },
-  fabInner: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 26, borderWidth: 1.5, borderColor: "rgba(255,122,24,0.55)" },
+  fabInner: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 26, borderWidth: 1.5, borderColor: "rgba(255,106,0,0.55)" },
   fabText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6, fontSize: 14 },
   card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: c.border, overflow: "hidden" },
   cardPressed: { borderColor: c.askOrange },
   accent: { position: "absolute", left: 0, top: 14, bottom: 14, width: 3, borderTopRightRadius: 3, borderBottomRightRadius: 3, backgroundColor: c.askOrange },
   chip: { height: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: "center", backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.borderStrong, flexShrink: 0, overflow: "hidden" },
-  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimary },
-  chipText: { color: c.brandSecondary, fontSize: 13, fontWeight: "600" },
+  chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimaryBorder },
+  chipText: { color: c.brandSecondaryText, fontSize: 13, fontWeight: "600" },
   chipTextOn: { color: c.onBrandPrimary, fontWeight: "700" },
   chipUnderline: { position: "absolute", left: 14, right: 14, bottom: 4, height: 3, borderRadius: 2, backgroundColor: c.askOrange },
   inputBorder: { borderWidth: 1, borderColor: c.borderStrong },

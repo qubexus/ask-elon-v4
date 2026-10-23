@@ -49,7 +49,7 @@ export default function Cases() {
     <View style={styles.root} testID="cases-screen">
       <Header robot="sprawy" title={t("casesTitle")} subtitle={t("casesSub", { n: String(cases.filter((c) => c.status === "open").length) })} />
       {loading ? (
-        <View style={styles.center}><ActivityIndicator color={colors.brandPrimary} testID="cases-loading" /></View>
+        <View style={styles.center}><ActivityIndicator color={colors.brandPrimaryText} testID="cases-loading" /></View>
       ) : error ? (
         <View style={styles.center} testID="cases-error">
           <Text style={styles.muted}>{t("loadError")}</Text>
@@ -60,7 +60,7 @@ export default function Cases() {
           data={cases}
           keyExtractor={(c) => c.case_id}
           contentContainerStyle={[styles.list, { paddingBottom: listPad }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brandPrimary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.brandPrimaryText} />}
           ListHeaderComponent={<SentLetters />}
           ListEmptyComponent={
             <View style={styles.empty} testID="cases-empty">

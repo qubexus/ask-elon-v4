@@ -4,6 +4,8 @@ export type Locale = "pl" | "en" | "ro";
 
 const S = {
   tabChat: ["Czat", "Chat", "Chat"],
+  footerSite: ["Strona", "Website", "Site"],
+  footerHelp: ["Pomoc", "Help", "Ajutor"],
   tabCases: ["Sprawy", "Cases", "Cazuri"],
   tabTemplates: ["Pisma", "Letters", "Scrisori"],
   tabProfile: ["Profil", "Profile", "Profil"],

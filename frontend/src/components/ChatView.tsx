@@ -180,7 +180,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
   if (loading) {
     return (
       <View style={styles.center} testID="chat-loading">
-        <ActivityIndicator color={colors.brandPrimary} />
+        <ActivityIndicator color={colors.brandPrimaryText} />
       </View>
     );
   }
@@ -219,7 +219,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
       )}
       {needContract && (
         <Pressable testID="chat-add-contract-banner" onPress={() => router.push("/profile?tab=docs")} style={styles.banner}>
-          <Ionicons name="document-attach-outline" size={18} color={colors.brandPrimary} />
+          <Ionicons name="document-attach-outline" size={18} color={colors.brandPrimaryText} />
           <Text style={styles.bannerText}>{t("addContractBanner")}</Text>
           <Text style={styles.bannerCta}>{t("addContract")} →</Text>
         </Pressable>
@@ -278,16 +278,16 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
                       hitSlop={6}
                     >
                       {speaking?.id === item.message_id && speaking?.phase === "loading" ? (
-                        <ActivityIndicator size="small" color={colors.brandPrimary} />
+                        <ActivityIndicator size="small" color={colors.brandPrimaryText} />
                       ) : (
-                        <Ionicons name={speaking?.id === item.message_id ? "stop-circle" : "volume-high-outline"} size={16} color={colors.brandPrimary} />
+                        <Ionicons name={speaking?.id === item.message_id ? "stop-circle" : "volume-high-outline"} size={16} color={colors.brandPrimaryText} />
                       )}
                       <Text style={styles.listenText}>{speaking?.id === item.message_id ? t("stopListen") : t("listen")}</Text>
                     </Pressable>
                   )}
                 </>
               ) : (
-                <ActivityIndicator testID="chat-typing-indicator" color={colors.brandPrimary} style={{ alignSelf: "flex-start" }} />
+                <ActivityIndicator testID="chat-typing-indicator" color={colors.brandPrimaryText} style={{ alignSelf: "flex-start" }} />
               )}
             </Animated.View>
           )
@@ -332,7 +332,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
             accessibilityState={{ disabled: !canSend }}
             style={({ pressed }) => [styles.send, canSend ? [styles.sendReady, pressed ? fx("glowOrange") : fx("shadowOrangeSoft")] : { opacity: 0.35 }]}
           >
-            {streaming ? <ActivityIndicator color={colors.onBrandPrimary} size="small" /> : <Ionicons name="arrow-up" size={22} color={canSend ? colors.askInk : colors.onBrandPrimary} />}
+            {streaming ? <ActivityIndicator color={colors.onAccent} size="small" /> : <Ionicons name="arrow-up" size={22} color={canSend ? colors.onAccent : colors.onBrandPrimary} />}
           </Pressable>
         </View>
       </KeyboardStickyView>
@@ -355,7 +355,7 @@ const useStyles = makeStyles((c) => ({
   banner: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: c.brandPrimarySoft, borderBottomWidth: 1, borderBottomColor: c.border },
   overdue: { backgroundColor: c.surfaceSecondary, borderBottomColor: c.error, borderBottomWidth: 2 },
   bannerText: { flex: 1, color: c.onSurface, fontSize: 12, fontWeight: "600" },
-  bannerCta: { color: c.brandPrimary, fontSize: 12, fontWeight: "800", flexShrink: 0 },
+  bannerCta: { color: c.brandPrimaryText, fontSize: 12, fontWeight: "800", flexShrink: 0 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { color: c.muted, fontSize: 14 },
   retry: { backgroundColor: c.brandPrimary, paddingHorizontal: 20, height: 44, borderRadius: 12, justifyContent: "center" },
@@ -364,13 +364,13 @@ const useStyles = makeStyles((c) => ({
   bubble: { maxWidth: "86%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   ai: { alignSelf: "flex-start", backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, borderBottomLeftRadius: 6 },
   user: { alignSelf: "flex-end", backgroundColor: c.brandPrimary, borderBottomRightRadius: 6 },
-  sender: { color: c.brandPrimary, fontWeight: "900", fontSize: 12 },
+  sender: { color: c.brandPrimaryText, fontWeight: "900", fontSize: 12 },
   senderRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
   avatar: { width: 28, height: 28 },
   aiText: { color: c.onSurface, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   bold: { fontWeight: "800" },
   listen: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 8, minHeight: 32, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surfaceSecondary },
-  listenText: { color: c.brandPrimary, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  listenText: { color: c.brandPrimaryText, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
   userText: { color: c.onBrandPrimary, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   quickWrap: { gap: 8, marginTop: 12 },
   quick: {

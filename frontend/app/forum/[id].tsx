@@ -57,7 +57,7 @@ export default function PostDetail() {
     <View style={styles.root} testID="forum-post-screen">
       <Header back title={t("tabForum")} />
       {!post ? (
-        <ActivityIndicator style={{ marginTop: 32 }} color={colors.brandPrimary} />
+        <ActivityIndicator style={{ marginTop: 32 }} color={colors.brandPrimaryText} />
       ) : (
         <FlatList
           data={post.comments}

@@ -67,7 +67,7 @@ export default function Paywall() {
 
         {PERKS.map(([icon, key]) => (
           <View key={key} style={styles.perk}>
-            <View style={styles.perkIcon}><Ionicons name={icon} size={18} color={colors.heritageGreen} /></View>
+            <View style={styles.perkIcon}><Ionicons name={icon} size={18} color={colors.success} /></View>
             <Text style={styles.perkText}>{t(key)}</Text>
           </View>
         ))}
@@ -113,7 +113,7 @@ export default function Paywall() {
           <Text style={styles.legal} testID="paywall-preparing">{t("pwPreparing")}</Text>
         )}
         <Pressable testID="paywall-restore-button" onPress={doRestore} disabled={isRestoring} style={styles.restore}>
-          {isRestoring ? <ActivityIndicator color={colors.brandPrimary} /> : <Text style={styles.restoreText}>{t("pwRestore")}</Text>}
+          {isRestoring ? <ActivityIndicator color={colors.brandPrimaryText} /> : <Text style={styles.restoreText}>{t("pwRestore")}</Text>}
         </Pressable>
         <Text style={styles.legal}>{t("pwLegal")}</Text>
       </ScrollView>
@@ -155,10 +155,10 @@ const useStyles = makeStyles((c) => ({
   activeText: { color: c.onSurface, fontWeight: "800", fontSize: 15 },
   unavailable: { color: c.muted, textAlign: "center", padding: 16 },
   buy: { marginTop: 8, minHeight: 60, borderRadius: 14, backgroundColor: c.heritageOrange, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 },
-  buyText: { color: c.onBrandPrimary, fontWeight: "900", fontSize: 16, textTransform: "uppercase", letterSpacing: 0.6 },
+  buyText: { color: c.onAccent, fontWeight: "900", fontSize: 16, textTransform: "uppercase", letterSpacing: 0.6 },
   buyPrice: { color: c.onBrandPrimary, fontWeight: "700", fontSize: 13, opacity: 0.9 },
   restore: { marginTop: 4, minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: c.border, alignItems: "center", justifyContent: "center", backgroundColor: c.surfaceSecondary },
-  restoreText: { color: c.brandPrimary, fontWeight: "700" },
+  restoreText: { color: c.brandPrimaryText, fontWeight: "700" },
   legal: { color: c.muted, fontSize: 11, textAlign: "center", lineHeight: 16 },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", padding: 24 },
   modal: { width: "100%", maxWidth: 380, backgroundColor: c.surfaceSecondary, borderRadius: 18, padding: 20, gap: 12 },

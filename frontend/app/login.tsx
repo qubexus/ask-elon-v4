@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { SiteFooter } from "@/src/components/SiteFooter";
 import Head from "expo-router/head";
 import { useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
@@ -113,7 +114,7 @@ export default function Login() {
         </View>
 
         <Animated.View entering={FadeInDown.duration(450)} style={styles.logoBlock}>
-          <Image testID="login-logo" source={require("@/assets/brand/logo-ask-elon.png")} style={styles.logo} contentFit="contain" accessibilityLabel="Ask Elon" alt="Ask Elon" />
+          <Image testID="login-logo" source={require("@/assets/brand/logo-ask-elon-ciemne-tlo.png")} style={styles.logo} contentFit="contain" accessibilityLabel="Ask Elon" alt="Ask Elon" />
           <Text style={styles.motto}>{t("mottoFull")}</Text>
           <View style={styles.tagline} testID="login-tagline">
             <View style={styles.greenDot} />
@@ -201,7 +202,7 @@ export default function Login() {
                   <View style={styles.line} />
                 </View>
                 <Pressable testID="google-signin-button" onPress={() => run("google", signIn)} disabled={!!busy} style={({ pressed }) => [styles.social, pressed && { opacity: 0.8 }]}>
-                  {busy === "google" ? <ActivityIndicator color={colors.askGreen} /> : (
+                  {busy === "google" ? <ActivityIndicator color={colors.brandPrimaryText} /> : (
                     <>
                       <Ionicons name="logo-google" size={22} color="#4285F4" />
                       <Text style={styles.socialText}>{t("google")}</Text>
@@ -211,6 +212,7 @@ export default function Login() {
               </>
             ) : null}
             <Text style={styles.disclaimer} testID="login-disclaimer">{t("authDisclaimer")}</Text>
+            <SiteFooter testID="login-footer" />
           </>
         )}
       </KeyboardAwareScrollView>
@@ -225,14 +227,14 @@ const useStyles = makeStyles((c) => ({
   scroll: { paddingHorizontal: 20, gap: 20, width: "100%", maxWidth: 520, alignSelf: "center" },
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   brandBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, height: 34, borderRadius: 12, backgroundColor: c.askOrangeTint, borderWidth: 1, borderColor: c.askBorder },
-  greenDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: c.askGreen },
+  greenDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: c.onlineDot },
   brandBadgeText: { color: c.askOrange, fontWeight: "800", fontSize: 12 },
   langs: { flexDirection: "row", gap: 4, padding: 3, borderRadius: 12, backgroundColor: c.askField, borderWidth: 1, borderColor: c.askBorder },
   lang: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, height: 32, borderRadius: 9, borderWidth: 1, borderColor: "transparent" },
   langActive: { backgroundColor: c.askOrange, borderColor: c.askOrange },
   flag: { fontSize: 13 },
   langText: { color: c.askNavy, fontWeight: "800", fontSize: 12 },
-  langTextActive: { color: c.onBrandPrimary },
+  langTextActive: { color: c.onAccent },
   logoBlock: { alignItems: "center", gap: 12, marginTop: 20 },
   logo: { width: 210, aspectRatio: 630 / 363 },
   motto: { color: c.askNavy, fontWeight: "700", fontSize: 15, textAlign: "center" },
@@ -242,7 +244,7 @@ const useStyles = makeStyles((c) => ({
   tab: { flex: 1, minHeight: 48, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderColor: c.askBorder, backgroundColor: c.askField },
   tabActive: { backgroundColor: c.askOrange, borderColor: c.askOrange, ...fx("buttonShadow") },
   tabText: { color: c.askNavy, fontWeight: "700", fontSize: 15 },
-  tabTextActive: { color: c.onBrandPrimary, fontWeight: "800" },
+  tabTextActive: { color: c.onAccent, fontWeight: "800" },
   resetHead: { alignItems: "center" },
   resetTitle: { color: c.askNavy, fontSize: 22, fontWeight: "900" },
   form: { gap: 12 },
