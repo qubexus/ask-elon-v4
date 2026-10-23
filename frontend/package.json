@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test:format": "node scripts/test-format.mjs"
+    "test:format": "node scripts/test-format.mjs",
+    "test:case-chat": "node scripts/test-case-chat.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "57.0.16",

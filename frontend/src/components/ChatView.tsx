@@ -13,6 +13,9 @@ import { speakMessage, stopSpeaking } from "@/src/audio";
 import { VoiceInputButton } from "@/src/components/VoiceInputButton";
 import { isOverdue, Letter, reportToAcas } from "@/src/components/SentLetters";
 import { ProLock } from "@/src/components/ProLock";
+import { StatusPill } from "@/src/components/StatusPill";
+import { descriptionIsFirstMessage } from "@/src/caseChat";
+import { formatDate } from "@/src/format";
 import { usePro } from "@/src/revenuecat";
 import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
@@ -20,6 +23,7 @@ import { useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
 type Msg = { message_id: string; role: "user" | "assistant"; text: string };
+export type ChatCase = { case_id: string; title: string; description: string; sector: string; status: string; created_at: string; updated_at: string };
 
 // Renders **bold** segments from AI markdown.
 function RichText({ text, style, boldStyle }: { text: string; style: any; boldStyle: any }) {
@@ -47,7 +51,51 @@ function ElonTag({ styles }: { styles: any }) {
   );
 }
 
-export function ChatView(props: { threadId: string; bottomOffset: number; isMain?: boolean; onSavedAsCase?: () => void }) {
+// Top of a case chat: the case card (status, title, sector, way back) and the texts the case was created with.
+function CaseIntro({ c, messages, locale, styles, t }: { c: ChatCase; messages: Msg[]; locale: any; styles: any; t: ReturnType<typeof useT> }) {
+  const { colors } = useTheme();
+  const showDesc = !descriptionIsFirstMessage(c.description, messages);
+  return (
+    <View style={{ gap: 12 }} testID="chat-case-intro">
+      <View style={styles.caseCard} testID="chat-case-card">
+        <View style={styles.caseTop}>
+          <StatusPill status={c.status} />
+          <Pressable
+            testID="chat-case-all-cases"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace("/cases"))}
+            hitSlop={8}
+            style={styles.caseLink}
+          >
+            <Ionicons name="chevron-back" size={14} color={colors.brandPrimaryText} />
+            <Text style={styles.caseLinkText}>{t("caseChatAllCases")}</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.caseTitle} testID="chat-case-title">{c.title}</Text>
+        {!!c.sector && (
+          <View style={styles.caseSector}>
+            <Ionicons name="business-outline" size={14} color={colors.muted} />
+            <Text style={styles.caseSectorText} numberOfLines={1}>{c.sector}</Text>
+          </View>
+        )}
+        <Pressable testID="chat-case-details" onPress={() => router.push(`/case/${c.case_id}`)} hitSlop={6} style={styles.caseLink}>
+          <Ionicons name="information-circle-outline" size={14} color={colors.brandPrimaryText} />
+          <Text style={styles.caseLinkText}>{t("caseChatDetails")}</Text>
+        </Pressable>
+      </View>
+      {showDesc && (
+        <View style={[styles.bubble, styles.user]} testID="chat-case-description">
+          <Text style={styles.caseOrigLabel}>{t("caseChatOriginal", { date: formatDate(c.created_at, locale) })}</Text>
+          <Text style={styles.userText}>{c.description}</Text>
+        </View>
+      )}
+      {messages.length === 0 && <Text style={styles.caseHint} testID="chat-case-hint">{t("caseChatHint")}</Text>}
+    </View>
+  );
+}
+
+type ChatProps = { threadId: string; bottomOffset: number; isMain?: boolean; onSavedAsCase?: () => void; caseId?: string; onCaseLoaded?: (c: ChatCase) => void };
+
+export function ChatView(props: ChatProps) {
   const { user } = useAuth();
   const t = useT();
   const styles = useStyles();
@@ -65,14 +113,15 @@ export function ChatView(props: { threadId: string; bottomOffset: number; isMain
   );
 }
 
-function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId: string; bottomOffset: number; isMain?: boolean; onSavedAsCase?: () => void }) {
-  const { user } = useAuth();
+function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCaseLoaded }: ChatProps) {
+  const { user, locale } = useAuth();
   const t = useT();
   const toast = useToast();
   const styles = useStyles();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [caseDoc, setCaseDoc] = useState<ChatCase | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [input, setInput] = useState("");
@@ -116,13 +165,20 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
     setLoading(true);
     setError(false);
     try {
-      setMessages(await api<Msg[]>(`/chat/messages?thread_id=${threadId}`));
+      // Case chat: load the case itself (its original description) together with that case's own message thread.
+      const [msgs, c] = await Promise.all([
+        api<Msg[]>(`/chat/messages?thread_id=${encodeURIComponent(threadId)}`),
+        caseId ? api<ChatCase>(`/cases/${encodeURIComponent(caseId)}`) : Promise.resolve(null),
+      ]);
+      setMessages(msgs);
+      setCaseDoc(c);
+      if (c) onCaseLoaded?.(c);
       api<typeof usage>("/chat/usage").then(setUsage).catch(() => {});
       if (isMain) {
         api<{ broadcast_id: string; text: string; author: string }[]>("/broadcasts/pending").then((b) => b.length && setBroadcasts(b)).catch(() => {});
         api<Letter[]>("/letters").then((l) => setOverdue(l.find(isOverdue) ?? null)).catch(() => {});
       }
-      api<{ category: string; status: string }[]>("/documents")
+      if (!caseId) api<{ category: string; status: string }[]>("/documents")
         .then((d) => setNeedContract(!d.some((x) => x.category === "contract" && x.status !== "failed")))
         .catch(() => {});
     } catch {
@@ -130,7 +186,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
     } finally {
       setLoading(false);
     }
-  }, [threadId]);
+  }, [threadId, caseId]);
 
   useEffect(() => {
     load();
@@ -244,19 +300,25 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
                 <Text style={styles.systemText}>{b.text}</Text>
               </View>
             ))}
-            <View style={[styles.bubble, styles.ai]} testID="chat-welcome-message">
-              <ElonTag styles={styles} />
-              <Text style={styles.aiText}>{withBrand(welcome, "soft")}</Text>
-            </View>
-            {messages.length === 0 && (
-              <View style={styles.quickWrap}>
-                {quick.map((q, i) => (
-                  <Pressable key={i} testID={`quick-action-${i}`} onPress={() => send(q)} style={({ pressed }) => [styles.quick, pressed && { opacity: 0.7 }]}>
-                    <Ionicons name="flash-outline" size={14} color={colors.askOrange} />
-                    <Text style={styles.quickText}>{q}</Text>
-                  </Pressable>
-                ))}
+            {caseDoc ? (
+              <CaseIntro c={caseDoc} messages={messages} locale={locale} styles={styles} t={t} />
+            ) : (
+              <>
+              <View style={[styles.bubble, styles.ai]} testID="chat-welcome-message">
+                <ElonTag styles={styles} />
+                <Text style={styles.aiText}>{withBrand(welcome, "soft")}</Text>
               </View>
+              {messages.length === 0 && (
+                <View style={styles.quickWrap}>
+                  {quick.map((q, i) => (
+                    <Pressable key={i} testID={`quick-action-${i}`} onPress={() => send(q)} style={({ pressed }) => [styles.quick, pressed && { opacity: 0.7 }]}>
+                      <Ionicons name="flash-outline" size={14} color={colors.askOrange} />
+                      <Text style={styles.quickText}>{q}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+              </>
             )}
           </View>
         }
@@ -318,7 +380,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
             testID="chat-input"
             value={input}
             onChangeText={setInput}
-            placeholder={t("placeholder")}
+            placeholder={caseDoc ? t("caseChatPlaceholder") : t("placeholder")}
             placeholderTextColor={colors.muted}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
@@ -387,6 +449,15 @@ const useStyles = makeStyles((c) => ({
     minHeight: 40,
   },
   quickText: { color: c.onSurfaceTertiary, fontWeight: "600", fontSize: 14 },
+  caseCard: { backgroundColor: c.surfaceSecondary, borderRadius: 16, borderWidth: 1, borderColor: c.border, borderLeftWidth: 4, borderLeftColor: c.askOrange, padding: 14, gap: 8 },
+  caseTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  caseTitle: { color: c.onSurface, fontSize: 18, fontWeight: "900", lineHeight: 24 },
+  caseSector: { flexDirection: "row", alignItems: "center", gap: 6 },
+  caseSectorText: { color: c.muted, fontSize: 13, fontWeight: "600", flexShrink: 1 },
+  caseLink: { flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start", minHeight: 28 },
+  caseLinkText: { color: c.brandPrimaryText, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  caseOrigLabel: { color: c.onBrandPrimary, opacity: 0.75, fontSize: 11, fontWeight: "800", letterSpacing: 0.4, marginBottom: 4 },
+  caseHint: { color: c.muted, fontSize: 13, lineHeight: 19, textAlign: "center", paddingHorizontal: 12 },
   saveCase: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 2, borderRadius: 999 },
   saveCaseText: { color: c.muted, fontSize: 11, fontWeight: "600" },
   freeBar: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 6, backgroundColor: c.goldSoft },
