@@ -1,10 +1,8 @@
-"""Email/password auth + reset + demo + logout tests (iteration 3)."""
+"""Email/password auth + reset + logout tests (iteration 3)."""
 import os, re, time, uuid, requests, pytest
 from conftest import BASE_URL
 
-DEMO_EMAIL = "demo@unionelon.app"
-DEMO_PW = "UnionDemo2026!"
-BACKEND_LOG = "/var/log/supervisor/backend.err.log"
+BACKEND_LOG = os.environ.get("TEST_BACKEND_LOG", "/tmp/ae-backend.log")  # server log (APP_ENV=development)
 
 
 def _headers(tok): return {"Authorization": f"Bearer {tok}", "Content-Type": "application/json"}
@@ -74,25 +72,6 @@ class TestLogin:
         r = requests.post(f"{BASE_URL}/api/auth/login",
                           json={"email": self.email, "password": "WrongPassword9"})
         assert r.status_code == 401
-
-
-# ------------------ Demo ------------------
-class TestDemo:
-    def test_demo_login_endpoint(self):
-        r = requests.post(f"{BASE_URL}/api/auth/demo")
-        assert r.status_code == 200, r.text
-        d = r.json()
-        assert "session_token" in d
-        u = d["user"]
-        assert u["email"] == DEMO_EMAIL
-        assert u.get("onboarded") is True
-        assert "password_hash" not in u
-
-    def test_demo_credentials_login(self):
-        r = requests.post(f"{BASE_URL}/api/auth/login",
-                          json={"email": DEMO_EMAIL, "password": DEMO_PW})
-        assert r.status_code == 200, r.text
-        assert r.json()["user"]["email"] == DEMO_EMAIL
 
 
 # ------------------ Reset ------------------

@@ -4,11 +4,13 @@ import uuid
 import pytest
 import requests
 
-BASE = os.environ.get("EXPO_PUBLIC_BACKEND_URL", "https://start-project-33.preview.emergentagent.com").rstrip("/")
+BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
 
-DEMO_EMAIL = "demo@unionelon.app"
-DEMO_PASS = "UnionDemo2026!"
+# PRO test account (the shared demo account was removed). Set TEST_PRO_EMAIL / TEST_PRO_PASSWORD
+# to an existing PRO (is_member) account to run the tests that need one; otherwise they are skipped.
+PRO_EMAIL = os.environ.get("TEST_PRO_EMAIL", "")
+PRO_PASS = os.environ.get("TEST_PRO_PASSWORD", "")
 ADMIN_EMAIL = "jan.test@example.com"
 ADMIN_PASS = "NoweHaslo123"
 
@@ -92,7 +94,9 @@ class TestAdminTabsEndpoints:
 # -------------------- Audits (documents list) --------------------
 class TestAuditsListing:
     def setup_method(self):
-        self.h = auth_headers(DEMO_EMAIL, DEMO_PASS)
+        if not PRO_EMAIL or not PRO_PASS:
+            pytest.skip("TEST_PRO_EMAIL / TEST_PRO_PASSWORD not set")
+        self.h = auth_headers(PRO_EMAIL, PRO_PASS)
 
     def test_documents_endpoint_returns_array(self):
         r = requests.get(f"{API}/documents", headers=self.h)

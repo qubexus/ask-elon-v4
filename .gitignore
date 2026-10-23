@@ -86,3 +86,6 @@ android-sdk/
 credentials.json
 *.key
 .credentials
+
+# Pliki wgrane lokalnie (STORAGE_BACKEND=local)
+backend/uploads/

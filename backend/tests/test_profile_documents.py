@@ -6,7 +6,7 @@ import uuid
 import pytest
 import requests
 
-BASE = os.environ["EXPO_PUBLIC_BACKEND_URL"].rstrip("/")
+BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
 
 CONTRACT_PDF = "/tmp/contract.pdf"
@@ -21,12 +21,6 @@ def _register_fresh():
     r = requests.post(f"{API}/auth/register", json={"name": "T", "email": email, "password": "Passw0rd!"}, timeout=30)
     assert r.status_code == 200, r.text
     return r.json()["session_token"], email
-
-
-def _demo_token():
-    r = requests.post(f"{API}/auth/demo", timeout=30)
-    assert r.status_code == 200, r.text
-    return r.json()["session_token"]
 
 
 FULL_PROFILE = {
@@ -77,19 +71,6 @@ class TestChatGate:
         tok, _ = _register_fresh()
         r = requests.post(f"{API}/chat/stream", json={"text": "hello", "thread_id": "main"}, headers=_hdr(tok), timeout=30)
         assert r.status_code == 403, f"expected 403, got {r.status_code}: {r.text}"
-
-    def test_chat_allowed_for_demo(self):
-        tok = _demo_token()
-        with requests.post(f"{API}/chat/stream", json={"text": "cześć", "thread_id": "main"},
-                           headers=_hdr(tok), timeout=60, stream=True) as r:
-            assert r.status_code == 200, r.text
-            # consume a bit to confirm SSE flows
-            got = False
-            for line in r.iter_lines(decode_unicode=True):
-                if line and line.startswith("data:"):
-                    got = True
-                    break
-            assert got
 
     def test_chat_allowed_after_profile_completed(self):
         tok, _ = _register_fresh()
@@ -178,33 +159,3 @@ class TestDocuments:
         lst = requests.get(f"{API}/documents", headers=_hdr(self.tok), timeout=30).json()
         ids = [d["doc_id"] for d in lst]
         assert TestDocuments.doc_id not in ids
-
-
-# ---------------- Demo chat w/ contract reference ----------------
-class TestDemoChatContract:
-    def test_demo_chat_references_contract(self):
-        tok = _demo_token()
-        # Make sure demo has at least one ready contract; if not skip
-        docs = requests.get(f"{API}/documents", headers=_hdr(tok), timeout=30).json()
-        if not any(d.get("category") == "contract" and d.get("status") == "ready" for d in docs):
-            pytest.skip("Demo user has no ready contract uploaded")
-        with requests.post(f"{API}/chat/stream",
-                           json={"text": "Jaki mam okres wypowiedzenia?", "thread_id": "main"},
-                           headers=_hdr(tok), timeout=120, stream=True) as r:
-            assert r.status_code == 200
-            full = ""
-            import json as _j
-            for line in r.iter_lines(decode_unicode=True):
-                if line and line.startswith("data:"):
-                    try:
-                        ev = _j.loads(line[5:].strip())
-                        if "delta" in ev:
-                            full += ev["delta"]
-                        if ev.get("done"):
-                            break
-                    except Exception:
-                        pass
-            assert full, "no streamed content"
-            # Loose check: expect answer mentions notice period or umowa / wypowiedzenie
-            low = full.lower()
-            assert any(k in low for k in ["wypowie", "notice", "umow", "tydzień", "miesiąc"]), f"Answer did not reference contract: {full[:400]}"

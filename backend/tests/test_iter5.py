@@ -5,14 +5,20 @@ import uuid
 import pytest
 import requests
 
-BASE_URL = os.environ["EXPO_PUBLIC_BACKEND_URL"].rstrip("/")
+BASE_URL = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
 
-DEMO = ("demo@unionelon.app", "UnionDemo2026!")
+# PRO test account (the shared demo account was removed). Set TEST_PRO_EMAIL / TEST_PRO_PASSWORD
+# to an existing PRO (is_member) account to run the tests that need one; otherwise they are skipped.
+PRO_EMAIL = os.environ.get("TEST_PRO_EMAIL", "")
+PRO_PASS = os.environ.get("TEST_PRO_PASSWORD", "")
+PRO = (PRO_EMAIL, PRO_PASS)
 ADMIN = ("jan.test@example.com", "NoweHaslo123")
 
 
 def _login(email, pw):
+    if not email or not pw:
+        pytest.skip("TEST_PRO_EMAIL / TEST_PRO_PASSWORD not set")
     r = requests.post(f"{API}/auth/login", json={"email": email, "password": pw}, timeout=30)
     assert r.status_code == 200, r.text
     return r.json()["session_token"]
@@ -31,7 +37,7 @@ def h(tok):
 
 # ---------------- Price £9.99 (F) ----------------
 def test_price_is_999():
-    tok = _login(*DEMO)
+    tok = _login(*PRO)
     r = requests.get(f"{API}/payments/plans", headers=h(tok), timeout=15)
     assert r.status_code == 200
     data = r.json()
@@ -58,8 +64,8 @@ class TestProGate:
         r = requests.post(f"{API}/documents/fake_id/audit", headers=h(tok), timeout=15)
         assert r.status_code == 403
 
-    def test_pro_demo_can_access_documents(self):
-        tok = _login(*DEMO)
+    def test_pro_can_access_documents(self):
+        tok = _login(*PRO)
         r = requests.get(f"{API}/documents", headers=h(tok), timeout=15)
         assert r.status_code == 200
         assert isinstance(r.json(), list)
@@ -68,14 +74,14 @@ class TestProGate:
 # ---------------- Payslip audit (A) ----------------
 class TestPayslipAudit:
     def test_audit_404_for_missing_doc(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         r = requests.post(f"{API}/documents/doc_missing/audit", headers=h(tok), timeout=15)
         # endpoint returns 400 ("Only analysed payslips can be audited") since the doc isn't found/is wrong state
         assert r.status_code == 400, r.text
 
     def test_audit_rejects_non_payslip_contract(self):
         """Try to audit the existing seeded contract (category=contract) -> 400."""
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         docs = requests.get(f"{API}/documents", headers=h(tok), timeout=15).json()
         contracts = [d for d in docs if d.get("category") == "contract" and d.get("status") == "ready"]
         if not contracts:
@@ -91,7 +97,7 @@ class TestForum:
         assert r.status_code == 401
 
     def test_list_seeded_posts(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         r = requests.get(f"{API}/forum/posts", headers=h(tok), timeout=15)
         assert r.status_code == 200
         posts = r.json()
@@ -101,14 +107,14 @@ class TestForum:
             assert "_id" not in p
 
     def test_category_filter(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         r = requests.get(f"{API}/forum/posts?category=wages", headers=h(tok), timeout=15)
         assert r.status_code == 200
         for p in r.json():
             assert p["category"] == "wages"
 
     def test_create_post_and_comment_and_like(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         # create
         r = requests.post(f"{API}/forum/posts", headers=h(tok),
                           json={"title": "TEST Post iter5", "body": "Hello world body long enough", "category": "general"},
@@ -137,7 +143,7 @@ class TestForum:
         assert len(got["comments"]) == 1 and got["comments"][0]["body"] == "TEST comment"
 
     def test_create_post_rejects_short(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         r = requests.post(f"{API}/forum/posts", headers=h(tok),
                           json={"title": "a", "body": "b"}, timeout=15)
         assert r.status_code == 400
@@ -155,7 +161,7 @@ class TestAdmin:
         return tok
 
     def test_non_admin_403(self):
-        tok = _login(*DEMO)
+        tok = _login(*PRO)
         for path in ["/admin/stats", "/admin/users", "/admin/promos", "/admin/broadcasts", "/admin/messages"]:
             r = requests.get(f"{API}{path}", headers=h(tok), timeout=15)
             assert r.status_code == 403, f"{path}: {r.status_code}"
@@ -172,7 +178,7 @@ class TestAdmin:
         r = requests.get(f"{API}/admin/users", headers=h(admin_token), timeout=15)
         assert r.status_code == 200
         users = r.json()
-        assert any(u["email"] == DEMO[0] for u in users)
+        assert any(u["email"] == PRO[0] for u in users)
         for u in users:
             assert "_id" not in u and "password_hash" not in u
 

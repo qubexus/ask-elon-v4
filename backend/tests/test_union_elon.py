@@ -148,7 +148,7 @@ class TestPayments:
 
     def test_subscribe(self):
         r = requests.post(f"{BASE_URL}/api/payments/subscribe", headers=AUTH,
-                          json={"app_redirect": "https://start-project-33.preview.emergentagent.com/"})
+                          json={"app_redirect": "http://localhost:8081/"})
         assert r.status_code == 200, r.text
         d = r.json()
         assert "approve_url" in d
@@ -164,11 +164,15 @@ class TestPayments:
 
     def test_return_html(self):
         r = requests.get(f"{BASE_URL}/api/payments/return",
-                        params={"redirect": "https://example.com/app", "cancelled": "1"},
+                        params={"redirect": "http://localhost:8081/profile", "cancelled": "1"},
                         allow_redirects=False)
         assert r.status_code == 200
         assert "text/html" in r.headers.get("content-type", "")
         assert "payment=cancelled" in r.text
+        # redirects to foreign sites are refused (open-redirect protection, see ALLOWED_ORIGINS)
+        bad = requests.get(f"{BASE_URL}/api/payments/return",
+                           params={"redirect": "https://example.com/app", "cancelled": "1"}, allow_redirects=False)
+        assert bad.status_code == 400
 
     def test_cancel_no_active(self):
         r = requests.post(f"{BASE_URL}/api/payments/cancel", headers=AUTH)

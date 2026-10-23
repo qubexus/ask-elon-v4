@@ -12,7 +12,7 @@ import time
 import pytest
 import requests
 
-BASE = os.environ["EXPO_PUBLIC_BACKEND_URL"].rstrip("/")
+BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
 
 DEMO_EMAIL = "demo@unionelon.app"

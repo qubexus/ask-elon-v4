@@ -1,7 +1,7 @@
 """
 Iteration 9 backend tests — RevenueCat/PRO gating, FREE plan rules,
 27 tri-lingual legal templates, chat usage endpoint, owner admin login,
-chat/stream LLM reply (Emergent key refreshed).
+chat/stream LLM reply (needs GEMINI_API_KEY on the server).
 """
 import io
 import os
@@ -9,7 +9,7 @@ import time
 import pytest
 import requests
 
-BASE_URL = os.environ.get("EXPO_PUBLIC_BACKEND_URL", "https://start-project-33.preview.emergentagent.com").rstrip("/")
+BASE_URL = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
 
 OWNER_EMAIL = "jocobisun@gmail.com"

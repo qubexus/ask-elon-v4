@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -14,15 +14,15 @@ import uuid
 import logging
 import httpx
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
-from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpeech
 from fastapi import UploadFile, File, Form, Response
 import hashlib
-import io
+import hmac
+import html
 import re
+import time
 import emoji
 import asyncio
-import requests
+from collections import defaultdict, deque
 from starlette.concurrency import run_in_threadpool
 import secrets
 import jwt
@@ -32,26 +32,53 @@ from pydantic import EmailStr
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
-EMERGENT_LLM_KEY = os.environ['EMERGENT_LLM_KEY']
+import ai  # noqa: E402  (reads .env values, so imported after load_dotenv)
+import mailer  # noqa: E402
+import storage  # noqa: E402
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+
+def env_list(name: str, default: str = "") -> List[str]:
+    return [v.strip() for v in (os.environ.get(name) or default).split(",") if v.strip()]
+
+
+APP_ENV = (os.environ.get("APP_ENV") or "development").strip().lower()
+IS_DEV = APP_ENV in ("development", "dev", "local")
+
+client = AsyncIOMotorClient(os.environ.get('MONGO_URL') or 'mongodb://localhost:27017')
+db = client[os.environ.get('DB_NAME') or 'ask_elon']
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', '')
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', '')
-PAYPAL_API_BASE = os.environ['PAYPAL_API_BASE']
-JWT_SECRET = os.environ['JWT_SECRET']
-DEMO_EMAIL = "demo@unionelon.app"
-DEMO_PASSWORD = "UnionDemo2026!"
+PAYPAL_API_BASE = (os.environ.get('PAYPAL_API_BASE') or 'https://api-m.sandbox.paypal.com').rstrip('/')
+
+# JWT secret: required. The server refuses to start without a real one.
+JWT_SECRET = (os.environ.get('JWT_SECRET') or '').strip()
+_PLACEHOLDER_SECRETS = {"", "WYGENERUJ_WLASNY_DLUGI_LOSOWY_CIAG", "changeme", "change-me", "secret", "jwt_secret"}
+if JWT_SECRET in _PLACEHOLDER_SECRETS or (not IS_DEV and len(JWT_SECRET) < 32):
+    raise RuntimeError("JWT_SECRET is missing or too weak. Set a long random value in backend/.env "
+                       "(e.g. `python -c \"import secrets; print(secrets.token_hex(32))\"`).")
+SESSION_DAYS = int(os.environ.get("SESSION_DAYS") or 7)
+
 USER_PROJ = {"_id": 0, "password_hash": 0}
 passwords = PasswordHash.recommended()
+ADMIN_EMAILS = {e.lower() for e in env_list("ADMIN_EMAILS")}
+GOOGLE_CLIENT_IDS = env_list("GOOGLE_CLIENT_IDS")
+ALLOWED_ORIGINS = env_list("ALLOWED_ORIGINS", "http://localhost:8081,http://127.0.0.1:8081,http://localhost:19006")
+APP_REDIRECT_SCHEMES = env_list("APP_REDIRECT_SCHEMES", "askelon,exp")
+TRUST_PROXY = (os.environ.get("TRUST_PROXY") or "").lower() in ("1", "true", "yes")
+MAX_REQUEST_MB = int(os.environ.get("MAX_REQUEST_MB") or 25)
+# Only for automated tests on a developer machine – ignored in production.
+RATE_LIMIT_OFF = IS_DEV and (os.environ.get("DISABLE_RATE_LIMIT") or "").lower() in ("1", "true", "yes")
 
 ELON_PROMPT = (ROOT_DIR / 'elon_prompt.txt').read_text()
 TEMPLATES = json.loads((ROOT_DIR / 'legal_templates.json').read_text())
 LANG_NAMES = {"pl": "Polish", "en": "English", "ro": "Romanian"}
 
-app = FastAPI()
+app = FastAPI(docs_url="/api/docs" if IS_DEV else None, redoc_url=None,
+              openapi_url="/api/openapi.json" if IS_DEV else None)
 api = APIRouter(prefix="/api")
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 def now():
@@ -62,9 +89,38 @@ def new_id(prefix):
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
+# ---------------- Rate limiting (in-memory, per server process) ----------------
+_hits = defaultdict(deque)
+
+
+def client_ip(request: Request) -> str:
+    if TRUST_PROXY:
+        fwd = request.headers.get("x-forwarded-for", "")
+        if fwd:
+            return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def rate_limit(key: str, limit: int, window_s: int):
+    """Allows `limit` hits per `window_s` seconds for `key`; raises 429 above that."""
+    if RATE_LIMIT_OFF:
+        return
+    t = time.monotonic()
+    q = _hits[key]
+    while q and q[0] <= t - window_s:
+        q.popleft()
+    if len(q) >= limit:
+        raise HTTPException(429, "Too many requests. Please try again later.",
+                            headers={"Retry-After": str(int(window_s - (t - q[0])) + 1)})
+    q.append(t)
+    if len(_hits) > 50000:  # keep memory bounded
+        for k in [k for k, v in list(_hits.items()) if not v][:10000]:
+            _hits.pop(k, None)
+
+
 # ---------------- Auth ----------------
-class SessionIn(BaseModel):
-    session_id: str
+class GoogleIn(BaseModel):
+    id_token: str
 
 
 async def current_user(request: Request) -> dict:
@@ -75,15 +131,16 @@ async def current_user(request: Request) -> dict:
 
 
 async def user_from_token(token: str) -> dict:
+    if not token or len(token) > 2048:
+        raise HTTPException(401, "Invalid session")
+    try:  # every session token is a signed JWT (sessions from the old hosted login are no longer accepted)
+        jwt.decode(token, JWT_SECRET, algorithms=["HS256"], issuer="union-elon", audience="union-elon-app",
+                   options={"require": ["sub", "sid", "exp", "iat"]})
+    except jwt.PyJWTError:
+        raise HTTPException(401, "Invalid token")
     sess = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
     if not sess:
         raise HTTPException(401, "Invalid session")
-    if sess.get("auth_method") == "password":
-        try:
-            jwt.decode(token, JWT_SECRET, algorithms=["HS256"], issuer="union-elon", audience="union-elon-app",
-                       options={"require": ["sub", "sid", "exp", "iat"]})
-        except jwt.PyJWTError:
-            raise HTTPException(401, "Invalid token")
     exp = sess["expires_at"]
     if exp.tzinfo is None:
         exp = exp.replace(tzinfo=timezone.utc)
@@ -120,27 +177,42 @@ SEED_CASES = [
 ]
 
 
-@api.post("/auth/session")
-async def auth_session(body: SessionIn):
-    async with httpx.AsyncClient(timeout=20) as hc:
-        r = await hc.get("https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                         headers={"X-Session-ID": body.session_id})
-    if r.status_code != 200:
-        raise HTTPException(401, "Invalid session_id")
-    data = r.json()
-    email = data["email"]
+def verify_google_id_token(token: str) -> dict:
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+    return google_id_token.verify_oauth2_token(token, google_requests.Request(), audience=GOOGLE_CLIENT_IDS)
+
+
+@api.get("/auth/config")
+async def auth_config():
+    """Tells the app which login methods the server accepts."""
+    return {"google": bool(GOOGLE_CLIENT_IDS), "email": True}
+
+
+@api.post("/auth/google")
+async def auth_google(body: GoogleIn, request: Request):
+    """Standard Google Sign-In: the app sends Google's ID token, the server verifies it with Google's keys."""
+    rate_limit(f"google:{client_ip(request)}", 20, 900)
+    if not GOOGLE_CLIENT_IDS:
+        raise HTTPException(503, "Google login is not configured")
+    try:
+        data = await run_in_threadpool(verify_google_id_token, body.id_token)
+    except Exception:
+        logger.info("Google ID token rejected")
+        raise HTTPException(401, "Invalid Google login")
+    if data.get("iss") not in ("accounts.google.com", "https://accounts.google.com") or not data.get("email") \
+            or not data.get("email_verified"):
+        raise HTTPException(401, "Invalid Google login")
+    email = norm_email(data["email"])
     existing = await db.users.find_one({"email": email}, {"_id": 0})
     if existing:
         user_id = existing["user_id"]
-        await db.users.update_one({"user_id": user_id}, {"$set": {"picture": data.get("picture")}})
+        await db.users.update_one({"user_id": user_id}, {"$set": {"picture": data.get("picture"), "google_sub": data.get("sub")}})
     else:
         user_id = await create_user(email, data.get("name", ""), data.get("picture"))
-    await db.user_sessions.insert_one({
-        "session_token": data["session_token"], "user_id": user_id, "auth_method": "google",
-        "expires_at": now() + timedelta(days=7), "created_at": now(),
-    })
-    user = await db.users.find_one({"user_id": user_id}, USER_PROJ)
-    return {"session_token": data["session_token"], "user": user}
+        await db.users.update_one({"user_id": user_id}, {"$set": {"google_sub": data.get("sub")}})
+    token = await issue_session(user_id, "google")
+    return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
 
 
 @api.get("/auth/me")
@@ -186,35 +258,44 @@ def digest(v: str) -> str:
     return hashlib.sha256(v.encode()).hexdigest()
 
 
-async def issue_password_session(user_id: str) -> str:
+async def issue_session(user_id: str, method: str = "password") -> str:
     sid = uuid.uuid4().hex
-    exp = now() + timedelta(days=7)
+    exp = now() + timedelta(days=SESSION_DAYS)
     token = jwt.encode({"sub": user_id, "sid": sid, "iss": "union-elon", "aud": "union-elon-app",
                         "iat": now(), "exp": exp, "typ": "access"}, JWT_SECRET, algorithm="HS256")
     await db.user_sessions.insert_one({"session_token": token, "sid": sid, "user_id": user_id,
-                                       "auth_method": "password", "expires_at": exp, "created_at": now()})
+                                       "auth_method": method, "expires_at": exp, "created_at": now()})
     return token
+
+
+issue_password_session = issue_session
 
 
 def check_password(pw: str):
     if len(pw) < 8:
         raise HTTPException(422, "Password must be at least 8 characters")
+    if len(pw) > 256:
+        raise HTTPException(422, "Password is too long")
 
 
 @api.post("/auth/register")
-async def register(body: RegisterIn):
+async def register(body: RegisterIn, request: Request):
+    rate_limit(f"register:{client_ip(request)}", 10, 3600)
     email = norm_email(body.email)
     check_password(body.password)
     if await db.users.find_one({"email": email}, {"_id": 1}):
         raise HTTPException(409, "Email already registered")
-    user_id = await create_user(email, body.name.strip(), None, password_hash=passwords.hash(body.password))
+    user_id = await create_user(email, body.name.strip()[:120], None, password_hash=passwords.hash(body.password))
     token = await issue_password_session(user_id)
     return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
 
 
 @api.post("/auth/login")
-async def login(body: LoginIn):
+async def login(body: LoginIn, request: Request):
+    rate_limit(f"login:{client_ip(request)}", 30, 900)
     email = norm_email(body.email)
+    if len(body.password) > 256:
+        raise HTTPException(401, "Invalid email or password")
     since = now() - timedelta(minutes=15)
     if await db.login_attempts.count_documents({"email": email, "at": {"$gte": since}}) >= 10:
         raise HTTPException(429, "Too many attempts. Try again in 15 minutes.")
@@ -227,22 +308,42 @@ async def login(body: LoginIn):
     return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
 
 
+RESET_MINUTES = 15
+RESET_MAX_ATTEMPTS = 5
+
+
+async def deliver_reset_code(email: str, code: str, locale: str):
+    if mailer.smtp_configured():
+        try:
+            await run_in_threadpool(mailer.send_reset_code, email, code, locale, RESET_MINUTES)
+            return
+        except Exception as e:
+            logger.error("Reset e-mail could not be sent (%s)", type(e).__name__)
+    if IS_DEV:  # only on a developer machine: the code goes to the server log
+        logger.warning("[DEV ONLY] PASSWORD RESET CODE for %s: %s", email, code)
+    elif not mailer.smtp_configured():
+        logger.error("SMTP is not configured – password reset e-mails cannot be sent")
+
+
 @api.post("/auth/request-reset")
-async def request_reset(body: ResetRequestIn):
+async def request_reset(body: ResetRequestIn, request: Request):
+    rate_limit(f"reset-ip:{client_ip(request)}", 10, 900)
     email = norm_email(body.email)
-    user = await db.users.find_one({"email": email}, {"_id": 0, "user_id": 1})
+    rate_limit(f"reset-mail:{email}", 3, 900)
+    user = await db.users.find_one({"email": email}, {"_id": 0, "user_id": 1, "locale": 1})
     if user:
         code = f"{secrets.randbelow(10**6):06d}"
         await db.password_resets.delete_many({"user_id": user["user_id"]})
         await db.password_resets.insert_one({"user_id": user["user_id"], "token_hash": digest(f"{email}:{code}"),
-                                             "expires_at": now() + timedelta(minutes=30), "attempts": 0, "created_at": now()})
-        # No email provider configured yet: the code is written to the server log.
-        logger.info("PASSWORD RESET CODE for %s: %s", email, code)
+                                             "expires_at": now() + timedelta(minutes=RESET_MINUTES), "attempts": 0,
+                                             "created_at": now()})
+        asyncio.create_task(deliver_reset_code(email, code, user.get("locale") or "pl"))
     return {"message": "If the account exists, a reset code has been sent."}
 
 
 @api.post("/auth/reset-password")
-async def reset_password(body: ResetIn):
+async def reset_password(body: ResetIn, request: Request):
+    rate_limit(f"reset-confirm:{client_ip(request)}", 20, 900)
     email = norm_email(body.email)
     check_password(body.new_password)
     user = await db.users.find_one({"email": email}, {"_id": 0, "user_id": 1})
@@ -250,19 +351,16 @@ async def reset_password(body: ResetIn):
     if not row:
         raise HTTPException(400, "Invalid or expired code")
     exp = row["expires_at"] if row["expires_at"].tzinfo else row["expires_at"].replace(tzinfo=timezone.utc)
-    if exp <= now() or row["attempts"] >= 5 or row["token_hash"] != digest(f"{email}:{body.code.strip()}"):
-        await db.password_resets.update_one({"user_id": user["user_id"]}, {"$inc": {"attempts": 1}})
+    code_ok = hmac.compare_digest(row["token_hash"], digest(f"{email}:{body.code.strip()[:12]}"))
+    if exp <= now() or row["attempts"] >= RESET_MAX_ATTEMPTS or not code_ok:
+        if row["attempts"] + 1 >= RESET_MAX_ATTEMPTS or exp <= now():
+            await db.password_resets.delete_many({"user_id": user["user_id"]})  # code burned
+        else:
+            await db.password_resets.update_one({"user_id": user["user_id"]}, {"$inc": {"attempts": 1}})
         raise HTTPException(400, "Invalid or expired code")
     await db.users.update_one({"user_id": user["user_id"]}, {"$set": {"password_hash": passwords.hash(body.new_password)}})
     await db.password_resets.delete_many({"user_id": user["user_id"]})
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
-    token = await issue_password_session(user["user_id"])
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
-
-
-@api.post("/auth/demo")
-async def demo_login():
-    user = await db.users.find_one({"email": DEMO_EMAIL}, {"_id": 0, "user_id": 1})
     token = await issue_password_session(user["user_id"])
     return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
 
@@ -379,7 +477,7 @@ async def patch_case(case_id: str, body: CasePatch, request: Request):
     return await db.cases.find_one({"case_id": case_id}, {"_id": 0})
 
 
-# ---------------- Chat (Gemini 3 Flash, streaming) ----------------
+# ---------------- Chat (AI model, streaming) ----------------
 class ChatIn(BaseModel):
     text: str
     thread_id: str = "main"
@@ -424,9 +522,15 @@ async def chat_stream(body: ChatIn, request: Request):
     text = body.text.strip()
     if not text:
         raise HTTPException(400, "Empty message")
-    uid, tid = user["user_id"], body.thread_id
+    if len(text) > 8000:
+        raise HTTPException(413, "Message too long (max 8000 characters)")
+    uid, tid = user["user_id"], body.thread_id[:64]
     if not user.get("profile_complete"):
         raise HTTPException(403, "Complete your profile to unlock Elon")
+    if not ai.ai_configured():
+        raise HTTPException(503, "AI assistant is not configured on the server yet")
+    rate_limit(f"chat:{uid}", 20, 60)
+    rate_limit(f"chat-day:{uid}", 400, 86400)
 
     p = lambda k: user.get(k) or "-"  # noqa: E731
     context = (f"\n\nKONTEKST UŻYTKOWNIKA (z profilu – nie pytaj o te dane ponownie):\n"
@@ -441,27 +545,20 @@ async def chat_stream(body: ChatIn, request: Request):
             context += f"\nROZMOWA DOTYCZY SPRAWY: \"{c['title']}\" ({c['sector']}). Opis: {c['description']}"
     system = ELON_PROMPT + context
     history = await db.messages.find({"user_id": uid, "thread_id": tid}, {"_id": 0}).sort("created_at", -1).to_list(30)
-    initial = [{"role": "system", "content": system}] + [
-        {"role": m["role"], "content": m["text"]} for m in reversed(history)]
+    initial = [{"role": m["role"], "content": m["text"]} for m in reversed(history)]
 
     await db.messages.insert_one({"message_id": new_id("msg"), "user_id": uid, "thread_id": tid,
                                   "role": "user", "text": text, "created_at": now()})
 
-    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"{uid}_{tid}", system_message=system,
-                   initial_messages=initial).with_model("gemini", "gemini-3-flash-preview")
-
     async def gen():
         full = ""
         try:
-            async for ev in chat.stream_message(UserMessage(text=text)):
-                if isinstance(ev, TextDelta):
-                    full += ev.content
-                    yield f"data: {json.dumps({'delta': ev.content})}\n\n"
-                elif isinstance(ev, StreamDone):
-                    break
-        except Exception as e:
+            async for delta in ai.stream_chat(system, initial, text):
+                full += delta
+                yield f"data: {json.dumps({'delta': delta})}\n\n"
+        except Exception:
             logger.exception("LLM error")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'error': 'Elon is temporarily unavailable. Please try again in a moment.'})}\n\n"
         if full:
             msg = {"message_id": new_id("msg"), "user_id": uid, "thread_id": tid,
                    "role": "assistant", "text": full, "created_at": now()}
@@ -473,33 +570,30 @@ async def chat_stream(body: ChatIn, request: Request):
 
 
 # ---------------- Voice: speech-to-text & text-to-speech ----------------
-STT_MODEL = "gpt-4o-mini-transcribe"
-TTS_MODEL = "gpt-4o-mini-tts"
-TTS_VOICE = "onyx"
-TTS_INSTRUCTIONS = ("You are Elon from Ask Elon, an experienced, calm and confident UK work-rights AI assistant. "
-                    "Speak clearly at a steady, reassuring pace, warm but professional, like a trusted colleague.")
+TTS_INSTRUCTIONS = ("You are Elon, the Ask Elon AI assistant for UK work rights. Read the following text aloud "
+                    "clearly, at a steady, reassuring pace, warm but professional, like a trusted colleague:")
 STT_PROMPT = "UK employment law: payslip, grievance, ACAS, SSP, holiday pay, zero-hours, HR, Employment Tribunal, agencja, nadgodziny."
 
 
 @api.post("/transcribe")
 async def transcribe(request: Request, audio: UploadFile = File(...), language: str = Form("pl")):
-    await current_user(request)
+    user = await current_user(request)
+    rate_limit(f"stt:{user['user_id']}", 20, 60)
     data = await audio.read()
     if len(data) < 2000:
         return {"text": "", "reason": "too_short"}
-    if len(data) > 25 * 1024 * 1024:
+    if len(data) > 20 * 1024 * 1024:
         raise HTTPException(413, "Audio too large")
-    buf = io.BytesIO(data)
-    buf.name = audio.filename or "recording.m4a"
+    lang = language if language in LANG_NAMES else None
     try:
-        stt = OpenAISpeechToText(api_key=EMERGENT_LLM_KEY)
-        resp = await stt.transcribe(file=buf, model=STT_MODEL, response_format="json",
-                                    language=language if language in LANG_NAMES else None,
-                                    prompt=STT_PROMPT, temperature=0.0)
-    except Exception as e:
+        text = await ai.transcribe(data, audio.filename or "recording.m4a", audio.content_type or "", lang,
+                                   LANG_NAMES.get(lang) if lang else None, STT_PROMPT)
+    except ai.AINotConfigured:
+        raise HTTPException(503, "Voice dictation is not configured on the server yet")
+    except Exception:
         logger.exception("STT failed")
-        raise HTTPException(502, f"Transcription failed: {e}")
-    return {"text": (resp.text or "").strip(), "reason": None}
+        raise HTTPException(502, "Transcription failed")
+    return {"text": text, "reason": None}
 
 
 def clean_for_tts(text: str) -> str:
@@ -535,66 +629,43 @@ async def tts(body: TtsIn, request: Request):
     text = clean_for_tts(msg["text"])
     if not text:
         raise HTTPException(400, "Nothing to read")
-    key = hashlib.sha256(f"{text}|{TTS_VOICE}|1.0|{TTS_MODEL}|mp3|{TTS_INSTRUCTIONS}".encode()).hexdigest()
-    if not await db.tts_cache.find_one({"key": key}, {"_id": 1}):
-        engine = OpenAITextToSpeech(api_key=EMERGENT_LLM_KEY)
-        audio = b""
+    key = hashlib.sha256(f"{text}|{ai.tts_signature()}|{TTS_INSTRUCTIONS}".encode()).hexdigest()
+    cached = await db.tts_cache.find_one({"key": key}, {"_id": 0, "ext": 1})
+    if not cached:
+        rate_limit(f"tts:{user['user_id']}", 15, 60)
         try:
-            for part in chunk_text(text):
-                audio += await engine.generate_speech(text=part, model=TTS_MODEL, voice=TTS_VOICE,
-                                                      instructions=TTS_INSTRUCTIONS, response_format="mp3")
-        except Exception as e:
+            audio, mime, ext = await ai.synthesize(chunk_text(text, 1500), TTS_INSTRUCTIONS)
+        except ai.AINotConfigured:
+            raise HTTPException(503, "Read-aloud is not configured on the server yet")
+        except Exception:
             logger.exception("TTS failed")
-            raise HTTPException(502, f"Speech generation failed: {e}")
-        await db.tts_cache.update_one({"key": key}, {"$set": {"key": key, "audio": audio, "created_at": now()}}, upsert=True)
-    return {"url": f"/api/tts/audio/{key}.mp3"}
+            raise HTTPException(502, "Speech generation failed")
+        await db.tts_cache.update_one({"key": key}, {"$set": {"key": key, "audio": audio, "mime": mime, "ext": ext,
+                                                              "created_at": now()}}, upsert=True)
+        cached = {"ext": ext}
+    return {"url": f"/api/tts/audio/{key}.{cached.get('ext') or 'mp3'}"}
 
 
-@api.get("/tts/audio/{key}.mp3")
-async def tts_audio(key: str):
-    doc = await db.tts_cache.find_one({"key": key}, {"_id": 0, "audio": 1})
+@api.get("/tts/audio/{name}")
+async def tts_audio(name: str):
+    key = name.rsplit(".", 1)[0]
+    if not re.fullmatch(r"[0-9a-f]{64}", key):
+        raise HTTPException(404, "Not found")
+    doc = await db.tts_cache.find_one({"key": key}, {"_id": 0, "audio": 1, "mime": 1})
     if not doc:
         raise HTTPException(404, "Not found")
-    return Response(content=bytes(doc["audio"]), media_type="audio/mpeg",
+    return Response(content=bytes(doc["audio"]), media_type=doc.get("mime") or "audio/mpeg",
                     headers={"Cache-Control": "public, max-age=31536000"})
 
 
-# ---------------- Documents (object storage + Gemini extraction) ----------------
-STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
-STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+# ---------------- Documents (file storage + AI extraction) ----------------
 STORAGE_APP = "union-elon"
-storage_key = None
+put_object = storage.put_object
+get_object = storage.get_object
 DOC_MIME = {"application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg"}
 DOC_MAX = 20 * 1024 * 1024
+MAGIC = {"application/pdf": b"%PDF", "image/png": b"\x89PNG", "image/jpeg": b"\xff\xd8", "image/jpg": b"\xff\xd8"}
 DOC_CATEGORIES = ["contract", "annex", "policy", "correspondence", "payslip", "other"]
-
-
-def init_storage():
-    global storage_key
-    if storage_key:
-        return storage_key
-    r = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_LLM_KEY}, timeout=30)
-    r.raise_for_status()
-    storage_key = r.json()["storage_key"]
-    return storage_key
-
-
-def put_object(path: str, data: bytes, content_type: str) -> dict:
-    global storage_key
-    for attempt in range(2):
-        r = requests.put(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": init_storage(), "Content-Type": content_type},
-                         data=data, timeout=120)
-        if r.status_code == 503 and attempt == 0:
-            storage_key = None
-            continue
-        r.raise_for_status()
-        return r.json()
-
-
-def get_object(path: str):
-    r = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": init_storage()}, timeout=60)
-    r.raise_for_status()
-    return r.content, r.headers.get("Content-Type", "application/octet-stream")
 
 
 def make_thumbnail(data: bytes, mime: str) -> Optional[bytes]:
@@ -614,7 +685,7 @@ def make_thumbnail(data: bytes, mime: str) -> Optional[bytes]:
         return None
 
 
-DOC_EXTRACT_PROMPT = """You analyse UK workplace documents for Ask Elon, a UK work-rights AI assistant.
+DOC_EXTRACT_PROMPT = """You are the Ask Elon AI assistant. You analyse UK workplace documents for workers.
 Return ONLY valid JSON (no markdown) with keys:
 "category": one of contract, annex, policy, correspondence, payslip, other;
 "title": short document title;
@@ -628,18 +699,10 @@ async def process_document(doc_id: str):
     doc = await db.documents.find_one({"doc_id": doc_id}, {"_id": 0})
     user = await db.users.find_one({"user_id": doc["user_id"]}, {"_id": 0, "locale": 1})
     lang = LANG_NAMES.get((user or {}).get("locale", "pl"), "Polish")
-    import tempfile
     try:
         data, _ = await run_in_threadpool(get_object, doc["storage_path"])
-        with tempfile.NamedTemporaryFile(suffix="." + DOC_MIME[doc["mime"]], delete=False) as f:
-            f.write(data)
-            tmp = f.name
-        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"doc_{doc_id}",
-                       system_message=DOC_EXTRACT_PROMPT.format(lang=lang)).with_model("gemini", "gemini-3-flash-preview")
-        from emergentintegrations.llm.chat import FileContentWithMimeType
-        raw = await chat.send_message(UserMessage(text=f"Analyse this document: {doc['filename']}",
-                                                  file_contents=[FileContentWithMimeType(doc["mime"], tmp)]))
-        os.unlink(tmp)
+        raw = await ai.generate(DOC_EXTRACT_PROMPT.format(lang=lang), f"Analyse this document: {doc['filename']}",
+                                files=[(data, doc["mime"])], json_output=True)
         m = re.search(r"\{.*\}", raw, re.S)
         res = json.loads(m.group(0)) if m else {}
         cat = res.get("category") if res.get("category") in DOC_CATEGORIES else (doc.get("category") or "other")
@@ -649,12 +712,14 @@ async def process_document(doc_id: str):
             "extracted_text": (res.get("text") or "")[:15000], "processed_at": now()}})
         if (doc.get("category_user") or cat) == "payslip":
             await audit_payslip(doc_id)
-    except Exception as e:
+    except ai.AINotConfigured:
+        await db.documents.update_one({"doc_id": doc_id}, {"$set": {"status": "failed", "error": "AI is not configured"}})
+    except Exception:
         logger.exception("document processing failed")
-        await db.documents.update_one({"doc_id": doc_id}, {"$set": {"status": "failed", "error": str(e)[:300]}})
+        await db.documents.update_one({"doc_id": doc_id}, {"$set": {"status": "failed", "error": "Analysis failed"}})
 
 
-PAYSLIP_AUDIT_PROMPT = """You are Elon from Ask Elon, a UK payroll auditor. Compare the worker's PAYSLIP with their CONTRACT
+PAYSLIP_AUDIT_PROMPT = """You are Elon, the Ask Elon AI assistant, checking a UK payslip. Compare the worker's PAYSLIP with their CONTRACT
 and UK law (National Minimum/Living Wage 2024-26 rates, Working Time Regulations 1998 holiday pay 12.07% accrual for irregular hours,
 overtime/night premiums in the contract, SSP, unlawful deductions s.13 ERA 1996).
 Return ONLY valid JSON (no markdown) with keys:
@@ -681,9 +746,7 @@ async def audit_payslip(doc_id: str):
               f"CONTRACT:\n{(contract or {}).get('extracted_text') or 'NOT PROVIDED'}\n\n"
               f"PAYSLIP ({doc.get('title')}):\nKey facts: {'; '.join(doc.get('key_facts') or [])}\n{doc.get('extracted_text', '')}")
     try:
-        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"audit_{doc_id}",
-                       system_message=PAYSLIP_AUDIT_PROMPT.format(lang=lang)).with_model("gemini", "gemini-3-flash-preview")
-        raw = await chat.send_message(UserMessage(text=prompt))
+        raw = await ai.generate(PAYSLIP_AUDIT_PROMPT.format(lang=lang), prompt, json_output=True)
         m = re.search(r"\{.*\}", raw, re.S)
         audit = json.loads(m.group(0))
         audit["issues"] = [i for i in audit.get("issues", []) if isinstance(i, dict)][:6]
@@ -737,6 +800,7 @@ async def user_from_token_or_header(request: Request, token: str) -> dict:
 @api.post("/documents")
 async def upload_document(request: Request, file: UploadFile = File(...), category: str = Form("")):
     user = await current_user(request)
+    rate_limit(f"upload:{user['user_id']}", 30, 3600)
     mime = (file.content_type or "").lower()
     if mime not in DOC_MIME:
         name = (file.filename or "").lower()
@@ -749,6 +813,8 @@ async def upload_document(request: Request, file: UploadFile = File(...), catego
         raise HTTPException(413, "File too large (max 20 MB)")
     if len(data) < 100:
         raise HTTPException(400, "File is empty")
+    if not data.startswith(MAGIC[mime]):
+        raise HTTPException(415, "Only PDF, PNG or JPG files are allowed")
     return await store_document(user, data, mime, file.filename or f"document.{DOC_MIME[mime]}", category)
 
 
@@ -759,9 +825,8 @@ async def store_document(user: dict, data: bytes, mime: str, filename: str, cate
         stored = await run_in_threadpool(put_object, f"{base}.{DOC_MIME[mime]}", data, mime)
         thumb = await run_in_threadpool(make_thumbnail, data, mime)
         thumb_path = (await run_in_threadpool(put_object, f"{base}_thumb.png", thumb, "image/png"))["path"] if thumb else None
-    except requests.HTTPError as e:
-        if e.response is not None and e.response.status_code == 402:
-            raise HTTPException(402, "Storage credits exhausted")
+    except Exception:
+        logger.exception("storage upload failed")
         raise HTTPException(502, "Storage upload failed")
     cat = category if category in DOC_CATEGORIES else ""
     doc = {"doc_id": doc_id, "user_id": user["user_id"], "filename": filename,
@@ -784,32 +849,27 @@ async def scan_check(request: Request, file: UploadFile = File(...)):
     data = await file.read()
     if len(data) < 100 or len(data) > DOC_MAX:
         raise HTTPException(400, "Invalid image")
-    import tempfile
+    if not ai.ai_configured():
+        return {"readable": True, "reason": ""}
+    rate_limit(f"scan:{user['user_id']}", 30, 60)
     mime = (file.content_type or "image/jpeg").lower()
     mime = mime if mime in ("image/png", "image/jpeg") else "image/jpeg"
-    with tempfile.NamedTemporaryFile(suffix="." + DOC_MIME[mime], delete=False) as f:
-        f.write(data)
-        tmp = f.name
     lang = LANG_NAMES.get(user.get("locale", "pl"), "Polish")
     try:
-        from emergentintegrations.llm.chat import FileContentWithMimeType
-        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"scan_{uuid.uuid4().hex}",
-                       system_message=SCAN_CHECK_PROMPT.format(lang=lang)).with_model("gemini", "gemini-3-flash-preview")
-        raw = await chat.send_message(UserMessage(text="Check this photo.", file_contents=[FileContentWithMimeType(mime, tmp)]))
+        raw = await ai.generate(SCAN_CHECK_PROMPT.format(lang=lang), "Check this photo.", files=[(data, mime)], json_output=True)
         m = re.search(r"\{.*\}", raw, re.S)
         res = json.loads(m.group(0)) if m else {"readable": True, "reason": ""}
         return {"readable": bool(res.get("readable", True)), "reason": str(res.get("reason") or "")[:200]}
     except Exception:
         logger.exception("scan check failed")
         return {"readable": True, "reason": ""}  # never block the user on a checker failure
-    finally:
-        os.unlink(tmp)
 
 
 @api.post("/documents/scan")
 async def upload_scan(request: Request, files: List[UploadFile] = File(...), category: str = Form("")):
     """Merges several photographed pages into one PDF document."""
     user = await current_user(request)
+    rate_limit(f"upload:{user['user_id']}", 30, 3600)
     if not 1 <= len(files) <= 15:
         raise HTTPException(400, "1-15 pages allowed")
     import pymupdf
@@ -885,7 +945,10 @@ async def document_file(doc_id: str, kind: str, request: Request, token: str = "
     d = await db.documents.find_one({"doc_id": doc_id, "user_id": user["user_id"], "deleted": {"$ne": True}}, {"_id": 0})
     if not d or kind not in ("file", "thumb") or (kind == "thumb" and not d.get("thumb_path")):
         raise HTTPException(404, "Not found")
-    data, ctype = await run_in_threadpool(get_object, d["storage_path"] if kind == "file" else d["thumb_path"])
+    try:
+        data, ctype = await run_in_threadpool(get_object, d["storage_path"] if kind == "file" else d["thumb_path"])
+    except storage.ObjectNotFound:
+        raise HTTPException(404, "File not found in storage")
     headers = {"Cache-Control": "private, max-age=86400"}
     if kind == "file":
         headers["Content-Disposition"] = f'inline; filename="{quote(d["filename"])}"'
@@ -929,6 +992,7 @@ async def forum_posts(request: Request, category: str = ""):
 @api.post("/forum/posts")
 async def forum_create(body: PostIn, request: Request):
     user = await current_user(request)
+    rate_limit(f"forum-post:{user['user_id']}", 10, 3600)
     if len(body.title.strip()) < 3 or len(body.body.strip()) < 3:
         raise HTTPException(400, "Title and content are required")
     doc = {"post_id": new_id("post"), "user_id": user["user_id"], "author": author_name(user),
@@ -955,6 +1019,7 @@ async def forum_get(post_id: str, request: Request):
 @api.post("/forum/posts/{post_id}/comments")
 async def forum_comment(post_id: str, body: CommentIn, request: Request):
     user = await current_user(request)
+    rate_limit(f"forum-comment:{user['user_id']}", 60, 3600)
     if not body.body.strip():
         raise HTTPException(400, "Empty comment")
     if not await db.forum_posts.find_one({"post_id": post_id}, {"_id": 1}):
@@ -979,9 +1044,6 @@ async def forum_like(post_id: str, request: Request):
 
 
 # ---------------- Admin hub, broadcasts, contact ----------------
-ADMIN_EMAILS = {"jocobisun@gmail.com"} | {e.strip().lower() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()}
-
-
 async def require_admin(request: Request) -> dict:
     user = await current_user(request)
     if user.get("role") != "admin" and user["email"] not in ADMIN_EMAILS:
@@ -1249,6 +1311,7 @@ async def pending_broadcasts(request: Request):
 @api.post("/contact")
 async def contact_admin(body: ContactIn, request: Request):
     user = await current_user(request)
+    rate_limit(f"contact:{user['user_id']}", 10, 3600)
     if not body.subject.strip() or not body.body.strip():
         raise HTTPException(400, "Subject and message are required")
     m = {"msg_id": new_id("cm"), "user_id": user["user_id"], "email": user["email"], "name": user.get("name", ""),
@@ -1381,10 +1444,27 @@ async def ensure_plan(hc: httpx.AsyncClient, headers: dict) -> str:
     return plan_id
 
 
+PUBLIC_BACKEND_URL = (os.environ.get("PUBLIC_BACKEND_URL") or "").strip().rstrip("/")
+
+
 def public_base(request: Request) -> str:
-    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get("x-forwarded-host", request.headers.get("host"))
+    if PUBLIC_BACKEND_URL:
+        return PUBLIC_BACKEND_URL
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme) if TRUST_PROXY else request.url.scheme
+    host = request.headers.get("x-forwarded-host", request.headers.get("host")) if TRUST_PROXY else request.headers.get("host")
     return f"{proto}://{host}"
+
+
+def safe_app_redirect(url: str) -> bool:
+    """Only send users back to our own app: an allowed web origin or the app's own URL scheme."""
+    from urllib.parse import urlparse
+    try:
+        u = urlparse(url)
+    except ValueError:
+        return False
+    if u.scheme in ("http", "https"):
+        return f"{u.scheme}://{u.netloc}" in ALLOWED_ORIGINS
+    return u.scheme in APP_REDIRECT_SCHEMES
 
 
 async def sync_subscription(subscription_id: str) -> dict:
@@ -1419,6 +1499,8 @@ async def subscribe(body: SubscribeIn, request: Request):
     user = await current_user(request)
     if not paypal_configured():
         raise HTTPException(503, "PayPal is not configured yet")
+    if not safe_app_redirect(body.app_redirect):
+        raise HTTPException(400, "Invalid redirect")
     ret = f"{public_base(request)}/api/payments/return?redirect={quote(body.app_redirect, safe='')}"
     async with httpx.AsyncClient(timeout=30) as hc:
         headers = await paypal_headers(hc)
@@ -1464,6 +1546,8 @@ async def cancel_subscription(request: Request):
 
 @api.get("/payments/return", response_class=HTMLResponse)
 async def payment_return(redirect: str, subscription_id: str = "", cancelled: str = ""):
+    if not safe_app_redirect(redirect):
+        raise HTTPException(400, "Invalid redirect")
     status = "cancelled"
     if subscription_id and not cancelled:
         try:
@@ -1471,7 +1555,8 @@ async def payment_return(redirect: str, subscription_id: str = "", cancelled: st
         except HTTPException:
             status = "failed"
     sep = "&" if "?" in redirect else "?"
-    target = f"{redirect}{sep}payment={status}"
+    status = re.sub(r"[^a-z_]", "", status)
+    target = html.escape(f"{redirect}{sep}payment={status}", quote=True)
     return HTMLResponse(f"""<html><head><meta name="viewport" content="width=device-width"/>
 <meta http-equiv="refresh" content="0;url={target}"/></head>
 <body style="font-family:sans-serif;text-align:center;padding:40px;background:#FBF8F3;color:#0F1A24">
@@ -1490,14 +1575,6 @@ async def startup():
     await db.paypal_config.create_index("key", unique=True)
     await db.password_resets.create_index("user_id")
     await db.login_attempts.create_index("at", expireAfterSeconds=900)
-    if not await db.users.find_one({"email": DEMO_EMAIL}, {"_id": 1}):
-        uid = await create_user(DEMO_EMAIL, "Artur Kowalski (Demo)", None, password_hash=passwords.hash(DEMO_PASSWORD), onboarded=True)
-        await db.users.update_one({"user_id": uid}, {"$set": {"employer": "Amazon Fulfilment LCY2", "job_title": "Warehouse Operative"}})
-    await db.users.update_one({"email": DEMO_EMAIL, "profile_complete": {"$ne": True}}, {"$set": {
-        "address": "12 High Street, Dartford DA1 1AA", "phone": "+44 7700 900123", "industry": "Logistics & Warehousing",
-        "contract_type": "zero_hours", "start_date": "2024-01-12", "workplace_address": "Amazon LCY2, London Road, Tilbury RM18 7AN",
-        "hr_email": "hr-lcy2@example.com", "profile_complete": True}})
-    await db.users.update_one({"email": DEMO_EMAIL}, {"$set": {"is_member": True, "member_plan": "demo"}})
     await db.user_message_reads.create_index([("user_id", 1), ("message_id", 1)], unique=True)
     await db.admin_messages.create_index([("created_at", -1)])
     await db.users.update_many({"email": {"$in": list(ADMIN_EMAILS)}}, {"$set": {"role": "admin", "is_member": True}})
@@ -1511,15 +1588,45 @@ async def startup():
                                              "created_at": now() - timedelta(hours=5 * (i + 1))})
     await db.documents.create_index([("user_id", 1), ("created_at", -1)])
     await db.documents.create_index("doc_id", unique=True)
+    await db.tts_cache.create_index("key", unique=True)
     try:
-        await run_in_threadpool(init_storage)
+        await run_in_threadpool(storage.init_storage)
     except Exception:
-        logger.exception("Object storage init failed")
+        logger.exception("File storage init failed (STORAGE_BACKEND=%s)", storage.BACKEND)
+    if not ai.ai_configured():
+        logger.warning("GEMINI_API_KEY is not set – chat, documents and voice will return 503 until it is added")
+    if not ADMIN_EMAILS:
+        logger.warning("ADMIN_EMAILS is empty – nobody gets the admin panel automatically")
+    if not mailer.smtp_configured():
+        logger.warning("SMTP is not configured – password reset e-mails will not be sent%s",
+                       " (dev mode: codes are written to this log)" if IS_DEV else "")
+
+
+@app.middleware("http")
+async def security_middleware(request: Request, call_next):
+    cl = request.headers.get("content-length")
+    if cl and cl.isdigit() and int(cl) > MAX_REQUEST_MB * 1024 * 1024:
+        return JSONResponse({"detail": f"Request too large (max {MAX_REQUEST_MB} MB)"}, status_code=413)
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if not IS_DEV:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_error(request: Request, exc: Exception):
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse({"detail": "Internal server error"}, status_code=500)
 
 
 app.include_router(api)
-app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=["*"],
-                   allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=ALLOWED_ORIGINS,
+                   allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                   allow_headers=["Authorization", "Content-Type", "Accept"])
 
 
 @app.on_event("shutdown")
