@@ -16,7 +16,8 @@ import { fx, makeStyles, useTheme } from "@/src/theme";
 export type RobotName = "sprawy" | "pisma" | "elon" | "forum" | "profil";
 
 // Same loading method as the old robot-header: bundled PNG through expo-image.
-// Files are 168 px (@3x) masters with a baked soft light outline, displayed at 56 px (originals kept).
+// Files are 168 px (@3x of 56 px) renders of the vector masters assets/brand/zrodla/*.svg with a crisp light
+// outline (scripts/robots/build-robots.py). The old 132 px robot-tab-*.png are kept but unused here.
 export const ROBOTS: Record<RobotName, number> = {
   sprawy: require("@/assets/brand/robot-tab-sprawy-kontur.png"),
   pisma: require("@/assets/brand/robot-tab-pisma-kontur.png"),
