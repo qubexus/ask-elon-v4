@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withBrand } from "@/src/components/BrandName";
 import { api } from "@/src/api";
 import { useAuth, User } from "@/src/auth";
+import { EmployerLookup } from "@/src/components/EmployerLookup";
 import { CONTRACT_TYPES, INDUSTRIES } from "@/src/components/ProfileForm";
 import { useToast } from "@/src/components/Toast";
 import { Locale, StringKey, useT } from "@/src/i18n";
@@ -168,6 +169,9 @@ export default function Onboarding() {
                 </Pressable>
               ))}
             </View>
+          )}
+          {cur?.k === "workplace_address" && !typing && (
+            <EmployerLookup compact testID="onboarding-lookup" onPick={(p) => setValue(p.address)} />
           )}
           {step === DOCS && !typing && (
             <View style={styles.docBtns}>

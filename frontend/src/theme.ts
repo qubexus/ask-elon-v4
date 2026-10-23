@@ -102,6 +102,7 @@ const dark = {
   onWarning: "#6B2800",
   warningSoft: "rgba(255,106,0,0.14)",
   error: "#F26D6D",
+  errorSoft: "rgba(242,109,109,0.12)",
   onError: "#1A0505",
   info: "#0A2A5C",
   onInfo: "#FFFFFF",

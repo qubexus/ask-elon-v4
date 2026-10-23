@@ -89,6 +89,7 @@ export type User = {
   contract_type?: string;
   start_date?: string;
   workplace_address?: string;
+  employer_company_number?: string;
   hr_email?: string;
 };
 

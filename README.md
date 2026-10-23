@@ -201,6 +201,34 @@ W `frontend/app.json` jest już `uk.askelon.app` (iOS `bundleIdentifier` i Andro
 **Ten sam identyfikator musi być w App Store Connect, Google Play Console, Google Cloud (klienci OAuth) i RevenueCat.**
 Jeśli w sklepach jest już inny, wpisz go tutaj zamiast `uk.askelon.app`.
 
+### 4.7 Podpowiadanie adresu pracodawcy (kod pocztowy / numer firmy)
+W Profilu („Dane pracodawcy” → **Znajdź pracodawcę**) i w kreatorze (krok z adresem zakładu) użytkownik wpisuje
+brytyjski kod pocztowy i dostaje listę firm w pobliżu. Dotknięcie firmy wpisuje nazwę pracodawcy i adres
+(ulica, miasto, kod). Wpisywanie ręczne zawsze działa.
+
+Jak to działa (wszystko idzie przez nasz serwer, tylko dla zalogowanych, z limitem 20 wyszukiwań/min i 300/dzień na konto,
+z krótkimi limitami czasu i pamięcią podręczną):
+- **postcodes.io** (darmowe, bez klucza): sprawdza kod i podaje położenie. https://postcodes.io/docs
+- **Photon / OpenStreetMap** (darmowe, bez klucza, „rozsądne użycie”): firmy, sklepy, biura, zakłady w promieniu ok. 600 m.
+  Gdy Photon nie działa, serwer próbuje **Overpass API** (też OpenStreetMap). https://photon.komoot.io, https://wiki.openstreetmap.org/wiki/Overpass_API
+  Dane mapy: © OpenStreetMap contributors (napis jest pod listą w aplikacji).
+- **Companies House** (numer firmy, np. `01234567` albo `SC123456` → adres siedziby): **potrzebny darmowy klucz**.
+  Bez klucza pole numeru firmy jest wyszarzone z komunikatem „nie jest jeszcze włączone”.
+
+Jak założyć klucz Companies House (5 minut, za darmo):
+1. Wejdź na https://developer.company-information.service.gov.uk i kliknij **Sign in / Register** (konto GOV.UK).
+2. **Your applications → Create an application**: nazwa „Ask Elon”, opis „employer address lookup”, środowisko **Live**.
+3. W aplikacji kliknij **Create new key** → typ **REST** → zapisz. Skopiuj klucz (**API key**).
+4. Wpisz do `backend/.env`: `COMPANIES_HOUSE_API_KEY=...` i zrestartuj serwer. Gotowe: pole numeru firmy się odblokuje.
+Limit Companies House: 600 zapytań na 5 minut na klucz (wyniki trzymamy w pamięci 7 dni).
+
+Ograniczenia, o których warto pamiętać:
+- OpenStreetMap nie zna każdej firmy (szczególnie zakładów na osiedlach przemysłowych i magazynów agencji). Wtedy można zawęzić po nazwie
+  („Zawęź po nazwie”) albo wpisać adres ręcznie. Gdy firma w mapie nie ma kodu pocztowego, podstawiamy wyszukany kod (oznaczone w liście).
+- Companies House podaje **adres siedziby (registered office)**, a nie miejsce pracy (często to biuro księgowego w innym mieście).
+  Aplikacja to pokazuje, a użytkownik może poprawić adres.
+- Google Places byłoby dokładniejsze, ale wymaga klucza z płatnościami w Google Cloud; nie jest potrzebne na start.
+
 ---
 
 ## 5. Bezpieczeństwo
@@ -241,6 +269,12 @@ TEST_ADMIN_EMAIL=twoj@admin.pl TEST_BACKEND_LOG=<plik z logiem serwera> \
 Domyślny adres testów to `http://localhost:8001` (zmiana: `TEST_BASE_URL`). Do testów wielu kont naraz można uruchomić
 serwer z `DISABLE_RATE_LIMIT=1` (działa tylko w trybie development). Starsze testy z Emergent (`test_iter*.py`)
 częściowo wymagają kont testowych i kluczy (`TEST_PRO_EMAIL`, `GEMINI_API_KEY`, PayPal), bez nich część się nie powiedzie.
+
+Testy bez serwera i bez internetu (udawane odpowiedzi postcodes.io / Photon / Overpass / Companies House, nic nie trafia do bazy):
+```bash
+cd backend && .venv/bin/python -m pytest -n 0 tests_unit      # wyszukiwanie adresu pracodawcy
+cd frontend && npm run test:format                              # staż pracy na karcie profilu (PL/EN/RO)
+```
 
 ---
 

@@ -35,6 +35,7 @@ load_dotenv(ROOT_DIR / '.env')
 import ai  # noqa: E402  (reads .env values, so imported after load_dotenv)
 import mailer  # noqa: E402
 import storage  # noqa: E402
+import lookup  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -380,6 +381,7 @@ class ProfileIn(BaseModel):
     start_date: Optional[str] = None
     workplace_address: Optional[str] = None
     hr_email: Optional[str] = None
+    employer_company_number: Optional[str] = None
 
 
 PROFILE_REQUIRED = ["name", "address", "phone", "employer", "industry", "job_title",
@@ -402,6 +404,45 @@ async def update_profile(body: ProfileIn, request: Request):
     upd["profile_complete"] = is_profile_complete(merged)
     await db.users.update_one({"user_id": user["user_id"]}, {"$set": upd})
     return await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)
+
+
+# ---------------- Employer address lookup (postcode -> nearby businesses, company number -> address) ----------------
+def _lookup_error(e: "lookup.LookupError_"):
+    headers = {"Retry-After": "60"} if e.code == "rate_limited" else None
+    return JSONResponse({"detail": e.message, "code": e.code}, status_code=e.status, headers=headers)
+
+
+def _lookup_limits(user: dict, kind: str):
+    rate_limit(f"lookup-{kind}:{user['user_id']}", 20, 60)
+    rate_limit(f"lookup-day:{user['user_id']}", 300, 86400)
+
+
+@api.get("/lookup/config")
+async def lookup_config(request: Request):
+    await current_user(request)
+    return {"postcode_businesses": True, "company_number": bool(lookup.ch_api_key())}
+
+
+@api.get("/lookup/postcode/{postcode}/businesses")
+async def lookup_postcode_businesses(postcode: str, request: Request, q: str = ""):
+    user = await current_user(request)
+    _lookup_limits(user, "postcode")
+    try:
+        return await lookup.with_client(lookup.nearby_businesses, postcode, q)
+    except lookup.LookupError_ as e:
+        if e.code == "unavailable":
+            logger.warning("postcode lookup failed for %s: %s", postcode[:10], e.message)
+        return _lookup_error(e)
+
+
+@api.get("/lookup/company/{number}")
+async def lookup_company(number: str, request: Request):
+    user = await current_user(request)
+    _lookup_limits(user, "company")
+    try:
+        return await lookup.with_client(lookup.company_by_number, number)
+    except lookup.LookupError_ as e:
+        return _lookup_error(e)
 
 
 # ---------------- Cases ----------------

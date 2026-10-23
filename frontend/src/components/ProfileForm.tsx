@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, Vi
 
 import { api } from "@/src/api";
 import { useAuth, User } from "@/src/auth";
+import { EmployerLookup, LookupPick } from "@/src/components/EmployerLookup";
 import { useToast } from "@/src/components/Toast";
 import { useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
@@ -27,6 +28,8 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
     if (!o.phone) o.phone = "+44 ";
     return o;
   });
+  const [companyNumber, setCompanyNumber] = useState<string>(((user as any)?.employer_company_number as string) ?? "");
+  const [lookupOpen, setLookupOpen] = useState(() => !f0Filled(user));
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const set = (k: Key) => (v: string) => setF((s) => ({ ...s, [k]: v }));
@@ -45,7 +48,7 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
     }
     setSaving(true);
     try {
-      const u = await api<User>("/profile", { method: "PUT", body: { ...f, onboarded: true } });
+      const u = await api<User>("/profile", { method: "PUT", body: { ...f, employer_company_number: companyNumber, onboarded: true } });
       setUser(u);
       toast(t("saved"));
       onSaved?.(u);
@@ -54,6 +57,12 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
     } finally {
       setSaving(false);
     }
+  };
+
+  const onPick = (p: LookupPick) => {
+    setF((s) => ({ ...s, employer: p.name || s.employer, workplace_address: p.address || s.workplace_address }));
+    setCompanyNumber(p.company_number ?? "");
+    toast(t("lk_filled"));
   };
 
   const [focusKey, setFocusKey] = useState<Key | null>(null);
@@ -112,6 +121,13 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t("secEmployer")}</Text>
+        <Pressable testID="profile-lookup-toggle" onPress={() => setLookupOpen((o) => !o)} accessibilityRole="button" accessibilityState={{ expanded: lookupOpen }}
+          style={({ pressed }) => [styles.lookupToggle, pressed && { opacity: 0.85 }]}>
+          <Ionicons name="search" size={16} color={colors.askOrange} />
+          <Text style={styles.lookupToggleText}>{t("lk_title")}</Text>
+          <Ionicons name={lookupOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.muted} />
+        </Pressable>
+        {lookupOpen && <EmployerLookup hideTitle onPick={onPick} initialPostcode={postcodeIn(f.workplace_address)} testID="profile-lookup" />}
         {input("employer", t("employer"), "business-outline", { placeholder: "Amazon UK Services Ltd" })}
         <View style={{ gap: 6 }}>
           <Text style={styles.label}>{t("industry")}<Text style={styles.req}> *</Text></Text>
@@ -141,6 +157,11 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
   );
 }
 
+const PC_IN_TEXT = /\b([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2})\b/i;
+/** First UK postcode found in a free-text address ("London Road, Tilbury RM18 7AN" -> "RM18 7AN"). */
+const postcodeIn = (s: string) => (PC_IN_TEXT.exec(s || "")?.[1] ?? "").toUpperCase();
+const f0Filled = (u: User | null | undefined) => !!((u as any)?.employer && (u as any)?.workplace_address);
+
 // Web: hide the browser outline; the orange ring sits on the field wrapper.
 const webNoOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : null;
 
@@ -161,6 +182,8 @@ const useStyles = makeStyles((c) => ({
   chipOn: { backgroundColor: c.brandPrimary, borderColor: c.brandPrimaryBorder },
   chipText: { color: c.onSurfaceTertiary, fontWeight: "600", fontSize: 13 },
   chipTextOn: { color: c.onBrandPrimary },
+  lookupToggle: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.askOrangeTint },
+  lookupToggleText: { flex: 1, color: c.onSurface, fontWeight: "800", fontSize: 14 },
   errText: { color: c.error, fontSize: 12, fontWeight: "600" },
   cta: { minHeight: 50, borderRadius: 12, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center", ...fx("buttonShadow") },
   ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },

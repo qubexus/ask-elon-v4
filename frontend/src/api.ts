@@ -15,9 +15,11 @@ export function setUnauthorizedHandler(fn: () => void) {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -33,10 +35,13 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   if (res.status === 401 && token) onUnauthorized?.();
   if (!res.ok) {
     let msg = `Error ${res.status}`;
+    let code: string | undefined;
     try {
-      msg = (await res.json()).detail ?? msg;
+      const j = await res.json();
+      msg = typeof j.detail === "string" ? j.detail : msg;
+      code = typeof j.code === "string" ? j.code : undefined;
     } catch {}
-    throw new ApiError(res.status, msg);
+    throw new ApiError(res.status, msg, code);
   }
   return res.json();
 }
