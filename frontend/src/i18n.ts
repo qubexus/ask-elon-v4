@@ -8,7 +8,7 @@ const S = {
   tabTemplates: ["Pisma", "Letters", "Scrisori"],
   tabProfile: ["Profil", "Profile", "Profil"],
   motto: ["Twój asystent praw pracownika w UK", "Your UK work-rights assistant", "Asistentul tău pentru drepturile la muncă în UK"],
-  loginTitle: ["Twój asystent praw pracownika w UK", "Your UK work-rights assistant", "Asistentul tău pentru drepturile la muncă în UK"],
+  loginTitle: ["Twój asystent AI do praw pracowniczych w UK", "Your AI assistant for UK work rights", "Asistentul tău AI pentru drepturile muncii în UK"],
   loginSub: [
     "Elon sprawdzi payslip, policzy zaległe wynagrodzenie i przygotuje pismo do HR.",
     "Elon audits payslips, calculates unpaid wages and drafts letters to HR.",
@@ -17,7 +17,7 @@ const S = {
   google: ["Google", "Google", "Google"],
   brandBadge: ["Ask Elon · UK", "Ask Elon · UK", "Ask Elon · UK"],
   mottoFull: ["Twój asystent praw pracownika w UK", "Your UK work-rights assistant", "Asistentul tău pentru drepturile la muncă în UK"],
-  tagline: ["Asystent AI · £9.99/mies.", "AI assistant · £9.99/mo", "Asistent AI · £9.99/lună"],
+  tagline: ["Asystent AI praw pracowniczych · £9.99/mies.", "AI work-rights assistant · £9.99/mo", "Asistent AI pentru drepturile muncii · £9.99/lună"],
   tabLogin: ["Logowanie", "Log in", "Autentificare"],
   tabRegister: ["Utwórz konto", "Create account", "Creează cont"],
   email: ["Adres e-mail", "Email address", "Adresă de e-mail"],
@@ -49,13 +49,13 @@ const S = {
   ],
   wizardCta: ["Zapisz i zaczynamy", "Save and start", "Salvează și începe"],
   skip: ["Pomiń", "Skip", "Omite"],
-  elonTitle: ["Ask Elon", "Ask Elon", "Ask Elon"],
-  online: ["Online · Gemini", "Online · Gemini", "Online · Gemini"],
+  elonTitle: ["Elon · Asystent praw pracowniczych", "Elon · Work-rights assistant", "Elon · Asistent pentru drepturile muncii"],
+  online: ["Asystent AI", "AI assistant", "Asistent AI"],
   placeholder: ["Opisz swój problem…", "Describe your issue…", "Descrie problema ta…"],
   welcome: [
-    "Cześć {name}! 👋 W czym mogę Ci dziś pomóc?",
-    "Hi {name}! 👋 How can I help you today?",
-    "Salut {name}! 👋 Cu ce te pot ajuta azi?",
+    "Cześć {name}! 👋 Jestem Elon – asystent AI Ask Elon. Pomogę Ci zrozumieć Twoje prawa w pracy w UK. W czym mogę Ci dziś pomóc?",
+    "Hi {name}! 👋 I'm Elon – the Ask Elon AI assistant. I'll help you understand your work rights in the UK. How can I help you today?",
+    "Salut {name}! 👋 Sunt Elon – asistentul AI Ask Elon. Te ajut să îți înțelegi drepturile la locul de muncă în UK. Cu ce te pot ajuta azi?",
   ],
   q1: ["Nie zapłacili mi za nadgodziny", "I wasn't paid overtime", "Nu mi-au plătit orele suplimentare"],
   q2: ["Obcięli mi godziny bez uprzedzenia", "My hours were cut without notice", "Mi-au tăiat orele fără preaviz"],
@@ -79,8 +79,8 @@ const S = {
   markResolved: ["Oznacz jako rozwiązaną", "Mark as resolved", "Marchează rezolvat"],
   reopen: ["Otwórz ponownie", "Reopen", "Redeschide"],
   updated: ["Aktualizacja", "Updated", "Actualizat"],
-  templatesTitle: ["Wzory pism", "Legal letters", "Modele de scrisori"],
-  templatesSub: ["Gotowe pisma zgodne z prawem UK", "UK-compliant ready letters", "Scrisori conforme legislației UK"],
+  templatesTitle: ["Wzory pism", "Letters", "Scrisori"],
+  templatesSub: ["Pisma wg prawa UK", "Ready letters, UK law", "Modele gata, legea UK"],
   all: ["Wszystkie", "All", "Toate"],
   noTemplates: ["Brak wzorów w tej kategorii", "No templates in this category", "Niciun model în această categorie"],
   fields: ["Uzupełnij dane", "Fill in details", "Completează datele"],
@@ -97,21 +97,21 @@ const S = {
   save: ["Zapisz", "Save", "Salvează"],
   saved: ["Zapisano profil", "Profile saved", "Profil salvat"],
   language: ["Język aplikacji", "App language", "Limba aplicației"],
-  membership: ["Składka członkowska", "Membership", "Cotizație de membru"],
+  membership: ["Subskrypcja Ask Elon", "Ask Elon subscription", "Abonament Ask Elon"],
   membershipSub: [
-    "Miesięczna subskrypcja Ask Elon przez PayPal. Możesz anulować w każdej chwili.",
-    "Monthly Ask Elon subscription via PayPal. Cancel anytime.",
-    "Abonament lunar Ask Elon prin PayPal. Poți anula oricând.",
+    "Miesięczna subskrypcja Ask Elon. Możesz anulować w każdej chwili.",
+    "Monthly Ask Elon subscription. Cancel anytime.",
+    "Abonament lunar Ask Elon. Poți anula oricând.",
   ],
-  payPal: ["Subskrybuj przez PayPal", "Subscribe with PayPal", "Abonează-te cu PayPal"],
+  payPal: ["Subskrybuj – £{price} / mies.", "Subscribe – £{price} / month", "Abonează-te – £{price} / lună"],
   month: ["miesiąc", "month", "lună"],
   nextBilling: ["następna płatność", "next payment", "următoarea plată"],
   cancelSub: ["Anuluj subskrypcję", "Cancel subscription", "Anulează abonamentul"],
   subCancelled: ["Subskrypcja anulowana", "Subscription cancelled", "Abonament anulat"],
-  member: ["Aktywny członek", "Active member", "Membru activ"],
+  member: ["Subskrypcja aktywna", "Subscription active", "Abonament activ"],
   payOk: ["Dziękujemy! Subskrypcja aktywna.", "Thank you! Subscription active.", "Mulțumim! Abonament activ."],
   payFail: ["Płatność nie została ukończona.", "Payment was not completed.", "Plata nu a fost finalizată."],
-  payNotConfigured: ["PayPal nie jest jeszcze skonfigurowany.", "PayPal is not configured yet.", "PayPal nu este configurat încă."],
+  payNotConfigured: ["Płatności nie są jeszcze dostępne.", "Payments are not available yet.", "Plățile nu sunt încă disponibile."],
   dictate: ["Dyktuj wiadomość", "Dictate message", "Dictează mesajul"],
   listening: ["Słucham…", "Listening…", "Ascult…"],
   voiceEmpty: ["Nie usłyszałem nic. Spróbuj ponownie.", "Didn't catch that. Try again.", "Nu am auzit nimic. Încearcă din nou."],
@@ -196,8 +196,8 @@ const S = {
   auditLetter: ["Pismo o zaległe wynagrodzenie", "Unpaid wages letter", "Scrisoare restanțe"],
   auditAgain: ["Ponów audyt", "Re-run audit", "Reia auditul"],
   tabForum: ["Forum", "Forum", "Forum"],
-  forumTitle: ["Forum społeczności", "Community forum", "Forumul comunității"],
-  forumSub: ["Doświadczenia pracowników w UK", "Experiences of UK workers", "Experiențele lucrătorilor din UK"],
+  forumTitle: ["Forum", "Forum", "Forum"],
+  forumSub: ["Doświadczenia z pracy", "Workers’ experiences", "Experiențele lucrătorilor"],
   fc_wages: ["Wynagrodzenia", "Wages", "Salarii"],
   fc_contracts: ["Umowy", "Contracts", "Contracte"],
   fc_agency: ["Agencje", "Agencies", "Agenții"],
@@ -213,9 +213,9 @@ const S = {
   writeComment: ["Napisz komentarz…", "Write a comment…", "Scrie un comentariu…"],
   logout: ["Wyloguj", "Sign out", "Deconectare"],
   ob_hello: [
-    "Cześć! Jestem Elon z Ask Elon – Twój asystent AI praw pracownika w UK. Zanim zaczniemy, razem uzupełnimy Twój profil. To zajmie około 2 minut.",
-    "Hi! I'm Elon from Ask Elon – your AI work-rights assistant in the UK. Before we start, let's set up your profile together. It takes about 2 minutes.",
-    "Salut! Sunt Elon de la Ask Elon – asistentul tău AI pentru drepturile la muncă în UK. Înainte să începem, completăm împreună profilul. Durează cam 2 minute.",
+    "Cześć! Jestem Elon – asystent AI Ask Elon. Pomogę Ci zrozumieć Twoje prawa w pracy w UK. Zanim zaczniemy, razem uzupełnimy Twój profil. To zajmie około 2 minut.",
+    "Hi! I'm Elon – the Ask Elon AI assistant. I'll help you understand your work rights in the UK. Before we start, let's set up your profile together. It takes about 2 minutes.",
+    "Salut! Sunt Elon – asistentul AI Ask Elon. Te ajut să îți înțelegi drepturile la locul de muncă în UK. Înainte să începem, completăm împreună profilul. Durează cam 2 minute.",
   ],
   ob_name: ["Jak się nazywasz? Podaj imię i nazwisko.", "What's your name? Please give your full name.", "Cum te numești? Scrie numele complet."],
   ob_address: ["Miło Cię poznać, {name}! Jaki jest Twój adres zamieszkania w UK?", "Nice to meet you, {name}! What's your home address in the UK?", "Încântat, {name}! Care este adresa ta de domiciliu în UK?"],
@@ -326,6 +326,47 @@ const S = {
   auditChart: ["Zaległości miesięcznie", "Owed per month", "Restanțe pe lună"],
   auditChartEmpty: ["Brak zaległości do pokazania na wykresie.", "No arrears to chart yet.", "Nicio restanță de afișat."],
   auditGoDocs: ["Przejdź do dokumentów", "Go to documents", "Mergi la documente"],
+  // --- Brand UI refresh: header texts (fit 360 px in PL/EN/RO) ---
+  elonTabTitle: ["Ask Elon", "Ask Elon", "Ask Elon"],
+  onlineA11y: ["Online, asystent AI", "Online, AI assistant", "Online, asistent AI"],
+  casesSub: ["{n} w toku", "{n} in progress", "{n} în curs"],
+  profileSubtitle: ["Dane i subskrypcja", "Details & subscription", "Date și abonament"],
+  // --- Profile card ---
+  profileCard: ["Karta Ask Elon", "Ask Elon card", "Card Ask Elon"],
+  profileCardTag: ["Twój profil", "Your profile", "Profilul tău"],
+  accountId: ["ID konta", "Account ID", "ID cont"],
+  accountSince: ["Konto od", "Account since", "Cont din"],
+  proActive: ["PRO aktywne", "PRO active", "PRO activ"],
+  noSubscription: ["Bez subskrypcji", "No subscription", "Fără abonament"],
+  disclaimer: [
+    "Ask Elon to asystent AI. Nie jest związkiem zawodowym i nie zastępuje porady prawnej.",
+    "Ask Elon is an AI assistant. It is not a trade union and does not replace legal advice.",
+    "Ask Elon este un asistent AI. Nu este un sindicat și nu înlocuiește consultanța juridică.",
+  ],
+  langName: ["Polski", "English", "Română"],
+  // --- Letter template categories (display only; data keys stay English) ---
+  tc_employment_grievance: ["Skargi pracownicze (grievance)", "Employment grievance", "Plângeri la locul de muncă"],
+  tc_wages_hours: ["Wynagrodzenie i godziny pracy", "Wages & hours", "Salariu și ore de lucru"],
+  tc_sick_pay_health: ["Chorobowe (SSP) i zdrowie", "Sick pay & health", "Concediu medical (SSP) și sănătate"],
+  tc_union_disciplinary: ["Postępowanie dyscyplinarne i osoba towarzysząca", "Disciplinary & right to be accompanied", "Proceduri disciplinare și dreptul la însoțitor"],
+  tc_agency_workers: ["Praca przez agencję", "Agency workers", "Lucrul prin agenție"],
+  tc_employment_contracts: ["Umowy o pracę", "Employment contracts", "Contracte de muncă"],
+  tc_contractor_agreements: ["Umowy dla wykonawców (contractor)", "Contractor agreements", "Contracte de colaborare"],
+  tc_gdpr_records: ["RODO i dane osobowe", "GDPR & records", "GDPR și date personale"],
+  tc_housing_living: ["Mieszkanie i życie w UK", "Housing & living", "Locuință și viața în UK"],
+  tc_rental_agreements: ["Umowy najmu", "Rental agreements", "Contracte de închiriere"],
+  // Categories present in the data but not in the brief's table:
+  tc_dismissal_discipline: ["Zwolnienia i dyscyplina", "Dismissal & discipline", "Concediere și disciplină"],
+  tc_leave_holiday: ["Urlopy i wolne", "Leave & holiday", "Concedii și zile libere"],
+  tc_leave_family: ["Urlopy rodzinne", "Family leave", "Concedii familiale"],
+  tc_workplace_conduct: ["Zachowanie w miejscu pracy", "Workplace conduct", "Conduita la locul de muncă"],
+  tc_redundancy: ["Redukcja etatów (redundancy)", "Redundancy", "Concediere colectivă (redundancy)"],
+  // Display-title overrides for templates (letter content unchanged)
+  tt_right_to_accompaniment: [
+    "Zawiadomienie o prawie do osoby towarzyszącej (Section 10 ERA 1999)",
+    "Notice of the right to be accompanied (Section 10 ERA 1999)",
+    "Notificare privind dreptul la însoțitor (Section 10 ERA 1999)",
+  ],
 };
 
 export type StringKey = keyof typeof S;
@@ -343,3 +384,15 @@ export function useT() {
 }
 
 export const localeSuffix = (l: Locale) => (l === "en" ? "En" : l === "ro" ? "Ro" : "Pl");
+
+/** Display name for a letter-template category (data key stays English so filters keep working). */
+export function categoryLabel(locale: Locale, category: string) {
+  const key = ("tc_" + category.toLowerCase().replace(/&/g, " ").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")) as StringKey;
+  return key in S ? translate(locale, key) : category;
+}
+
+/** Display title for a letter template; uses an i18n override when one exists. */
+export function templateTitle(locale: Locale, tpl: { id: string } & Record<string, any>) {
+  const key = ("tt_" + tpl.id) as StringKey;
+  return key in S ? translate(locale, key) : (tpl[`title${localeSuffix(locale)}`] as string);
+}

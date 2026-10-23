@@ -1,20 +1,21 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useT } from "@/src/i18n";
-import { makeStyles, ThemeColors, useTheme } from "@/src/theme";
+import { useReduceMotion } from "@/src/motion";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 
-type Cfg = { on: string; off: string; color: keyof ThemeColors; label: any };
+type Cfg = { on: string; off: string; label: any };
 const CFG: Record<string, Cfg> = {
-  cases: { on: "folder", off: "folder-outline", color: "tabCases", label: "tabCases" },
-  templates: { on: "document-text", off: "document-text-outline", color: "tabLetters", label: "tabTemplates" },
-  forum: { on: "people", off: "people-outline", color: "tabForum", label: "tabForum" },
-  profile: { on: "person-circle", off: "person-circle-outline", color: "tabProfile", label: "tabProfile" },
+  cases: { on: "folder", off: "folder-outline", label: "tabCases" },
+  templates: { on: "document-text", off: "document-text-outline", label: "tabTemplates" },
+  forum: { on: "people", off: "people-outline", label: "tabForum" },
+  profile: { on: "person-circle", off: "person-circle-outline", label: "tabProfile" },
 };
 
 function TabItem({ name, focused, onPress }: { name: string; focused: boolean; onPress: () => void }) {
@@ -22,29 +23,28 @@ function TabItem({ name, focused, onPress }: { name: string; focused: boolean; o
   const styles = useStyles();
   const { colors } = useTheme();
   const cfg = CFG[name];
-  const tint = colors[cfg.color] as string;
-  const scale = useSharedValue(focused ? 1 : 0.9);
-  const lift = useSharedValue(0);
+  const reduceMotion = useReduceMotion();
+  // State transition only (≤200 ms); no bounce, nothing under reduced motion.
+  const on = useSharedValue(focused ? 1 : 0);
   useEffect(() => {
-    scale.value = withSpring(focused ? 1.12 : 0.92, { damping: 9, stiffness: 180 });
-    lift.value = focused ? withSequence(withTiming(-5, { duration: 140 }), withSpring(0, { damping: 6 })) : withTiming(0);
-  }, [focused, scale, lift]);
-  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }, { translateY: lift.value }] }));
-  const pillStyle = useAnimatedStyle(() => ({ opacity: withTiming(focused ? 1 : 0, { duration: 200 }), transform: [{ scaleX: withSpring(focused ? 1 : 0.4) }] }));
+    on.value = reduceMotion ? (focused ? 1 : 0) : withTiming(focused ? 1 : 0, { duration: 180 });
+  }, [focused, on, reduceMotion]);
+  const pillStyle = useAnimatedStyle(() => ({ opacity: on.value, transform: [{ scaleX: 0.6 + 0.4 * on.value }] }));
   return (
     <Pressable testID={`tab-${name}`} onPress={onPress} style={styles.item} accessibilityRole="tab" accessibilityState={{ selected: focused }}>
       <View style={styles.iconWrap}>
-        <Animated.View style={[styles.pill, { backgroundColor: tint + "22" }, pillStyle]} />
-        <Animated.View style={iconStyle}>
-          <Ionicons name={(focused ? cfg.on : cfg.off) as any} size={23} color={focused ? tint : tint + "AA"} />
-        </Animated.View>
+        {focused && <View style={[styles.dot, fx("tabDot")]} testID={`tab-${name}-active-dot`} />}
+        <Animated.View style={[styles.pill, pillStyle]} />
+        <Ionicons name={(focused ? cfg.on : cfg.off) as any} size={23} color={focused ? colors.tabCases : colors.tabInactive} />
       </View>
-      <Text numberOfLines={1} style={[styles.label, { color: focused ? tint : colors.muted }, focused && styles.labelOn]}>{t(cfg.label)}</Text>
+      <Text numberOfLines={1} style={[styles.label, { color: focused ? colors.tabCases : colors.tabInactive }, focused && styles.labelOn]}>{t(cfg.label)}</Text>
     </Pressable>
   );
 }
 
 const GLOW = "0px 6px 16px rgba(19,43,65,0.28), 0px 0px 0px 6px rgba(255,122,24,0.10), 0px 0px 22px 4px rgba(255,122,24,0.28)";
+// Extra halo layer for the one-off breath: adds ~0.17 to the 0.28 glow opacity (→ ≈0.45).
+const BREATH = "0px 0px 22px 4px rgba(255,122,24,0.17)";
 const GLOW_ON = "0px 6px 16px rgba(19,43,65,0.28), 0px 0px 0px 7px rgba(255,122,24,0.20), 0px 0px 28px 8px rgba(255,122,24,0.45)";
 
 function ChatButton({ focused, onPress }: { focused: boolean; onPress: () => void }) {
@@ -53,6 +53,16 @@ function ChatButton({ focused, onPress }: { focused: boolean; onPress: () => voi
   const [pressed, setPressed] = useState(false);
   const press = useSharedValue(1);
   const btnStyle = useAnimatedStyle(() => ({ transform: [{ scale: press.value }] }));
+  // One gentle "breath" of the glow once after entering the app; skipped with reduced motion.
+  const reduceMotion = useReduceMotion();
+  const breath = useSharedValue(0);
+  const breathed = useRef(false);
+  useEffect(() => {
+    if (reduceMotion !== false || breathed.current) return;
+    breathed.current = true;
+    breath.value = withSequence(withTiming(1, { duration: 800 }), withTiming(0, { duration: 800 }));
+  }, [reduceMotion, breath]);
+  const breathStyle = useAnimatedStyle(() => ({ opacity: breath.value }));
   return (
     <Pressable
       testID="tab-chat"
@@ -72,6 +82,7 @@ function ChatButton({ focused, onPress }: { focused: boolean; onPress: () => voi
       {...(Platform.OS === "web" ? ({ "aria-current": focused ? "page" : undefined } as any) : null)}
     >
       <Animated.View style={[styles.chatFloat, { boxShadow: focused || pressed ? GLOW_ON : GLOW }, btnStyle]}>
+        <Animated.View pointerEvents="none" style={[styles.breath, { boxShadow: BREATH }, breathStyle]} />
         <Image source={require("@/assets/brand/czat-przycisk.png")} style={styles.chatImg} contentFit="contain" accessible={false} alt="" draggable={false} />
         <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>AI</Text></View>
       </Animated.View>
@@ -112,21 +123,19 @@ const useStyles = makeStyles((c) => ({
     borderTopWidth: 1,
     borderTopColor: c.border,
     paddingTop: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
+    ...fx("barShadow"),
   },
   item: { flex: 1, alignItems: "center", gap: 2, minHeight: 50, justifyContent: "flex-end" },
-  iconWrap: { width: 52, height: 32, alignItems: "center", justifyContent: "center" },
-  pill: { position: "absolute", width: 52, height: 32, borderRadius: 16 },
-  label: { fontSize: 11, fontWeight: "600" },
-  labelOn: { fontWeight: "800" },
+  iconWrap: { width: 52, height: 32, alignItems: "center", justifyContent: "center", overflow: "visible" },
+  pill: { position: "absolute", width: 52, height: 32, borderRadius: 16, backgroundColor: c.tabActiveBg },
+  dot: { position: "absolute", top: -6, alignSelf: "center", width: 6, height: 6, borderRadius: 3, backgroundColor: c.askOrange },
+  label: { fontSize: 11, fontWeight: "600", lineHeight: 14, height: 14 },
+  labelOn: { fontWeight: "700" },
   chatItem: { flex: 1.2, alignItems: "center", minHeight: 50, justifyContent: "flex-end", overflow: "visible" },
   chatFloat: { width: 64, height: 64, borderRadius: 32, marginTop: -30, overflow: "visible" },
   chatImg: { width: 64, height: 64, borderRadius: 32 },
   aiBadge: { position: "absolute", top: -3, right: -8, backgroundColor: c.askOrange, borderRadius: 9, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 2, borderColor: "#FFFFFF" },
   aiBadgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
   chatLabel: { color: c.askGreen, fontWeight: "700", marginTop: 2 },
+  breath: { position: "absolute", top: 0, left: 0, width: 64, height: 64, borderRadius: 32 },
 }));
