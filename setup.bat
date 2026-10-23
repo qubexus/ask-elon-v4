@@ -2,7 +2,6 @@
 chcp 65001 >nul
 REM Ask Elon - jednorazowa instalacja (Windows). Kliknij dwa razy albo uruchom: setup.bat
 cd /d "%~dp0"
-set EMERGENT_INDEX=https://d33sy5i8bnduwe.cloudfront.net/simple/
 
 echo == 1/4 Szukam Pythona (3.11-3.13) ==
 set PY=
@@ -20,9 +19,11 @@ echo == 2/4 Backend: srodowisko i biblioteki (kilka minut) ==
 cd backend
 if not exist .venv %PY% -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install -r requirements.txt --extra-index-url %EMERGENT_INDEX%
+.venv\Scripts\python -m pip install -r requirements.txt
 if errorlevel 1 ( echo Blad instalacji bibliotek backendu. & pause & exit /b 1 )
 if not exist .env ( copy .env.example .env >nul & echo Utworzono backend\.env - uzupelnij go! )
+REM Wlasny, losowy JWT_SECRET (wpisywany tylko raz, gdy w .env jest jeszcze napis zastepczy)
+.venv\Scripts\python -c "import secrets,pathlib; p=pathlib.Path('.env'); t=p.read_text(encoding='utf-8'); p.write_text(t.replace('WYGENERUJ_WLASNY_DLUGI_LOSOWY_CIAG', secrets.token_hex(32)), encoding='utf-8')"
 cd ..
 
 echo == 3/4 Szukam Node.js i yarn ==
@@ -38,5 +39,5 @@ if not exist .env ( copy .env.example .env >nul & echo Utworzono frontend\.env )
 cd ..
 
 echo.
-echo Gotowe! Uzupelnij backend\.env, wlacz MongoDB i uruchom start.bat
+echo Gotowe! W backend\.env wpisz GEMINI_API_KEY ^(i ewentualnie reszte^), wlacz MongoDB i uruchom start.bat
 pause

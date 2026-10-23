@@ -3,7 +3,6 @@
 # Uruchom w Terminalu z folderu projektu:  bash setup.sh
 set -e
 cd "$(dirname "$0")"
-EMERGENT_INDEX="https://d33sy5i8bnduwe.cloudfront.net/simple/"
 
 echo "== 1/4 Szukam Pythona (3.11-3.13) =="
 PY=""
@@ -17,8 +16,10 @@ echo "== 2/4 Backend: środowisko i biblioteki (kilka minut) =="
 cd backend
 [ -d .venv ] || "$PY" -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -r requirements.txt --extra-index-url "$EMERGENT_INDEX"
+.venv/bin/python -m pip install -r requirements.txt
 [ -f .env ] || { cp .env.example .env; echo "Utworzono backend/.env – uzupełnij go!"; }
+# Własny, losowy JWT_SECRET (wpisywany tylko raz, gdy w .env jest jeszcze napis zastępczy)
+.venv/bin/python -c "import secrets,pathlib; p=pathlib.Path('.env'); t=p.read_text(encoding='utf-8'); p.write_text(t.replace('WYGENERUJ_WLASNY_DLUGI_LOSOWY_CIAG', secrets.token_hex(32)), encoding='utf-8')"
 cd ..
 
 echo "== 3/4 Szukam Node.js i yarn =="
@@ -35,4 +36,4 @@ yarn install
 cd ..
 
 echo ""
-echo "Gotowe! Uzupełnij backend/.env, włącz MongoDB i uruchom:  bash start.sh"
+echo "Gotowe! W backend/.env wpisz GEMINI_API_KEY (i ewentualnie resztę), włącz MongoDB i uruchom:  bash start.sh"
