@@ -428,6 +428,33 @@ const S = {
     "Notice of the right to be accompanied (Section 10 ERA 1999)",
     "Notificare privind dreptul la însoțitor (Section 10 ERA 1999)",
   ],
+  // Notes drawer (Notatki)
+  notesOpen: ["Otwórz notatki", "Open notes", "Deschide notițele"],
+  notesTitle: ["Notatki", "Notes", "Notițe"],
+  notesClose: ["Zamknij notatki", "Close notes", "Închide notițele"],
+  notesBack: ["Wróć do notatek", "Back to notes", "Înapoi la notițe"],
+  notesHint: ["Elon widzi Twoje notatki", "Elon can see your notes", "Elon îți vede notițele"],
+  notesAdd: ["Dodaj notatkę", "Add note", "Adaugă notiță"],
+  notesNew: ["Nowa notatka", "New note", "Notiță nouă"],
+  notesEdit: ["Notatka", "Note", "Notiță"],
+  notesOpenNote: ["Otwórz notatkę", "Open note", "Deschide notița"],
+  notesEmpty: [
+    "Nie masz jeszcze notatek. Zapisz tu to, o czym Elon ma pamiętać, np. imię kierownika albo godziny zmian.",
+    "No notes yet. Save things Elon should remember here, e.g. your manager's name or your shift hours.",
+    "Încă nu ai notițe. Salvează aici ce trebuie să rețină Elon, de ex. numele managerului sau orele de tură.",
+  ],
+  notesLimit: ["Osiągnięto limit {n} notatek.", "You have reached the limit of {n} notes.", "Ai atins limita de {n} notițe."],
+  notesLoadError: ["Nie udało się wczytać notatek.", "Couldn't load your notes.", "Notițele nu au putut fi încărcate."],
+  notesRetry: ["Spróbuj ponownie", "Try again", "Încearcă din nou"],
+  notesFieldTitle: ["Tytuł", "Title", "Titlu"],
+  notesFieldContent: ["Treść", "Content", "Conținut"],
+  notesTitlePh: ["np. Mój kierownik", "e.g. My manager", "de ex. Managerul meu"],
+  notesContentPh: ["Co Elon ma wiedzieć?", "What should Elon know?", "Ce trebuie să știe Elon?"],
+  notesSave: ["Zapisz", "Save", "Salvează"],
+  notesSaveError: ["Nie udało się zapisać. Spróbuj ponownie.", "Couldn't save. Please try again.", "Nu s-a putut salva. Încearcă din nou."],
+  notesDelete: ["Usuń notatkę", "Delete note", "Șterge notița"],
+  notesDeleteConfirm: ["Na pewno usunąć tę notatkę?", "Delete this note?", "Sigur ștergi această notiță?"],
+  notesDeleteYes: ["Usuń", "Delete", "Șterge"],
 };
 
 export type StringKey = keyof typeof S;

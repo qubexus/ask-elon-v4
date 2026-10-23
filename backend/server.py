@@ -36,6 +36,7 @@ import ai  # noqa: E402  (reads .env values, so imported after load_dotenv)
 import mailer  # noqa: E402
 import storage  # noqa: E402
 import lookup  # noqa: E402
+import notes  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -580,6 +581,7 @@ async def chat_stream(body: ChatIn, request: Request):
                f"- Typ umowy: {p('contract_type')}; zatrudniony od: {p('start_date')}; adres zakładu: {p('workplace_address')}; "
                f"e-mail HR: {p('hr_email')}\n- Język aplikacji: {LANG_NAMES.get(user.get('locale', 'pl'))}.")
     context += await documents_context(uid, text)
+    context += await notes.notes_context(db, uid)  # user's notes, read fresh every request
     if tid != "main":
         c = await db.cases.find_one({"case_id": tid, "user_id": uid}, {"_id": 0})
         if c:
@@ -1630,6 +1632,7 @@ async def startup():
     await db.documents.create_index([("user_id", 1), ("created_at", -1)])
     await db.documents.create_index("doc_id", unique=True)
     await db.tts_cache.create_index("key", unique=True)
+    await notes.ensure_indexes(db)
     try:
         await run_in_threadpool(storage.init_storage)
     except Exception:
@@ -1665,6 +1668,7 @@ async def unhandled_error(request: Request, exc: Exception):
 
 
 app.include_router(api)
+app.include_router(notes.build_router(db, current_user, rate_limit, new_id, now))
 app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=ALLOWED_ORIGINS,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type", "Accept"])

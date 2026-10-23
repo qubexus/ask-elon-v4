@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
+import { NotesButton } from "@/src/components/NotesPanel";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
 import { useUnreadCount } from "@/src/inbox";
@@ -102,6 +103,7 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
       </View>
       <View style={styles.rightGroup}>
         {right}
+        {user && <NotesButton />}
         {user && (
           <Pressable
             testID="header-messages-button"
