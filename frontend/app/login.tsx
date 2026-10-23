@@ -3,8 +3,9 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
 import { SiteFooter } from "@/src/components/SiteFooter";
+import { router, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -13,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
+import { DEMO_LOCALES, dt } from "@/src/demo/content";
 import { Locale, useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
@@ -55,7 +57,20 @@ export default function Login() {
   const insets = useSafeAreaInsets();
   const styles = useStyles();
   const { colors } = useTheme();
-  const [mode, setMode] = useState<Mode>("login");
+  // /login?mode=register&lang=pl (e.g. from the demo CTA) opens "Create account" in that language.
+  const params = useLocalSearchParams<{ mode?: string; lang?: string }>();
+  const [mode, setMode] = useState<Mode>(params.mode === "register" ? "register" : "login");
+  const [modeParam, setModeParam] = useState(params.mode);
+  if (params.mode !== modeParam) {
+    setModeParam(params.mode);
+    if (params.mode === "register") setMode("register");
+  }
+  useEffect(() => {
+    const l = String(params.lang ?? "") as Locale;
+    if ((DEMO_LOCALES as string[]).includes(l) && l !== locale) setLocale(l);
+    // Only when the URL changes, not when the user later picks another language here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.lang]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -189,6 +204,19 @@ export default function Login() {
           </LinearGradient>
         </Pressable>
 
+        {mode !== "reset" && (
+          <Pressable
+            testID="demo-link"
+            onPress={() => router.push({ pathname: "/demo", params: { lang: locale } })}
+            accessibilityRole="link"
+            style={({ pressed }) => [styles.demoLink, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="play-circle-outline" size={20} color={colors.askOrange} />
+            <Text style={styles.demoLinkText}>{dt(locale, "loginLink")}</Text>
+            <Text style={styles.demoLinkSub}>· {dt(locale, "loginLinkSub")}</Text>
+          </Pressable>
+        )}
+
         {mode === "reset" ? (
           <Pressable testID="reset-back-button" onPress={() => { setMode("login"); setCode(""); setPassword(""); }} style={styles.backLink}>
             <Text style={styles.backText}>← {t("back")}</Text>
@@ -265,6 +293,9 @@ const useStyles = makeStyles((c) => ({
   social: { minHeight: 54, borderRadius: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: c.askField, borderWidth: 1.5, borderColor: c.askBorder },
   socialText: { color: c.askInk, fontWeight: "700", fontSize: 16 },
   disclaimer: { color: c.muted, fontSize: 11, textAlign: "center", lineHeight: 16, marginTop: -8 },
+  demoLink: { alignSelf: "center", flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "center", gap: 6, minHeight: 44, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: c.askBorder, backgroundColor: c.askOrangeTint, marginTop: -4 },
+  demoLinkText: { color: c.askOrange, fontWeight: "800", fontSize: 14 },
+  demoLinkSub: { color: c.muted, fontWeight: "600", fontSize: 13 },
   backLink: { alignSelf: "center", minHeight: 44, justifyContent: "center" },
   backText: { color: c.askOrange, fontWeight: "700", fontSize: 14 },
 }));

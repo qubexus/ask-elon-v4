@@ -55,6 +55,8 @@ function Gate() {
       <Stack.Protected guard={!user}>
         <Stack.Screen name="login" />
       </Stack.Protected>
+      {/* Public demo: sample data only, no API calls; open logged out and logged in. */}
+      <Stack.Screen name="demo" />
     </Stack>
   );
 }
