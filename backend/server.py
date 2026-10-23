@@ -37,6 +37,7 @@ import mailer  # noqa: E402
 import storage  # noqa: E402
 import lookup  # noqa: E402
 import notes  # noqa: E402
+import resend_webhook  # noqa: E402
 import account_ids  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -1715,6 +1716,7 @@ async def unhandled_error(request: Request, exc: Exception):
 
 app.include_router(api)
 app.include_router(notes.build_router(db, current_user, rate_limit, new_id, now))
+app.include_router(resend_webhook.build_router())
 app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=ALLOWED_ORIGINS,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type", "Accept"])
