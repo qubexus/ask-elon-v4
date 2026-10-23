@@ -110,7 +110,7 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
           >
             <Ionicons name="mail-outline" size={24} color={colors.onBrandSecondary} />
             {unread > 0 && (
-              <Animated.View style={[styles.badge, fx("badgeGlow", colors.brandSecondary), pulseStyle]} testID="header-messages-badge">
+              <Animated.View style={[styles.badge, fx("badgeGlow", colors.headerBg), pulseStyle]} testID="header-messages-badge">
                 <Text style={styles.badgeText}>{badge}</Text>
               </Animated.View>
             )}
@@ -144,7 +144,9 @@ export function HeaderIconButton({ icon, onPress, label, testID }: { icon: any; 
 
 const useStyles = makeStyles((c) => ({
   wrap: {
-    backgroundColor: c.brandSecondary,
+    backgroundColor: c.headerBg,
+    borderBottomWidth: 1,
+    borderBottomColor: c.headerBorder,
     paddingLeft: 14,
     paddingRight: 12,
     paddingBottom: 12,
@@ -163,7 +165,7 @@ const useStyles = makeStyles((c) => ({
   sub: { color: c.onBrandSecondaryMuted, fontSize: 12, fontWeight: "400", lineHeight: 16, flexShrink: 1 },
   rightGroup: { flexDirection: "row", alignItems: "center", gap: 2, flexShrink: 0 },
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  badge: { position: "absolute", top: 1, right: 0, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: c.askOrange, borderWidth: 2, borderColor: c.brandSecondary, alignItems: "center", justifyContent: "center" },
+  badge: { position: "absolute", top: 1, right: 0, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: c.askOrange, borderWidth: 2, borderColor: c.headerBg, alignItems: "center", justifyContent: "center" },
   badgeText: { color: c.onAccent, fontSize: 11, fontWeight: "900" },
   user: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: c.askOrange },

@@ -65,7 +65,9 @@ const dark = {
   onBrandPrimary: "#FFFFFF",
   brandPrimaryText: "#2EE59D", // green used as text/icon on dark backgrounds
   brandPrimaryBorder: "rgba(46,229,157,0.45)",
-  brandSecondary: "#0B6E4F", // top bar (as the app mock-up header on the site)
+  brandSecondary: "#0B6E4F", // green surfaces (lock icon, category tags)
+  headerBg: "#070F1A", // top bar = site nav (rgba(7,15,26,.88) on graphite)
+  headerBorder: "rgba(255,255,255,0.13)",
   onBrandSecondary: "#FFFFFF",
   brandSecondaryText: "#F4F8FB", // headings that used the bar colour as text
   brandTertiary: "#FF6A00",
