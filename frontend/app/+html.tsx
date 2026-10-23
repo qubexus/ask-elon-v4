@@ -19,7 +19,7 @@ export default function Root({ children }: PropsWithChildren) {
         */}
         <meta name="theme-color" content="#070F1A" />
         <meta name="color-scheme" content="dark" />
-        <title>Ask Elon</title>
+        <title>ask Elon</title>
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
         <ScrollViewStyleReset />
         <style

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Linking, Pressable, RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { withBrand } from "@/src/components/BrandName";
 import { api } from "@/src/api";
 import { Header } from "@/src/components/Header";
 import { useToast } from "@/src/components/Toast";
@@ -110,7 +111,7 @@ export default function Messages() {
             <View style={styles.empty} testID="messages-empty">
               <Ionicons name="mail-outline" size={48} color={colors.muted} />
               <Text style={styles.emptyTitle}>{t("msgEmptyTitle")}</Text>
-              <Text style={styles.emptyText}>{t("msgEmptyText")}</Text>
+              <Text style={styles.emptyText}>{withBrand(t("msgEmptyText"))}</Text>
             </View>
           }
           renderItem={({ item: m }) => {

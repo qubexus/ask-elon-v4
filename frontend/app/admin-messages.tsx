@@ -74,7 +74,7 @@ export default function AdminMessages() {
 
   return (
     <View style={styles.root} testID="admin-messages-screen">
-      <Header back title="Wiadomości do użytkowników" subtitle="Ask Elon · Admin" />
+      <Header back title="Wiadomości do użytkowników" subtitle="ask Elon · Admin" />
       {forbidden ? (
         <View style={styles.forbidden} testID="admin-messages-forbidden">
           <Ionicons name="lock-closed" size={36} color={colors.error} />

@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
 import { SiteFooter } from "@/src/components/SiteFooter";
 import Head from "expo-router/head";
 import { useState } from "react";
@@ -101,7 +102,7 @@ export default function Login() {
         <View style={styles.topRow}>
           <View style={styles.brandBadge} testID="login-brand-badge">
             <View style={styles.greenDot} />
-            <Text style={styles.brandBadgeText}>{t("brandBadge")}</Text>
+            <Text style={styles.brandBadgeText}>{withBrand(t("brandBadge"))}</Text>
           </View>
           <View style={styles.langs} testID="language-switch">
             {LANGS.map((l) => (
@@ -114,7 +115,7 @@ export default function Login() {
         </View>
 
         <Animated.View entering={FadeInDown.duration(450)} style={styles.logoBlock}>
-          <Image testID="login-logo" source={require("@/assets/brand/logo-ask-elon-ciemne-tlo.png")} style={styles.logo} contentFit="contain" accessibilityLabel="Ask Elon" alt="Ask Elon" />
+          <Image testID="login-logo" source={require("@/assets/brand/logo-ask-elon-ciemne-tlo.png")} style={styles.logo} contentFit="contain" accessibilityLabel={BRAND_PLAIN} alt={BRAND_PLAIN} />
           <Text style={styles.motto}>{t("mottoFull")}</Text>
           <View style={styles.tagline} testID="login-tagline">
             <View style={styles.greenDot} />
@@ -181,7 +182,7 @@ export default function Login() {
           <LinearGradient colors={[colors.askGreen, colors.askGreenLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
             {busy === "submit" ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
               <>
-                <Text style={styles.ctaText}>{ctaLabel}</Text>
+                <Text style={styles.ctaText}>{withBrand(ctaLabel, "soft")}</Text>
                 <Ionicons name="arrow-forward" size={20} color={colors.onBrandPrimary} />
               </>
             )}
@@ -211,7 +212,7 @@ export default function Login() {
                 </Pressable>
               </>
             ) : null}
-            <Text style={styles.disclaimer} testID="login-disclaimer">{t("authDisclaimer")}</Text>
+            <Text style={styles.disclaimer} testID="login-disclaimer">{withBrand(t("authDisclaimer"))}</Text>
             <SiteFooter testID="login-footer" />
           </>
         )}
@@ -228,7 +229,7 @@ const useStyles = makeStyles((c) => ({
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   brandBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, height: 34, borderRadius: 12, backgroundColor: c.askOrangeTint, borderWidth: 1, borderColor: c.askBorder },
   greenDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: c.onlineDot },
-  brandBadgeText: { color: c.askOrange, fontWeight: "800", fontSize: 12 },
+  brandBadgeText: { color: c.onSurface, fontWeight: "800", fontSize: 12 },
   langs: { flexDirection: "row", gap: 4, padding: 3, borderRadius: 12, backgroundColor: c.askField, borderWidth: 1, borderColor: c.askBorder },
   lang: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, height: 32, borderRadius: 9, borderWidth: 1, borderColor: "transparent" },
   langActive: { backgroundColor: c.askOrange, borderColor: c.askOrange },

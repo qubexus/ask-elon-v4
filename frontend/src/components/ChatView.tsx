@@ -7,6 +7,7 @@ import { KeyboardStickyView } from "react-native-keyboard-controller";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { withBrand } from "@/src/components/BrandName";
 import { api, streamChat } from "@/src/api";
 import { speakMessage, stopSpeaking } from "@/src/audio";
 import { VoiceInputButton } from "@/src/components/VoiceInputButton";
@@ -245,7 +246,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
             ))}
             <View style={[styles.bubble, styles.ai]} testID="chat-welcome-message">
               <ElonTag styles={styles} />
-              <Text style={styles.aiText}>{welcome}</Text>
+              <Text style={styles.aiText}>{withBrand(welcome, "soft")}</Text>
             </View>
             {messages.length === 0 && (
               <View style={styles.quickWrap}>

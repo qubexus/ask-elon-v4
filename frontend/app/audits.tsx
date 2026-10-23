@@ -39,7 +39,7 @@ export default function Audits() {
 
   return (
     <View style={styles.root} testID="audits-screen">
-      <Header back title={t("auditHistory")} subtitle="Ask Elon · PRO" />
+      <Header back title={t("auditHistory")} subtitle="ask Elon · PRO" />
       {!docs ? (
         <ActivityIndicator color={colors.brandPrimaryText} style={{ marginTop: 32 }} />
       ) : (

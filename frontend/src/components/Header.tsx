@@ -6,6 +6,7 @@ import { Platform, Pressable, Text, useWindowDimensions, View } from "react-nati
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
 import { useUnreadCount } from "@/src/inbox";
@@ -76,8 +77,8 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
           contentFit="contain"
           accessible
           accessibilityRole="image"
-          accessibilityLabel="Ask Elon"
-          alt="Ask Elon"
+          accessibilityLabel={BRAND_PLAIN}
+          alt={BRAND_PLAIN}
         />
       )}
       <View style={styles.textBlock}>
@@ -89,12 +90,12 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
           ellipsizeMode="tail"
           testID="header-title"
         >
-          {title}
+          {withBrand(title)}
         </Text>
         {!!subtitle && (
           <View style={styles.subRow} accessible={online ? true : undefined} accessibilityLabel={online ? onlineA11y : undefined}>
             {online && <Text style={styles.onlineDot}>●</Text>}
-            <Text style={styles.sub} numberOfLines={1} ellipsizeMode="tail" testID="header-subtitle">{subtitle}</Text>
+            <Text style={styles.sub} numberOfLines={1} ellipsizeMode="tail" testID="header-subtitle">{withBrand(subtitle)}</Text>
           </View>
         )}
       </View>

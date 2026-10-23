@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { withBrand } from "@/src/components/BrandName";
 import { api } from "@/src/api";
 import { Header } from "@/src/components/Header";
 import { StatusPill } from "@/src/components/StatusPill";
@@ -92,7 +93,7 @@ export default function CaseDetail() {
               style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}
             >
               <Ionicons name="chatbubbles" size={20} color={colors.onBrandPrimary} />
-              <Text style={styles.ctaText}>{t("askElon")}</Text>
+              <Text style={styles.ctaText}>{withBrand(t("askElon"), "soft")}</Text>
             </Pressable>
           </View>
         </>

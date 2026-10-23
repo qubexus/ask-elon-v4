@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
 import { Header } from "@/src/components/Header";
 import { useToast } from "@/src/components/Toast";
 import { StringKey, useT } from "@/src/i18n";
@@ -57,11 +58,11 @@ export default function Paywall() {
 
   return (
     <View style={styles.root} testID="paywall-screen">
-      <Header back title="Ask Elon PRO" subtitle={t("membership")} />
+      <Header back title={`${BRAND_PLAIN} PRO`} subtitle={t("membership")} />
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <Ionicons name="ribbon" size={40} color={colors.gold} />
-          <Text style={styles.heroTitle}>{t("pwTitle")}</Text>
+          <Text style={styles.heroTitle}>{withBrand(t("pwTitle"))}</Text>
           <Text style={styles.heroSub}>{t("pwSub")}</Text>
         </View>
 
@@ -122,7 +123,7 @@ export default function Paywall() {
         <View style={styles.backdrop}>
           <View style={styles.modal} testID="paywall-confirm-modal">
             <Text style={styles.modalTitle}>{t("pwConfirmTitle")}</Text>
-            <Text style={styles.modalText}>{t("pwConfirmText", { price: price ?? "" })}</Text>
+            <Text style={styles.modalText}>{withBrand(t("pwConfirmText", { price: price ?? "" }))}</Text>
             <View style={{ flexDirection: "row", gap: 8 }}>
               <Pressable testID="paywall-confirm-cancel" onPress={() => setConfirm(false)} style={[styles.restore, { flex: 1, marginTop: 0 }]}>
                 <Text style={styles.restoreText}>{t("cancel")}</Text>

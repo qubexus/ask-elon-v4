@@ -6,6 +6,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { withBrand } from "@/src/components/BrandName";
 import { api } from "@/src/api";
 import { useAuth, User } from "@/src/auth";
 import { CONTRACT_TYPES, INDUSTRIES } from "@/src/components/ProfileForm";
@@ -141,7 +142,7 @@ export default function Onboarding() {
         <ScrollView ref={scroll} onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: true })} contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
           {msgs.map((m, i) => (
             <Animated.View key={i} entering={FadeInUp.duration(250)} style={[styles.bubble, m.from === "elon" ? styles.ai : styles.me]} testID={m.from === "elon" ? "onboarding-elon-message" : "onboarding-user-message"}>
-              <Text style={m.from === "elon" ? styles.aiText : styles.meText}>{m.from === "elon" ? t(m.key, m.vars) : m.text}</Text>
+              <Text style={m.from === "elon" ? styles.aiText : styles.meText}>{m.from === "elon" ? withBrand(t(m.key, m.vars), "soft") : m.text}</Text>
             </Animated.View>
           ))}
           {pickLang && (

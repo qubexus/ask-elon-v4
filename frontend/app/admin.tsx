@@ -66,7 +66,7 @@ export default function Admin() {
 
   return (
     <View style={styles.root} testID="admin-screen">
-      <Header back title="Hub Administratora" subtitle="Ask Elon · Admin" />
+      <Header back title="Hub Administratora" subtitle="ask Elon · Admin" />
       <View style={styles.tabRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
           {TABS.map((x) => (

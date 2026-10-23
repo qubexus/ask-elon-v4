@@ -1,6 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { withBrand } from "@/src/components/BrandName";
 import { SiteFooter } from "@/src/components/SiteFooter";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
@@ -123,12 +124,7 @@ export default function Profile() {
             <Image source={require("@/assets/brand/robot-watermark.png")} style={styles.watermark} contentFit="contain" accessible={false} alt="" />
             <View style={styles.cardTop}>
               <Text style={styles.cardKicker} numberOfLines={1}>
-                {t("profileCard").toUpperCase().split("ASK ELON").map((part, i) => (
-                  <Text key={i}>
-                    {i > 0 && <Text style={styles.cardKickerBrand}>ASK ELON</Text>}
-                    {part}
-                  </Text>
-                ))}
+                {withBrand(t("profileCard"), "soft", (s) => s.toUpperCase())}
               </Text>
               <Text style={styles.cardTag} numberOfLines={1}>{t("profileCardTag").toUpperCase()}</Text>
             </View>
@@ -237,7 +233,7 @@ export default function Profile() {
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.msgTitle}>{t("msgTitle")}</Text>
-            <Text style={styles.msgSub}>{t("msgSubtitle")}{unread > 0 ? ` · ${t("msgUnread", { n: String(unread) })}` : ""}</Text>
+            <Text style={styles.msgSub}>{withBrand(t("msgSubtitle"))}{unread > 0 ? ` · ${t("msgUnread", { n: String(unread) })}` : ""}</Text>
           </View>
           <Text style={styles.chev}>›</Text>
         </Pressable>
@@ -248,12 +244,12 @@ export default function Profile() {
         </View>
 
         <View style={[styles.section, fx("cardShadow")]} testID="membership-section">
-          <Text style={styles.sectionTitle}>{t("membership")}</Text>
+          <Text style={styles.sectionTitle}>{withBrand(t("membership"))}</Text>
           <View style={styles.priceRow} testID="membership-price">
             <Text style={styles.price}>£{price}</Text>
             <Text style={styles.per}>/ {t("month")}</Text>
           </View>
-          <Text style={styles.muted}>{t("membershipSub")}</Text>
+          <Text style={styles.muted}>{withBrand(t("membershipSub"))}</Text>
           {active ? (
             <>
               <View style={styles.activeRow} testID="membership-active">
@@ -290,7 +286,7 @@ export default function Profile() {
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>{t("logout")}</Text>
         </Pressable>
-        <Text style={styles.disclaimer} testID="profile-disclaimer">{t("disclaimer")}</Text>
+        <Text style={styles.disclaimer} testID="profile-disclaimer">{withBrand(t("disclaimer"))}</Text>
         <SiteFooter testID="profile-footer" />
         </>
         )}
@@ -308,7 +304,6 @@ const useStyles = makeStyles((c) => ({
   watermark: { position: "absolute", right: -34, bottom: -34, width: 150, height: 150, opacity: 0.15 },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
   cardKicker: { color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: "700", letterSpacing: 1.4, flexShrink: 1 },
-  cardKickerBrand: { color: c.askOrange },
   cardTag: { color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: "700", letterSpacing: 1.4, flexShrink: 0 },
   cardMid: { flexDirection: "row", alignItems: "center", gap: 14 },
   avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: c.onBrandPrimary },

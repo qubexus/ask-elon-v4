@@ -570,7 +570,7 @@ async def chat_stream(body: ChatIn, request: Request):
 
 
 # ---------------- Voice: speech-to-text & text-to-speech ----------------
-TTS_INSTRUCTIONS = ("You are Elon, the Ask Elon AI assistant for UK work rights. Read the following text aloud "
+TTS_INSTRUCTIONS = ("You are Elon, the ask Elon AI assistant for UK work rights. Read the following text aloud "
                     "clearly, at a steady, reassuring pace, warm but professional, like a trusted colleague:")
 STT_PROMPT = "UK employment law: payslip, grievance, ACAS, SSP, holiday pay, zero-hours, HR, Employment Tribunal, agencja, nadgodziny."
 
@@ -685,7 +685,7 @@ def make_thumbnail(data: bytes, mime: str) -> Optional[bytes]:
         return None
 
 
-DOC_EXTRACT_PROMPT = """You are the Ask Elon AI assistant. You analyse UK workplace documents for workers.
+DOC_EXTRACT_PROMPT = """You are the ask Elon AI assistant. You analyse UK workplace documents for workers.
 Return ONLY valid JSON (no markdown) with keys:
 "category": one of contract, annex, policy, correspondence, payslip, other;
 "title": short document title;
@@ -719,7 +719,7 @@ async def process_document(doc_id: str):
         await db.documents.update_one({"doc_id": doc_id}, {"$set": {"status": "failed", "error": "Analysis failed"}})
 
 
-PAYSLIP_AUDIT_PROMPT = """You are Elon, the Ask Elon AI assistant, checking a UK payslip. Compare the worker's PAYSLIP with their CONTRACT
+PAYSLIP_AUDIT_PROMPT = """You are Elon, the ask Elon AI assistant, checking a UK payslip. Compare the worker's PAYSLIP with their CONTRACT
 and UK law (National Minimum/Living Wage 2024-26 rates, Working Time Regulations 1998 holiday pay 12.07% accrual for irregular hours,
 overtime/night premiums in the contract, SSP, unlawful deductions s.13 ERA 1996).
 Return ONLY valid JSON (no markdown) with keys:
@@ -1507,7 +1507,7 @@ async def subscribe(body: SubscribeIn, request: Request):
         plan_id = await ensure_plan(hc, headers)
         r = await hc.post(f"{PAYPAL_API_BASE}/v1/billing/subscriptions", headers=headers, json={
             "plan_id": plan_id, "custom_id": user["user_id"],
-            "application_context": {"brand_name": "Ask Elon", "user_action": "SUBSCRIBE_NOW",
+            "application_context": {"brand_name": "ask Elon", "user_action": "SUBSCRIBE_NOW",
                                     "shipping_preference": "NO_SHIPPING",
                                     "return_url": ret, "cancel_url": ret + "&cancelled=1"}})
     if r.status_code not in (200, 201):
@@ -1560,7 +1560,7 @@ async def payment_return(redirect: str, subscription_id: str = "", cancelled: st
     return HTMLResponse(f"""<html><head><meta name="viewport" content="width=device-width"/>
 <meta http-equiv="refresh" content="0;url={target}"/></head>
 <body style="font-family:sans-serif;text-align:center;padding:40px;background:#FBF8F3;color:#0F1A24">
-<h2>Ask Elon</h2><p>Subscription: {status}</p><a href="{target}">Return to app</a></body></html>""")
+<h2>ask Elon</h2><p>Subscription: {status}</p><a href="{target}">Return to app</a></body></html>""")
 
 @app.on_event("startup")
 async def startup():

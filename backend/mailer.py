@@ -13,7 +13,7 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT") or 587)
 SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 MAIL_FROM = os.environ.get("MAIL_FROM", "").strip() or SMTP_USER
-MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "Ask Elon").strip()
+MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "ask Elon").strip()
 
 
 def smtp_configured() -> bool:
@@ -21,18 +21,18 @@ def smtp_configured() -> bool:
 
 
 RESET_TEXT = {
-    "pl": ("Ask Elon – kod do zmiany hasła",
-           "Cześć,\n\nTwój kod do ustawienia nowego hasła w Ask Elon: {code}\n\n"
+    "pl": ("ask Elon – kod do zmiany hasła",
+           "Cześć,\n\nTwój kod do ustawienia nowego hasła w ask Elon: {code}\n\n"
            "Kod jest ważny {minutes} minut i działa tylko raz.\n"
-           "Jeśli to nie Ty prosiłeś o zmianę hasła, zignoruj tę wiadomość.\n\nAsk Elon"),
-    "en": ("Ask Elon – password reset code",
-           "Hi,\n\nYour Ask Elon password reset code: {code}\n\n"
+           "Jeśli to nie Ty prosiłeś o zmianę hasła, zignoruj tę wiadomość.\n\nask Elon"),
+    "en": ("ask Elon – password reset code",
+           "Hi,\n\nYour ask Elon password reset code: {code}\n\n"
            "The code is valid for {minutes} minutes and can be used once.\n"
-           "If you didn't ask to reset your password, you can ignore this e-mail.\n\nAsk Elon"),
-    "ro": ("Ask Elon – cod pentru resetarea parolei",
-           "Salut,\n\nCodul tău pentru resetarea parolei Ask Elon: {code}\n\n"
+           "If you didn't ask to reset your password, you can ignore this e-mail.\n\nask Elon"),
+    "ro": ("ask Elon – cod pentru resetarea parolei",
+           "Salut,\n\nCodul tău pentru resetarea parolei ask Elon: {code}\n\n"
            "Codul este valabil {minutes} minute și poate fi folosit o singură dată.\n"
-           "Dacă nu ai cerut resetarea parolei, ignoră acest e-mail.\n\nAsk Elon"),
+           "Dacă nu ai cerut resetarea parolei, ignoră acest e-mail.\n\nask Elon"),
 }
 
 
