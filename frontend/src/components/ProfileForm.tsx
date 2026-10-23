@@ -1,12 +1,12 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { api } from "@/src/api";
 import { useAuth, User } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
 import { useT } from "@/src/i18n";
-import { makeStyles, useTheme } from "@/src/theme";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 
 export const CONTRACT_TYPES = ["permanent", "fixed_term", "zero_hours", "agency", "contract_for_services", "b2b"] as const;
 export const INDUSTRIES = ["Logistics & Warehousing", "Manufacturing", "Food Production", "Transport & Haulage", "Retail", "Hospitality", "Construction", "Healthcare & Care", "Cleaning"];
@@ -56,6 +56,7 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
     }
   };
 
+  const [focusKey, setFocusKey] = useState<Key | null>(null);
   const err = (k: Key, extra = true) => touched && (!f[k].trim() || !extra);
   const input = (k: Key, label: string, icon: any, opts: Partial<React.ComponentProps<typeof TextInput>> = {}, required = true, extraOk = true) => (
     <View style={{ gap: 6 }}>
@@ -63,9 +64,18 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
         {label}
         {required && <Text style={styles.req}> *</Text>}
       </Text>
-      <View style={[styles.field, required && err(k, extraOk) && styles.fieldErr]}>
-        <Ionicons name={icon} size={18} color={colors.muted} />
-        <TextInput testID={`profile-${k}-input`} value={f[k]} onChangeText={set(k)} placeholderTextColor={colors.muted} style={styles.input} {...opts} />
+      <View style={[styles.field, required && err(k, extraOk) && styles.fieldErr, focusKey === k && fx("focusRing"), focusKey === k && styles.fieldFocus]}>
+        <Ionicons name={icon} size={18} color={colors.brandPrimary} />
+        <TextInput
+          testID={`profile-${k}-input`}
+          value={f[k]}
+          onChangeText={set(k)}
+          placeholderTextColor={colors.muted}
+          style={[styles.input, webNoOutline]}
+          onFocus={() => setFocusKey(k)}
+          onBlur={() => setFocusKey((cur) => (cur === k ? null : cur))}
+          {...opts}
+        />
       </View>
     </View>
   );
@@ -131,13 +141,17 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
   );
 }
 
+// Web: hide the browser outline; the orange ring sits on the field wrapper.
+const webNoOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : null;
+
 const useStyles = makeStyles((c) => ({
   wrap: { gap: 16 },
-  card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: c.border },
-  cardTitle: { color: c.onSurface, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
+  card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: c.border, ...fx("cardShadow") },
+  cardTitle: { color: c.brandSecondary, fontSize: 13, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   label: { color: c.onSurfaceTertiary, fontSize: 13, fontWeight: "700" },
   req: { color: c.error },
-  field: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+  field: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.surface, borderWidth: 1, borderColor: c.borderStrong },
+  fieldFocus: { borderColor: c.askOrange },
   fieldErr: { borderColor: c.error },
   fieldRO: { backgroundColor: c.surfaceTertiary },
   ro: { flex: 1, color: c.onSurfaceTertiary, fontSize: 15 },
@@ -148,6 +162,6 @@ const useStyles = makeStyles((c) => ({
   chipText: { color: c.onSurfaceTertiary, fontWeight: "600", fontSize: 13 },
   chipTextOn: { color: c.onBrandPrimary },
   errText: { color: c.error, fontSize: 12, fontWeight: "600" },
-  cta: { minHeight: 50, borderRadius: 12, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  cta: { minHeight: 50, borderRadius: 12, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center", ...fx("buttonShadow") },
   ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
 }));
