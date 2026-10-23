@@ -1,7 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import Animated, { FadeInUp } from "react-native-reanimated";
@@ -21,6 +21,7 @@ import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
 import { useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
+import { useWebKeyboardOpen } from "@/src/webKeyboard";
 
 type Msg = { message_id: string; role: "user" | "assistant"; text: string };
 export type ChatCase = { case_id: string; title: string; description: string; sector: string; status: string; created_at: string; updated_at: string };
@@ -128,6 +129,11 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
   const [inputFocused, setInputFocused] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const listRef = useRef<FlatList>(null);
+  // Auto-scroll only while the reader is at the bottom; reading older messages is never interrupted.
+  const nearBottom = useRef(true);
+  const scrolledOnce = useRef(false);
+  const autoScrollAt = useRef(0);
+  const webKeyboard = useWebKeyboardOpen();
   const idRef = useRef(0);
   const [needContract, setNeedContract] = useState(false);
   const [overdue, setOverdue] = useState<Letter | null>(null);
@@ -196,6 +202,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
     const msg = text.trim();
     if (!msg || streaming || freeBlocked) return;
     setInput("");
+    nearBottom.current = true;
     const stamp = idRef.current++;
     const aiId = `ai_${stamp}`;
     setMessages((m) => [...m, { message_id: `u_${stamp}`, role: "user", text: msg }, { message_id: aiId, role: "assistant", text: "" }]);
@@ -230,6 +237,24 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
   };
 
   const canSend = !!input.trim() && !streaming;
+  const onListScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    if (contentSize.height - layoutMeasurement.height - contentOffset.y < 120) nearBottom.current = true;
+    // Ignore the scroll events of our own scrollToEnd (content may still be growing under it).
+    else if (Date.now() - autoScrollAt.current > 600) nearBottom.current = false;
+  };
+  const followBottom = (animated: boolean) => {
+    if (scrolledOnce.current && !nearBottom.current) return;
+    autoScrollAt.current = Date.now();
+    const anim = scrolledOnce.current && animated;
+    // Web: FlatList.scrollToEnd aims at an estimated end while rows are still being rendered and stops short;
+    // an oversized offset is clamped by the browser to the real bottom.
+    if (Platform.OS === "web") listRef.current?.scrollToOffset({ offset: 1e7, animated: anim });
+    else listRef.current?.scrollToEnd({ animated: anim });
+    scrolledOnce.current = true;
+  };
+  // With the web keyboard open there is no tab bar or home indicator under the composer.
+  const composerBottom = webKeyboard ? 10 : (bottomOffset > 0 ? 28 : insets.bottom) + 12;
   const firstName = (user?.name || "").split(" ")[0] || "";
   const welcome = t("welcome", { name: firstName });
   const quick = [t("q1"), t("q2"), t("q3"), t("q4")];
@@ -286,9 +311,15 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
         testID="chat-message-list"
         data={messages}
         keyExtractor={(m) => m.message_id}
+        style={styles.listBox}
         contentContainerStyle={styles.list}
         keyboardDismissMode="interactive"
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={32}
+        onScroll={onListScroll}
+        onContentSizeChange={() => followBottom(true)}
+        // Keyboard opening shrinks the list: keep the newest message in view if the reader was at the bottom.
+        onLayout={() => followBottom(false)}
         ListHeaderComponent={
           <View>
             {broadcasts.map((b) => (
@@ -357,11 +388,11 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
         }
       />
       {freeBlocked ? (
-        <View style={{ padding: 12, paddingBottom: (bottomOffset > 0 ? 28 : insets.bottom) + 12 }}>
+        <View style={{ padding: 12, paddingBottom: composerBottom, flexShrink: 0 }}>
           <ProLock testID="chat-free-lock" text={trialOver ? t("freeTrialOver") : t("freeLimitReached")} />
         </View>
       ) : (
-      <KeyboardStickyView offset={{ closed: 0, opened: bottomOffset }}>
+      <KeyboardStickyView offset={{ closed: 0, opened: bottomOffset }} style={styles.composerBox} testID="chat-composer">
         {isMain && messages.length > 0 && !streaming && (
           <Pressable testID="chat-save-as-case" onPress={saveAsCase} disabled={saving} hitSlop={8} style={styles.saveCase}>
             <Ionicons name="add-circle-outline" size={13} color={colors.muted} />
@@ -374,7 +405,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
             <Text style={styles.freeText}>{t("freeLeft", { n: String(left), d: String(Math.max(0, usage.trial_days - usage.days_since_signup)) })}</Text>
           </Pressable>
         )}
-        <View style={[styles.composer, { paddingBottom: (bottomOffset > 0 ? 28 : insets.bottom) + 12 }]}>
+        <View style={[styles.composer, { paddingBottom: composerBottom }]}>
           <VoiceInputButton disabled={streaming} onText={(txt) => setInput((cur) => (cur.trim() ? `${cur.trim()} ${txt}` : txt))} />
           <TextInput
             testID="chat-input"
@@ -423,6 +454,9 @@ const useStyles = makeStyles((c) => ({
   muted: { color: c.muted, fontSize: 14 },
   retry: { backgroundColor: c.brandPrimary, paddingHorizontal: 20, height: 44, borderRadius: 12, justifyContent: "center" },
   retryText: { color: c.onBrandPrimary, fontWeight: "700" },
+  // The message list is the only thing that scrolls; the page itself never does (web: no scroll chaining to the page).
+  listBox: { flex: 1, minHeight: 0, ...(Platform.OS === "web" ? ({ overscrollBehavior: "contain" } as any) : null) },
+  composerBox: { flexShrink: 0 },
   list: { padding: 16, gap: 12 },
   bubble: { maxWidth: "86%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   ai: { alignSelf: "flex-start", backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, borderBottomLeftRadius: 6 },
@@ -483,7 +517,8 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,
-    fontSize: 15,
+    // 16 px on web: iOS Safari zooms the page into any smaller input on focus.
+    fontSize: Platform.OS === "web" ? 16 : 15,
     color: c.onSurface,
   },
   inputFocused: { borderColor: c.askOrange },

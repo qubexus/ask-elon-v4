@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useT } from "@/src/i18n";
 import { useReduceMotion } from "@/src/motion";
+import { useWebKeyboardOpen } from "@/src/webKeyboard";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
 type Cfg = { on: string; off: string; label: any };
@@ -95,6 +96,9 @@ type TabRoute = { key: string; name: string };
 export function AnimatedTabBar({ state, navigation }: { state: { index: number; routes: TabRoute[] }; navigation: any }) {
   const insets = useSafeAreaInsets();
   const styles = useStyles();
+  // Mobile web: while the keyboard is open the tab bar steps aside so the chat composer sits right above the keyboard.
+  const keyboardOpen = useWebKeyboardOpen();
+  if (keyboardOpen) return null;
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]} testID="tab-bar">
       {state.routes.map((route: TabRoute, i: number) => {

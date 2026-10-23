@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- interactive-widget=resizes-content: on Android Chrome the on-screen keyboard shrinks the page instead of overlaying it. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#070F1A" />
+    <title>ask Elon</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        margin: 0;
+        background-color: #070F1A;
+      }
+      /* The page itself never scrolls or bounces; only lists inside the app do. */
+      html,
+      body {
+        overscroll-behavior: none;
+      }
+      /* The app shell always covers exactly the visible area (above the keyboard), see the script below. */
+      #root {
+        display: flex;
+        flex: 1;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: var(--app-top, 0px);
+        height: var(--app-h, 100%);
+      }
+      /* iOS Safari zooms the whole page into any input with text smaller than 16 px. */
+      @supports (-webkit-touch-callout: none) {
+        input,
+        textarea,
+        select {
+          font-size: max(16px, 1em) !important;
+        }
+      }
+    </style>
+    <script>
+      // Mobile keyboard fix (chat): iOS Safari does not shrink the page when the keyboard opens, it pans the whole
+      // page up, so the composer "runs away" and the message list cannot be scrolled. Here the app shell is sized to
+      // window.visualViewport (the area above the keyboard) and the page is held at scroll 0, so the composer stays at
+      // the bottom of the visible area and only the message list scrolls. <html data-kb="1"> = keyboard open
+      // (read by src/webKeyboard.ts). Pinch-zoom is left alone.
+      (function () {
+        var vv = window.visualViewport, de = document.documentElement;
+        if (!vv) return;
+        var maxH = 0, lastW = 0, kb = false, raf = 0;
+        function editing() {
+          var a = document.activeElement;
+          return !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable === true);
+        }
+        function apply() {
+          raf = 0;
+          if (Math.abs((vv.scale || 1) - 1) > 0.01) {
+            de.style.removeProperty("--app-h");
+            de.style.removeProperty("--app-top");
+            return;
+          }
+          var w = Math.round(vv.width), h = Math.round(vv.height);
+          if (w !== lastW) { lastW = w; maxH = 0; }
+          if (!editing() || h > maxH) maxH = Math.max(h, window.innerHeight || 0);
+          if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
+          de.style.setProperty("--app-h", h + "px");
+          de.style.setProperty("--app-top", Math.max(0, Math.round(vv.offsetTop)) + "px");
+          var open = editing() && maxH - h > 120;
+          if (open !== kb) {
+            kb = open;
+            if (open) de.dataset.kb = "1"; else delete de.dataset.kb;
+            window.dispatchEvent(new Event("askelon-kb"));
+          }
+        }
+        function schedule() { if (!raf) raf = requestAnimationFrame(apply); }
+        function later() { schedule(); setTimeout(schedule, 60); setTimeout(schedule, 350); }
+        vv.addEventListener("resize", schedule);
+        vv.addEventListener("scroll", schedule);
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule);
+        window.addEventListener("orientationchange", later);
+        document.addEventListener("focusin", later);
+        document.addEventListener("focusout", later);
+        apply();
+      })();
+    </script>
+  </head>
+
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>
