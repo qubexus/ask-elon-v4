@@ -15,13 +15,13 @@ import { fx, makeStyles, useTheme } from "@/src/theme";
 export type RobotName = "sprawy" | "pisma" | "elon" | "forum" | "profil";
 
 // Same loading method as the old robot-header: bundled PNG through expo-image.
-// Files are the 132 px (@3x) masters, displayed at 44 px.
+// Files are 168 px (@3x) masters with a baked soft light outline, displayed at 56 px (originals kept).
 export const ROBOTS: Record<RobotName, number> = {
-  sprawy: require("@/assets/brand/robot-tab-sprawy.png"),
-  pisma: require("@/assets/brand/robot-tab-pisma.png"),
-  elon: require("@/assets/brand/robot-tab-elon.png"),
-  forum: require("@/assets/brand/robot-tab-forum.png"),
-  profil: require("@/assets/brand/robot-tab-profil.png"),
+  sprawy: require("@/assets/brand/robot-tab-sprawy-kontur.png"),
+  pisma: require("@/assets/brand/robot-tab-pisma-kontur.png"),
+  elon: require("@/assets/brand/robot-tab-elon-kontur.png"),
+  forum: require("@/assets/brand/robot-tab-forum-kontur.png"),
+  profil: require("@/assets/brand/robot-tab-profil-kontur.png"),
 };
 
 type Props = {
@@ -155,7 +155,9 @@ const useStyles = makeStyles((c) => ({
     gap: 10,
   },
   back: { width: 36, height: 44, justifyContent: "center", marginLeft: -6 },
-  robot: { width: 44, height: 44, flexShrink: 0 },
+  // 56 px box = 51 px robot + baked light outline (robot-tab-*-kontur.png, 168 px @3x masters).
+  // Negative margins keep the header only ~6 px taller and the title column only ~6 px narrower.
+  robot: { width: 56, height: 56, marginVertical: -3, marginHorizontal: -3, flexShrink: 0 },
   textBlock: { flex: 1, minWidth: 0, justifyContent: "center", minHeight: 44 },
   title: { color: c.onBrandSecondary, fontWeight: "800", lineHeight: 22 },
   // Detail screens (user content titles): wrap to 2 lines instead of cutting.
