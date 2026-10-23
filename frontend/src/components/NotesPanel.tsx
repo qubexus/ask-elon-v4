@@ -2,15 +2,13 @@
 // Notes live in MongoDB per user (/api/notes) and are added to Elon's chat context on every message.
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from "react-native";
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { api } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
-import { useReduceMotion } from "@/src/motion";
+import { RightDrawer } from "@/src/components/RightDrawer";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
 export type Note = { note_id: string; title: string; content: string; color?: string; created_at: string; updated_at: string };
@@ -42,73 +40,38 @@ export function NotesButton() {
   );
 }
 
-function NotesDrawer({ onClose }: { onClose: () => void }) {
+export function NotesDrawer({ onClose }: { onClose: () => void }) {
   const styles = useStyles();
   const { colors } = useTheme();
   const t = useT();
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const reduceMotion = useReduceMotion();
-  const panelW = width < 600 ? Math.round(width * 0.85) : 380;
   const [editing, setEditing] = useState<Note | "new" | null>(null);
   const notes = useNotes(true);
-
-  const x = useSharedValue(panelW);
-  const fade = useSharedValue(0);
-  const dur = reduceMotion ? 0 : 240;
-  const [closing, setClosing] = useState(false);
-  useEffect(() => {
-    if (closing) {
-      if (!dur) return onClose();
-      fade.value = withTiming(0, { duration: dur });
-      x.value = withTiming(panelW, { duration: dur, easing: Easing.in(Easing.cubic) }, (done) => {
-        if (done) runOnJS(onClose)();
-      });
-    } else {
-      x.value = withTiming(0, { duration: dur, easing: Easing.out(Easing.cubic) });
-      fade.value = withTiming(1, { duration: dur });
-    }
-  }, [closing, dur, panelW, onClose, x, fade]);
-  const close = () => setClosing(true);
-  const panelStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: fade.value }));
-
-  // Escape (web) / Android back: react-native-web Modal calls onRequestClose on Escape keyup -> editor first, then drawer.
   const list = notes.data ?? [];
+
+  // Escape (web) / Android back: leave the editor first, then close the drawer.
   return (
-    <Modal visible transparent animationType="none" onRequestClose={() => (editing ? setEditing(null) : close())} statusBarTranslucent>
-      <View style={styles.root}>
-        <Animated.View style={[styles.backdrop, backdropStyle]}>
-          <Pressable style={{ flex: 1 }} onPress={close} accessibilityRole="button" accessibilityLabel={t("notesClose")} testID="notes-backdrop" />
-        </Animated.View>
-        <Animated.View
-          style={[styles.panel, { width: panelW, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 }, panelStyle]}
-          testID="notes-drawer"
-          accessibilityViewIsModal
-          aria-modal
-          role="dialog"
-          aria-label={t("notesTitle")}
-        >
-          <View style={styles.head}>
-            {editing ? (
-              <Pressable onPress={() => setEditing(null)} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notesBack")} testID="notes-editor-back">
-                <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
-              </Pressable>
-            ) : (
-              <Ionicons name="document-text-outline" size={22} color={colors.askOrange} style={{ marginLeft: 4 }} />
-            )}
-            <Text style={styles.headTitle} accessibilityRole="header" numberOfLines={1}>
-              {editing ? (editing === "new" ? t("notesNew") : t("notesEdit")) : t("notesTitle")}
-            </Text>
-            <Pressable onPress={close} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notesClose")} testID="notes-close">
-              <Ionicons name="close" size={24} color={colors.onSurface} />
-            </Pressable>
-          </View>
+    <RightDrawer
+      onClose={onClose}
+      idBase="notes"
+      title={editing ? (editing === "new" ? t("notesNew") : t("notesEdit")) : t("notesTitle")}
+      closeLabel={t("notesClose")}
+      onBack={() => (editing ? (setEditing(null), true) : false)}
+      leading={
+        editing ? (
+          <Pressable onPress={() => setEditing(null)} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notesBack")} testID="notes-editor-back">
+            <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
+          </Pressable>
+        ) : (
+          <Ionicons name="document-text-outline" size={22} color={colors.askOrange} style={{ marginLeft: 4 }} />
+        )
+      }
+    >
+      {() => (
+        <>
           <View style={styles.hint} testID="notes-hint">
             <Ionicons name="eye-outline" size={15} color={colors.warning} />
             <Text style={styles.hintText}>{t("notesHint")}</Text>
           </View>
-
           {editing ? (
             <NoteEditor key={editing === "new" ? "new" : editing.note_id} note={editing === "new" ? null : editing} onDone={() => setEditing(null)} />
           ) : notes.isLoading ? (
@@ -143,9 +106,9 @@ function NotesDrawer({ onClose }: { onClose: () => void }) {
               {list.length >= NOTES_MAX && <Text style={[styles.muted, styles.empty]}>{t("notesLimit", { n: String(NOTES_MAX) })}</Text>}
             </ScrollView>
           )}
-        </Animated.View>
-      </View>
-    </Modal>
+        </>
+      )}
+    </RightDrawer>
   );
 }
 
@@ -213,11 +176,6 @@ function NoteEditor({ note, onDone }: { note: Note | null; onDone: () => void })
 
 const useStyles = makeStyles((c) => ({
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  root: { flex: 1, flexDirection: "row", justifyContent: "flex-end" },
-  backdrop: { ...({ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const), backgroundColor: "rgba(4,10,18,0.62)" },
-  panel: { height: "100%", backgroundColor: c.surface, borderLeftWidth: 1, borderLeftColor: c.headerBorder, paddingHorizontal: 14, ...fx("shadowOrangeSoft") },
-  head: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
-  headTitle: { flex: 1, color: c.onSurface, fontSize: 18, fontWeight: "800" },
   hint: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: c.warningSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7, marginBottom: 12 },
   hintText: { color: c.warning, fontSize: 12.5, fontWeight: "600", flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, paddingVertical: 40 },

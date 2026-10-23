@@ -469,6 +469,28 @@ const S = {
   notesDelete: ["Usuń notatkę", "Delete note", "Șterge notița"],
   notesDeleteConfirm: ["Na pewno usunąć tę notatkę?", "Delete this note?", "Sigur ștergi această notiță?"],
   notesDeleteYes: ["Usuń", "Delete", "Șterge"],
+  // Main menu (right-side drawer, ☰ in the header)
+  menuOpen: ["Otwórz menu", "Open menu", "Deschide meniul"],
+  menuTitle: ["Menu", "Menu", "Meniu"],
+  menuClose: ["Zamknij menu", "Close menu", "Închide meniul"],
+  menuSecNav: ["Nawigacja", "Navigation", "Navigare"],
+  menuSecTools: ["Twoje narzędzia", "Your tools", "Instrumentele tale"],
+  menuSecAccount: ["Konto", "Account", "Cont"],
+  menuSecAdmin: ["Administracja", "Administration", "Administrare"],
+  menuSecLang: ["Język aplikacji", "App language", "Limba aplicației"],
+  menuSecHelp: ["Pomoc i kontakt", "Help & contact", "Ajutor și contact"],
+  menuChat: ["Czat z Elonem", "Chat with Elon", "Chat cu Elon"],
+  menuAccountId: ["ID konta", "Account ID", "ID cont"],
+  menuPro: ["PRO aktywne", "PRO active", "PRO activ"],
+  menuFree: ["Plan darmowy", "Free plan", "Plan gratuit"],
+  menuUpgrade: ["Przejdź na PRO · £9.99/mies.", "Go PRO · £9.99/mo", "Treci la PRO · £9.99/lună"],
+  menuAdminHub: ["Hub administratora", "Admin hub", "Hub administrator"],
+  menuAdminMessages: ["Wiadomości do użytkowników", "Messages to users", "Mesaje către utilizatori"],
+  menuContact: ["Napisz do nas", "Contact us", "Scrie-ne"],
+  menuSite: ["Strona askelon.uk", "askelon.uk website", "Site-ul askelon.uk"],
+  menuCurrent: ["aktualnie otwarte", "current page", "pagina curentă"],
+  menuLogoutConfirm: ["Na pewno chcesz się wylogować?", "Sign out of ask Elon?", "Sigur vrei să te deconectezi?"],
+  menuLogoutYes: ["Tak, wyloguj", "Yes, sign out", "Da, deconectează-mă"],
 };
 
 export type StringKey = keyof typeof S;

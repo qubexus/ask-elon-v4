@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
+import { MenuButton } from "@/src/components/MenuPanel";
 import { NotesButton } from "@/src/components/NotesPanel";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
@@ -64,6 +65,8 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
 
   const titleSize = Platform.OS === "web" ? (width < 375 ? 17 : 18) : 18;
+  // Phones: avatar and sign-out live in the ☰ menu so the title keeps room next to notes / messages / menu.
+  const compact = width < 600;
 
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 8 }]} testID="app-header">
@@ -120,16 +123,17 @@ export function Header({ title, subtitle, back, right, robot = "elon", online, o
             )}
           </Pressable>
         )}
-        {user && !hideAvatar && (
+        {user && !hideAvatar && !compact && (
           <Pressable testID="header-user" onPress={() => router.push("/profile?tab=data")} style={styles.user} accessibilityRole="button" accessibilityLabel={t("tabProfile")}>
             {user.picture ? <Image source={{ uri: user.picture }} style={styles.avatar} /> : <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>}
           </Pressable>
         )}
-        {user && (
+        {user && !compact && (
           <Pressable testID="header-logout-button" onPress={signOut} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("logout")}>
             <Ionicons name="log-out-outline" size={22} color={colors.onBrandSecondary} />
           </Pressable>
         )}
+        {user && <MenuButton />}
       </View>
     </View>
   );
