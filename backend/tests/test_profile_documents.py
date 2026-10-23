@@ -5,6 +5,7 @@ import time
 import uuid
 import pytest
 import requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
@@ -18,7 +19,7 @@ def _hdr(tok):
 
 def _register_fresh():
     email = f"test_{uuid.uuid4().hex[:10]}@example.com"
-    r = requests.post(f"{API}/auth/register", json={"name": "T", "email": email, "password": "Passw0rd!"}, timeout=30)
+    r = devmail.register(API, json={"name": "T", "email": email, "password": "Passw0rd!"}, timeout=30)
     assert r.status_code == 200, r.text
     return r.json()["session_token"], email
 
@@ -110,23 +111,26 @@ class TestDocuments:
         ids = [d["doc_id"] for d in r.json()]
         assert TestDocuments.doc_id in ids
 
-    def test_04_thumb_token_returns_png(self):
-        url = f"{API}/documents/{TestDocuments.doc_id}/thumb?token={self.tok}"
-        r = requests.get(url, timeout=30)
+    def test_04_thumb_signed_link_returns_png(self):
+        link = requests.get(f"{API}/documents/{TestDocuments.doc_id}/link?kind=thumb", headers=_hdr(self.tok), timeout=30)
+        assert link.status_code == 200, link.text
+        r = requests.get(f"{API}{link.json()['url']}", timeout=30)
         assert r.status_code == 200, r.text
         assert r.headers["Content-Type"].startswith("image/png")
         assert len(r.content) > 500
 
-    def test_05_file_token_returns_pdf(self):
-        url = f"{API}/documents/{TestDocuments.doc_id}/file?token={self.tok}"
-        r = requests.get(url, timeout=30)
+    def test_05_file_signed_link_returns_pdf_and_token_param_is_ignored(self):
+        assert requests.get(f"{API}/documents/{TestDocuments.doc_id}/file?token={self.tok}", timeout=30).status_code == 401
+        link = requests.get(f"{API}/documents/{TestDocuments.doc_id}/link?kind=file", headers=_hdr(self.tok), timeout=30)
+        r = requests.get(f"{API}{link.json()['url']}", timeout=30)
         assert r.status_code == 200
         assert r.headers["Content-Type"] == "application/pdf"
 
     def test_06_other_users_token_cannot_access(self):
         other_tok, _ = _register_fresh()
-        url = f"{API}/documents/{TestDocuments.doc_id}/file?token={other_tok}"
-        r = requests.get(url, timeout=30)
+        assert requests.get(f"{API}/documents/{TestDocuments.doc_id}/link", headers=_hdr(other_tok), timeout=30).status_code == 404
+        url = f"{API}/documents/{TestDocuments.doc_id}/file"
+        r = requests.get(url, headers=_hdr(other_tok), timeout=30)
         assert r.status_code == 404, f"expected 404, got {r.status_code}"
 
     def test_07_processing_becomes_ready(self):

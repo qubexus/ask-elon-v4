@@ -183,8 +183,12 @@ Bez tego przycisk Google jest **ukryty**, a logowanie e-mailem działa normalnie
 Wpisz dane serwera poczty wychodzącej od dostawcy skrzynki (np. tej, na której działa `contact@askelon.uk`):
 `SMTP_HOST`, `SMTP_PORT` (587 albo 465), `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM=contact@askelon.uk`.
 Kod ma 6 cyfr, jest ważny 15 minut, działa raz i po 5 błędnych próbach przestaje działać.
-Bez SMTP w trybie `development` kod pokazuje się w oknie serwera (`[DEV ONLY] PASSWORD RESET CODE`);
-w trybie `production` kod **nigdy** nie trafia do logów.
+Ten sam serwer wysyła **kod potwierdzenia adresu e-mail** przy rejestracji (nowe konto jest nieaktywne, dopóki
+użytkownik nie wpisze kodu; kod 15 minut, 5 prób). **Bez SMTP w trybie `production` rejestracja e-mailem jest wyłączona**
+(odpowiedź 503), działa logowanie Google i istniejące konta.
+Bez SMTP w trybie `development` kod pokazuje się w oknie serwera (`[DEV ONLY] … CODE`); można też ustawić
+`MAIL_BACKEND=outbox` (`MAIL_OUTBOX_DIR`), wtedy wiadomości trafiają do plików – tylko w trybie development.
+W trybie `production` kod **nigdy** nie trafia do logów.
 
 ### 4.4 Pliki użytkowników
 - `STORAGE_BACKEND=local` (domyślnie): pliki w `backend/uploads/`. Dobre na komputer i serwer z trwałym dyskiem. Rób kopie zapasowe tego folderu.
@@ -279,6 +283,15 @@ Testy bez serwera i bez internetu (udawane odpowiedzi postcodes.io / Photon / Ov
 cd backend && .venv/bin/python -m pytest -n 0 tests_unit      # wyszukiwanie adresu pracodawcy
 cd frontend && npm run test:format                              # staż pracy na karcie profilu (PL/EN/RO)
 ```
+
+Izolacja danych między kontami (bez serwera; potrzebny lokalny MongoDB, baza testowa jest tworzona i usuwana sama,
+nazwa musi kończyć się na `_test`). Uruchamiaj osobno, nie razem z `tests_unit`:
+```bash
+cd backend && ISOLATION_DB_NAME=ask_elon_izolacja_test .venv/bin/python -m pytest -n 0 tests_isolation
+```
+Sprawdza m.in.: konto B nie widzi/zmienia/usuwa danych A, linki do plików i nagrań są podpisane i krótkotrwałe,
+forum nie zdradza `user_id`, potwierdzanie e-maila, przejęcie niepotwierdzonego konta przez Google, usuwanie konta
+oraz statycznie skanuje `server.py`, czy każde zapytanie do prywatnych kolekcji filtruje po `user_id`.
 
 ---
 

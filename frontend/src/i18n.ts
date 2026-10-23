@@ -491,6 +491,47 @@ const S = {
   menuCurrent: ["aktualnie otwarte", "current page", "pagina curentă"],
   menuLogoutConfirm: ["Na pewno chcesz się wylogować?", "Sign out of ask Elon?", "Sigur vrei să te deconectezi?"],
   menuLogoutYes: ["Tak, wyloguj", "Yes, sign out", "Da, deconectează-mă"],
+  // e-mail verification (new accounts)
+  verifyTitle: ["Potwierdź adres e-mail", "Confirm your e-mail", "Confirmă adresa de e-mail"],
+  verifySub: [
+    "Wysłaliśmy 6-cyfrowy kod na {email}. Wpisz go poniżej, żeby aktywować konto. Kod jest ważny 15 minut.",
+    "We sent a 6-digit code to {email}. Enter it below to activate your account. The code is valid for 15 minutes.",
+    "Am trimis un cod de 6 cifre la {email}. Introdu-l mai jos ca să activezi contul. Codul este valabil 15 minute.",
+  ],
+  verifyCode: ["Kod z e-maila", "Code from the e-mail", "Codul din e-mail"],
+  verifyCta: ["Potwierdź i wejdź", "Confirm and continue", "Confirmă și continuă"],
+  verifyResend: ["Wyślij kod ponownie", "Send the code again", "Trimite codul din nou"],
+  verifyResendIn: ["Wyślij ponownie za {s} s", "Send again in {s} s", "Trimite din nou în {s} s"],
+  verifyResent: ["Wysłaliśmy nowy kod. Sprawdź też folder Spam.", "We sent a new code. Check your Spam folder too.", "Am trimis un cod nou. Verifică și folderul Spam."],
+  verifyNeeded: [
+    "To konto nie jest jeszcze aktywne. Potwierdź adres e-mail kodem, który wysłaliśmy.",
+    "This account isn't active yet. Confirm your e-mail with the code we sent.",
+    "Contul nu este încă activ. Confirmă adresa de e-mail cu codul trimis.",
+  ],
+  verifyBad: ["Kod jest nieprawidłowy albo wygasł. Wyślij nowy kod.", "The code is wrong or has expired. Send a new code.", "Codul este greșit sau a expirat. Trimite un cod nou."],
+  verifyMailOff: [
+    "Zakładanie kont e-mail jest chwilowo niedostępne. Zaloguj się przez Google albo spróbuj później.",
+    "Creating e-mail accounts is temporarily unavailable. Sign in with Google or try again later.",
+    "Crearea conturilor cu e-mail nu este disponibilă momentan. Conectează-te cu Google sau încearcă mai târziu.",
+  ],
+  verifySpam: ["Nie widzisz wiadomości? Sprawdź folder Spam.", "Can't see the e-mail? Check your Spam folder.", "Nu vezi e-mailul? Verifică folderul Spam."],
+  // account deletion (GDPR)
+  delTitle: ["Usuń konto", "Delete account", "Șterge contul"],
+  delSub: [
+    "Usuniemy na zawsze Twoje konto, sprawy, rozmowy z Elonem, pisma, notatki i dokumenty razem z plikami. Wpisy na forum zostaną, ale jako „Usunięty użytkownik”. Tego nie da się cofnąć.",
+    "We will permanently delete your account, cases, chats with Elon, letters, notes and documents including the files. Forum posts stay, shown as \u201cDeleted user\u201d. This can't be undone.",
+    "Vom șterge definitiv contul, cazurile, conversațiile cu Elon, scrisorile, notițele și documentele, inclusiv fișierele. Postările de pe forum rămân, afișate ca „Utilizator șters”. Acțiunea nu poate fi anulată.",
+  ],
+  delOpen: ["Usuń konto i wszystkie dane", "Delete my account and all data", "Șterge contul și toate datele"],
+  delConfirmQ: ["Na pewno usunąć konto na zawsze?", "Delete your account forever?", "Sigur ștergi contul definitiv?"],
+  delPassword: ["Wpisz hasło, żeby potwierdzić", "Enter your password to confirm", "Introdu parola pentru confirmare"],
+  delYes: ["Tak, usuń na zawsze", "Yes, delete forever", "Da, șterge definitiv"],
+  delCancel: ["Anuluj", "Cancel", "Anulează"],
+  delDone: ["Konto zostało usunięte.", "Your account has been deleted.", "Contul a fost șters."],
+  delWrongPw: ["Hasło jest nieprawidłowe.", "Wrong password.", "Parolă greșită."],
+  delSubActive: ["Najpierw anuluj subskrypcję, potem usuń konto.", "Cancel your subscription first, then delete the account.", "Anulează mai întâi abonamentul, apoi șterge contul."],
+  delAdmin: ["Konta administratora nie można usunąć w aplikacji.", "The admin account can't be deleted in the app.", "Contul de administrator nu poate fi șters din aplicație."],
+  deletedUser: ["Usunięty użytkownik", "Deleted user", "Utilizator șters"],
 };
 
 export type StringKey = keyof typeof S;

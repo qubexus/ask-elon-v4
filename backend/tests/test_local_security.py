@@ -7,6 +7,7 @@ Run against a backend started with APP_ENV=development (reset codes are read fro
 import io, os, re, time, uuid
 import pytest, requests
 from conftest import BASE_URL
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 API = f"{BASE_URL}/api"
 LOG = os.environ.get("TEST_BACKEND_LOG", "/tmp/ae-backend.log")
@@ -16,7 +17,7 @@ PW = "StrongPass123!"
 
 def new_user(email=None, name="Jan Test"):
     email = email or f"local_{uuid.uuid4().hex[:10]}@example.com"
-    r = requests.post(f"{API}/auth/register", json={"name": name, "email": email, "password": PW}, timeout=15)
+    r = devmail.register(API, json={"name": name, "email": email, "password": PW}, timeout=15)
     assert r.status_code in (200, 409), r.text
     if r.status_code == 409:
         r = requests.post(f"{API}/auth/login", json={"email": email, "password": PW}, timeout=15)
@@ -84,20 +85,12 @@ def test_admin_only_via_admin_emails():
 
 
 def _read_code(email):
-    pat = re.compile(rf"PASSWORD RESET CODE for {re.escape(email)}: (\d{{6}})")
-    for _ in range(20):
-        with open(LOG, errors="ignore") as f:
-            for ln in reversed(f.readlines()[-2000:]):
-                m = pat.search(ln)
-                if m:
-                    return m.group(1)
-        time.sleep(0.25)
-    return ""
+    return devmail.latest_code(email, "reset")
 
 
 def test_reset_flow_single_use_and_attempts():
-    if not os.path.exists(LOG):
-        pytest.skip("server log not available")
+    if not (devmail.OUTBOX or os.path.exists(LOG)):
+        pytest.skip("dev outbox / server log not available")
     email, old = new_user()
     r = requests.post(f"{API}/auth/request-reset", json={"email": email}, timeout=15)
     assert r.status_code == 200 and "code" not in r.json()
@@ -111,9 +104,10 @@ def test_reset_flow_single_use_and_attempts():
     # single use
     assert requests.post(f"{API}/auth/reset-password", json={"email": email, "code": code, "new_password": "Other12345"}, timeout=15).status_code == 400
     # code burned after 5 wrong attempts
+    t0 = time.time()
     requests.post(f"{API}/auth/request-reset", json={"email": email}, timeout=15)
     time.sleep(0.5)
-    code2 = _read_code(email)
+    code2 = devmail.latest_code(email, "reset", after=t0 - 0.05)
     for _ in range(5):
         requests.post(f"{API}/auth/reset-password", json={"email": email, "code": bad, "new_password": "Other12345"}, timeout=15)
     assert requests.post(f"{API}/auth/reset-password", json={"email": email, "code": code2, "new_password": "Other12345"}, timeout=15).status_code == 400

@@ -71,3 +71,56 @@ def get_object(path: str) -> Tuple[bytes, str]:
     if not p.is_file():
         raise ObjectNotFound(path)
     return p.read_bytes(), "application/octet-stream"
+
+
+def delete_object(path: str) -> bool:
+    """Removes one stored file; True if something was deleted. Missing files are fine (idempotent)."""
+    if not path:
+        return False
+    if BACKEND == "s3":
+        _client().delete_object(Bucket=S3_BUCKET, Key=path)
+        return True
+    try:
+        p = _local_path(path)
+    except ObjectNotFound:
+        return False
+    if p.is_file():
+        p.unlink()
+        return True
+    return False
+
+
+def delete_prefix(prefix: str) -> int:
+    """Removes every stored file under `prefix` (one user's folder). Returns the number of files removed."""
+    prefix = (prefix or "").strip("/")
+    if prefix.count("/") < 2:  # never wipe a whole app folder by mistake: expects "<app>/<kind>/<user_id>"
+        raise ValueError("refusing to delete a broad storage prefix")
+    if BACKEND == "s3":
+        n, token = 0, None
+        while True:
+            kw = {"Bucket": S3_BUCKET, "Prefix": prefix + "/"}
+            if token:
+                kw["ContinuationToken"] = token
+            r = _client().list_objects_v2(**kw)
+            keys = [{"Key": o["Key"]} for o in r.get("Contents", [])]
+            if keys:
+                _client().delete_objects(Bucket=S3_BUCKET, Delete={"Objects": keys, "Quiet": True})
+                n += len(keys)
+            if not r.get("IsTruncated"):
+                return n
+            token = r.get("NextContinuationToken")
+    try:
+        d = _local_path(prefix)
+    except ObjectNotFound:
+        return 0
+    if not d.is_dir():
+        return 0
+    n = 0
+    for f in sorted(d.rglob("*"), reverse=True):
+        if f.is_file() or f.is_symlink():
+            f.unlink()
+            n += 1
+        elif f.is_dir():
+            f.rmdir()
+    d.rmdir()
+    return n

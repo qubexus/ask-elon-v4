@@ -3,6 +3,7 @@ import os
 import uuid
 import pytest
 import requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
@@ -25,7 +26,7 @@ def auth_headers(email, password):
 class TestOnboardingProfile:
     def setup_method(self):
         email = f"TEST_ob_{uuid.uuid4().hex[:8]}@example.com"
-        r = requests.post(f"{API}/auth/register", json={"name": "Testowy Jan", "email": email, "password": "Password123"})
+        r = devmail.register(API, json={"name": "Testowy Jan", "email": email, "password": "Password123"})
         assert r.status_code == 200, r.text
         self.email = email
         self.h = {"Authorization": f"Bearer {r.json()['session_token']}"}

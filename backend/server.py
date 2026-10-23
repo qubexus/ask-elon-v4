@@ -38,6 +38,8 @@ import storage  # noqa: E402
 import lookup  # noqa: E402
 import notes  # noqa: E402
 import account_ids  # noqa: E402
+import security  # noqa: E402
+import account_deletion  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -121,10 +123,23 @@ def rate_limit(key: str, limit: int, window_s: int):
             _hits.pop(k, None)
 
 
+class CodedError(Exception):
+    """An API error with a machine-readable `code` the app translates (PL/EN/RO)."""
+    def __init__(self, status: int, code: str, detail: str):
+        self.status, self.code, self.detail = status, code, detail
+
+
 # ---------------- Auth ----------------
 class GoogleIn(BaseModel):
     id_token: str
     locale: Optional[str] = None
+
+
+async def link_viewer_ok(request: Request, owner: str) -> bool:
+    """Signed links work without a login (img/audio/new tab). If a session IS sent, it must be the owner's."""
+    if not request.headers.get("Authorization"):
+        return True
+    return (await current_user(request))["user_id"] == owner
 
 
 async def current_user(request: Request) -> dict:
@@ -142,7 +157,8 @@ async def user_from_token(token: str) -> dict:
                    options={"require": ["sub", "sid", "exp", "iat"]})
     except jwt.PyJWTError:
         raise HTTPException(401, "Invalid token")
-    sess = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
+    # sessions are stored as SHA-256 of the token only (see security.py)
+    sess = await db.user_sessions.find_one({"token_hash": security.token_hash(token)}, {"_id": 0})
     if not sess:
         raise HTTPException(401, "Invalid session")
     exp = sess["expires_at"]
@@ -153,15 +169,21 @@ async def user_from_token(token: str) -> dict:
     user = await db.users.find_one({"user_id": sess["user_id"]}, USER_PROJ)
     if not user:
         raise HTTPException(401, "User not found")
+    if user.get("email_verified") is False:  # defence in depth: unverified accounts never get a session
+        raise HTTPException(401, "Invalid session")
     return user
 
 
 async def create_user(email: str, name: str, picture: Optional[str], password_hash: Optional[str] = None,
-                      onboarded: bool = False, locale: Optional[str] = None) -> str:
+                      onboarded: bool = False, locale: Optional[str] = None, email_verified: bool = False,
+                      verified_via: Optional[str] = None) -> str:
     user_id = new_id("user")
     doc = {"user_id": user_id, "email": email, "name": name, "picture": picture, "employer": "", "job_title": "",
            "locale": locale if locale in ("pl", "en", "ro") else "pl", "is_member": email in ADMIN_EMAILS,
-           "role": "admin" if email in ADMIN_EMAILS else "user", "onboarded": onboarded, "created_at": now()}
+           "role": "admin" if email in ADMIN_EMAILS else "user", "onboarded": onboarded, "created_at": now(),
+           "email_verified": bool(email_verified)}
+    if email_verified:
+        doc.update(email_verified_via=verified_via or "unknown", email_verified_at=now())
     if password_hash:
         doc["password_hash"] = password_hash
     # Customer account ID (initials, join month, sequence, check digit, nationality letter); fixed for life.
@@ -211,11 +233,24 @@ async def auth_google(body: GoogleIn, request: Request):
         raise HTTPException(401, "Invalid Google login")
     email = norm_email(data["email"])
     existing = await db.users.find_one({"email": email}, {"_id": 0})
-    if existing:
+    if existing and existing.get("email_verified") is False:
+        # Someone registered this address with a password but never proved they own it. Google has just proved
+        # that THIS person owns it, so they take the account over safely: the unknown password is removed and
+        # every session/code is revoked, so whoever typed that password can never get in.
+        user_id = existing["user_id"]
+        await db.users.update_one({"user_id": user_id}, {
+            "$set": {"picture": data.get("picture"), "google_sub": data.get("sub"), "name": data.get("name") or "",
+                     "email_verified": True, "email_verified_via": "google", "email_verified_at": now()},
+            "$unset": {"password_hash": ""}})
+        for coll in (db.user_sessions, db.password_resets, db.email_verifications):
+            await coll.delete_many({"user_id": user_id})
+        logger.warning("Google sign-in took over an unverified password account %s (password removed, sessions revoked)", user_id)
+    elif existing:
         user_id = existing["user_id"]
         await db.users.update_one({"user_id": user_id}, {"$set": {"picture": data.get("picture"), "google_sub": data.get("sub")}})
     else:
-        user_id = await create_user(email, data.get("name", ""), data.get("picture"), locale=body.locale)
+        user_id = await create_user(email, data.get("name", ""), data.get("picture"), locale=body.locale,
+                                    email_verified=True, verified_via="google")
         await db.users.update_one({"user_id": user_id}, {"$set": {"google_sub": data.get("sub")}})
     token = await issue_session(user_id, "google")
     return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
@@ -223,14 +258,16 @@ async def auth_google(body: GoogleIn, request: Request):
 
 @api.get("/auth/me")
 async def auth_me(request: Request):
-    return await current_user(request)
+    user = await current_user(request)
+    pw = await db.users.find_one({"user_id": user["user_id"], "password_hash": {"$exists": True}}, {"_id": 1})
+    return {**user, "has_password": bool(pw)}
 
 
 @api.post("/auth/logout")
 async def auth_logout(request: Request):
     auth = request.headers.get("Authorization", "")
-    if auth.startswith("Bearer "):
-        await db.user_sessions.delete_one({"session_token": auth[7:]})
+    if auth.startswith("Bearer ") and auth[7:]:
+        await db.user_sessions.delete_one({"token_hash": security.token_hash(auth[7:])})
     return {"ok": True}
 
 
@@ -261,8 +298,9 @@ def norm_email(e: str) -> str:
     return e.strip().lower()
 
 
-def digest(v: str) -> str:
-    return hashlib.sha256(v.encode()).hexdigest()
+def code_digest(purpose: str, email: str, code: str) -> str:
+    """One-time codes are stored as HMAC-SHA256 with the server secret (a DB dump alone can't brute-force them)."""
+    return security.code_hash(JWT_SECRET, purpose, email, code)
 
 
 async def issue_session(user_id: str, method: str = "password") -> str:
@@ -270,7 +308,7 @@ async def issue_session(user_id: str, method: str = "password") -> str:
     exp = now() + timedelta(days=SESSION_DAYS)
     token = jwt.encode({"sub": user_id, "sid": sid, "iss": "union-elon", "aud": "union-elon-app",
                         "iat": now(), "exp": exp, "typ": "access"}, JWT_SECRET, algorithm="HS256")
-    await db.user_sessions.insert_one({"session_token": token, "sid": sid, "user_id": user_id,
+    await db.user_sessions.insert_one({"token_hash": security.token_hash(token), "sid": sid, "user_id": user_id,
                                        "auth_method": method, "expires_at": exp, "created_at": now()})
     return token
 
@@ -287,15 +325,19 @@ def check_password(pw: str):
 
 @api.post("/auth/register")
 async def register(body: RegisterIn, request: Request):
+    """Creates an INACTIVE account and e-mails a 6-digit code; the first session is issued by /auth/verify-email."""
     rate_limit(f"register:{client_ip(request)}", 10, 3600)
     email = norm_email(body.email)
     check_password(body.password)
+    if not mailer.configured() and not IS_DEV:
+        raise CodedError(503, "email_unavailable", "E-mail sending is not configured, so new accounts can't be confirmed yet")
     if await db.users.find_one({"email": email}, {"_id": 1}):
         raise HTTPException(409, "Email already registered")
+    locale = body.locale if body.locale in LANG_NAMES else "pl"
     user_id = await create_user(email, body.name.strip()[:120], None, password_hash=passwords.hash(body.password),
-                              locale=body.locale)
-    token = await issue_password_session(user_id)
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
+                                locale=locale, email_verified=False)
+    await send_verification(user_id, email, locale)
+    return {"verification_required": True, "email": email, "code_minutes": VERIFY_MINUTES}
 
 
 @api.post("/auth/login")
@@ -312,6 +354,16 @@ async def login(body: LoginIn, request: Request):
         await db.login_attempts.insert_one({"email": email, "at": now()})
         raise HTTPException(401, "Invalid email or password")
     await db.login_attempts.delete_many({"email": email})
+    if user.get("email_verified") is False:
+        # Correct password, but the address was never confirmed: no session. A fresh code is sent if none is live.
+        live = await db.email_verifications.find_one({"user_id": user["user_id"], "expires_at": {"$gt": now()}}, {"_id": 1})
+        if not live:
+            try:
+                rate_limit(f"verify-send:{email}", 3, 900)
+                await send_verification(user["user_id"], email, user.get("locale") or "pl")
+            except HTTPException:
+                pass
+        raise CodedError(403, "email_unverified", "Please confirm your e-mail address first")
     token = await issue_password_session(user["user_id"])
     return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
 
@@ -320,17 +372,83 @@ RESET_MINUTES = 15
 RESET_MAX_ATTEMPTS = 5
 
 
-async def deliver_reset_code(email: str, code: str, locale: str):
-    if mailer.smtp_configured():
+async def deliver_code(kind: str, email: str, code: str, locale: str):
+    """kind = "reset" or "verify". Uses the configured sender (mailer.py); never logs codes in production."""
+    send = mailer.send_reset_code if kind == "reset" else mailer.send_verification_code
+    minutes = RESET_MINUTES if kind == "reset" else VERIFY_MINUTES
+    if mailer.configured():
         try:
-            await run_in_threadpool(mailer.send_reset_code, email, code, locale, RESET_MINUTES)
+            await run_in_threadpool(send, email, code, locale, minutes)
             return
         except Exception as e:
-            logger.error("Reset e-mail could not be sent (%s)", type(e).__name__)
-    if IS_DEV:  # only on a developer machine: the code goes to the server log
-        logger.warning("[DEV ONLY] PASSWORD RESET CODE for %s: %s", email, code)
-    elif not mailer.smtp_configured():
-        logger.error("SMTP is not configured – password reset e-mails cannot be sent")
+            logger.error("%s e-mail could not be sent (%s)", kind, type(e).__name__)
+    if IS_DEV:  # only on a developer machine without any sender: the code goes to the server log
+        logger.warning("[DEV ONLY] %s CODE for %s: %s", kind.upper(), email, code)
+    elif not mailer.configured():
+        logger.error("SMTP is not configured – %s e-mails cannot be sent", kind)
+
+
+async def deliver_reset_code(email: str, code: str, locale: str):
+    await deliver_code("reset", email, code, locale)
+
+
+# ---------------- E-mail verification (new password accounts) ----------------
+VERIFY_MINUTES = 15
+VERIFY_MAX_ATTEMPTS = 5
+
+
+class VerifyIn(BaseModel):
+    email: EmailStr
+    code: str
+
+
+class ResendIn(BaseModel):
+    email: EmailStr
+
+
+async def send_verification(user_id: str, email: str, locale: str):
+    code = f"{secrets.randbelow(10**6):06d}"
+    await db.email_verifications.delete_many({"user_id": user_id})
+    await db.email_verifications.insert_one({"user_id": user_id, "code_hash": code_digest("verify", email, code),
+                                             "expires_at": now() + timedelta(minutes=VERIFY_MINUTES), "attempts": 0,
+                                             "created_at": now()})
+    asyncio.create_task(deliver_code("verify", email, code, locale))
+
+
+@api.post("/auth/verify-email")
+async def verify_email(body: VerifyIn, request: Request):
+    """Confirms the address with the e-mailed code, activates the account and logs the user in."""
+    rate_limit(f"verify-ip:{client_ip(request)}", 20, 900)
+    email = norm_email(body.email)
+    user = await db.users.find_one({"email": email, "email_verified": False}, {"_id": 0, "user_id": 1})
+    row = user and await db.email_verifications.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not row:
+        raise CodedError(400, "code_invalid", "Invalid or expired code")
+    exp = row["expires_at"] if row["expires_at"].tzinfo else row["expires_at"].replace(tzinfo=timezone.utc)
+    code_ok = hmac.compare_digest(row["code_hash"], code_digest("verify", email, body.code.strip()[:12]))
+    if exp <= now() or row["attempts"] >= VERIFY_MAX_ATTEMPTS or not code_ok:
+        if row["attempts"] + 1 >= VERIFY_MAX_ATTEMPTS or exp <= now():
+            await db.email_verifications.delete_many({"user_id": user["user_id"]})  # code burned
+        else:
+            await db.email_verifications.update_one({"user_id": user["user_id"]}, {"$inc": {"attempts": 1}})
+        raise CodedError(400, "code_invalid", "Invalid or expired code")
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": {
+        "email_verified": True, "email_verified_via": "code", "email_verified_at": now()}})
+    await db.email_verifications.delete_many({"user_id": user["user_id"]})
+    token = await issue_password_session(user["user_id"])
+    return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
+
+
+@api.post("/auth/resend-verification")
+async def resend_verification(body: ResendIn, request: Request):
+    """Sends a new code to an unverified account. Same answer whether or not the account exists."""
+    rate_limit(f"verify-resend-ip:{client_ip(request)}", 10, 900)
+    email = norm_email(body.email)
+    rate_limit(f"verify-send:{email}", 3, 900)
+    user = await db.users.find_one({"email": email, "email_verified": False}, {"_id": 0, "user_id": 1, "locale": 1})
+    if user:
+        await send_verification(user["user_id"], email, user.get("locale") or "pl")
+    return {"message": "If the account needs confirming, a new code has been sent.", "code_minutes": VERIFY_MINUTES}
 
 
 @api.post("/auth/request-reset")
@@ -342,7 +460,7 @@ async def request_reset(body: ResetRequestIn, request: Request):
     if user:
         code = f"{secrets.randbelow(10**6):06d}"
         await db.password_resets.delete_many({"user_id": user["user_id"]})
-        await db.password_resets.insert_one({"user_id": user["user_id"], "token_hash": digest(f"{email}:{code}"),
+        await db.password_resets.insert_one({"user_id": user["user_id"], "token_hash": code_digest("reset", email, code),
                                              "expires_at": now() + timedelta(minutes=RESET_MINUTES), "attempts": 0,
                                              "created_at": now()})
         asyncio.create_task(deliver_reset_code(email, code, user.get("locale") or "pl"))
@@ -359,15 +477,20 @@ async def reset_password(body: ResetIn, request: Request):
     if not row:
         raise HTTPException(400, "Invalid or expired code")
     exp = row["expires_at"] if row["expires_at"].tzinfo else row["expires_at"].replace(tzinfo=timezone.utc)
-    code_ok = hmac.compare_digest(row["token_hash"], digest(f"{email}:{body.code.strip()[:12]}"))
+    code_ok = hmac.compare_digest(row["token_hash"], code_digest("reset", email, body.code.strip()[:12]))
     if exp <= now() or row["attempts"] >= RESET_MAX_ATTEMPTS or not code_ok:
         if row["attempts"] + 1 >= RESET_MAX_ATTEMPTS or exp <= now():
             await db.password_resets.delete_many({"user_id": user["user_id"]})  # code burned
         else:
             await db.password_resets.update_one({"user_id": user["user_id"]}, {"$inc": {"attempts": 1}})
         raise HTTPException(400, "Invalid or expired code")
-    await db.users.update_one({"user_id": user["user_id"]}, {"$set": {"password_hash": passwords.hash(body.new_password)}})
+    upd = {"password_hash": passwords.hash(body.new_password)}
+    if (await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "email_verified": 1}) or {}).get("email_verified") is False:
+        # the reset code arrived in this inbox, so it also proves the address (lets an owner reclaim a squatted e-mail)
+        upd.update(email_verified=True, email_verified_via="reset", email_verified_at=now())
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": upd})
     await db.password_resets.delete_many({"user_id": user["user_id"]})
+    await db.email_verifications.delete_many({"user_id": user["user_id"]})
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
     token = await issue_password_session(user["user_id"])
     return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
@@ -522,7 +645,7 @@ async def patch_case(case_id: str, body: CasePatch, request: Request):
                                     {"$set": {"status": body.status, "updated_at": now()}})
     if not res.matched_count:
         raise HTTPException(404, "Case not found")
-    return await db.cases.find_one({"case_id": case_id}, {"_id": 0})
+    return await db.cases.find_one({"case_id": case_id, "user_id": user["user_id"]}, {"_id": 0})
 
 
 # ---------------- Chat (AI model, streaming) ----------------
@@ -623,6 +746,7 @@ TTS_STYLE_VERSION = "2"  # bump to invalidate cached audio after changing the re
 TTS_MAX_CHARS = 3600     # longer replies are read up to this point (cost + latency cap)
 TTS_CHUNK_CHARS = 1200   # few requests per reply (API quota); chunks run in parallel, then joined
 TTS_CACHE_MAX = 3000     # cached audio files kept in MongoDB (oldest removed first)
+TTS_LINK_TTL = 900       # seconds a signed audio link works (issued per user, per own message)
 
 
 def tts_instructions(lang: str) -> str:
@@ -709,6 +833,8 @@ async def tts(body: TtsIn, request: Request):
     lang = user.get("locale") if user.get("locale") in LANG_NAMES else "pl"
     style = tts_instructions(lang)
     key = hashlib.sha256(f"{text}|{ai.tts_signature()}|{style}|{TTS_STYLE_VERSION}".encode()).hexdigest()
+    if msg.get("tts_key") != key:  # remembered on the message: lets account deletion find this user's audio
+        await db.messages.update_one({"message_id": body.message_id, "user_id": user["user_id"]}, {"$set": {"tts_key": key}})
     cached = await db.tts_cache.find_one({"key": key}, {"_id": 0, "ext": 1})
     if not cached:
         rate_limit(f"tts:{user['user_id']}", 15, 60)
@@ -730,19 +856,27 @@ async def tts(body: TtsIn, request: Request):
                 await db.tts_cache.delete_many({"_id": {"$in": [d["_id"] for d in old]}})
         except Exception:
             logger.warning("TTS cache trim failed", exc_info=True)
-    return {"url": f"/api/tts/audio/{key}.{cached.get('ext') or 'mp3'}", "lang": lang}
+    # <audio> can't send the Authorization header, so the link is signed for this user's own message and expires.
+    sig = security.link_params(JWT_SECRET, "tts", f"{key}:{msg['message_id']}", user["user_id"], TTS_LINK_TTL)
+    return {"url": f"/api/tts/audio/{key}.{cached.get('ext') or 'mp3'}?m={msg['message_id']}&{sig}", "lang": lang,
+            "expires_in": TTS_LINK_TTL}
 
 
 @api.get("/tts/audio/{name}")
-async def tts_audio(name: str):
+async def tts_audio(name: str, request: Request, m: str = "", exp: int = 0, sig: str = ""):
+    """Plays cached audio only through a signed, short-lived link issued by POST /tts for the caller's own message."""
     key = name.rsplit(".", 1)[0]
-    if not re.fullmatch(r"[0-9a-f]{64}", key):
+    if not re.fullmatch(r"[0-9a-f]{64}", key) or not m or not sig:
         raise HTTPException(404, "Not found")
+    msg = await db.messages.find_one({"message_id": m[:64]}, {"_id": 0, "user_id": 1})
+    if not msg or not security.check_link(JWT_SECRET, "tts", f"{key}:{m[:64]}", msg["user_id"], exp, sig, TTS_LINK_TTL) \
+            or not await link_viewer_ok(request, msg["user_id"]):
+        raise HTTPException(404, "Not found")  # expired / forged / deleted message look the same
     doc = await db.tts_cache.find_one({"key": key}, {"_id": 0, "audio": 1, "mime": 1})
     if not doc:
         raise HTTPException(404, "Not found")
     return Response(content=bytes(doc["audio"]), media_type=doc.get("mime") or "audio/mpeg",
-                    headers={"Cache-Control": "public, max-age=31536000"})
+                    headers={"Cache-Control": f"private, max-age={TTS_LINK_TTL}"})
 
 
 # ---------------- Documents (file storage + AI extraction) ----------------
@@ -873,15 +1007,20 @@ async def documents_context(user_id: str, question: str) -> str:
     return "".join(out)
 
 
+DOC_LINK_TTL = 300  # seconds a signed file/thumbnail link works
+
+
+def doc_link(d: dict, kind: str) -> str:
+    """Short-lived signed path (relative to /api) – the session token never goes into a URL."""
+    return f"/documents/{d['doc_id']}/{kind}?{security.link_params(JWT_SECRET, 'doc-' + kind, d['doc_id'], d['user_id'], DOC_LINK_TTL)}"
+
+
 def doc_public(d: dict) -> dict:
-    d = {k: v for k, v in d.items() if k not in ("extracted_text", "storage_path", "thumb_path", "_id")}
-    return d
-
-
-async def user_from_token_or_header(request: Request, token: str) -> dict:
-    if token and not request.headers.get("Authorization"):
-        return await user_from_token(token)
-    return await current_user(request)
+    out = {k: v for k, v in d.items() if k not in ("extracted_text", "storage_path", "thumb_path", "_id")}
+    if d.get("doc_id") and d.get("user_id"):
+        out["thumb_url"] = doc_link(d, "thumb") if d.get("thumb_path") else None
+        out["link_expires_in"] = DOC_LINK_TTL
+    return out
 
 
 @api.post("/documents")
@@ -1026,17 +1165,36 @@ async def run_audit(doc_id: str, request: Request):
     return {"ok": True}
 
 
-@api.get("/documents/{doc_id}/{kind}")
-async def document_file(doc_id: str, kind: str, request: Request, token: str = ""):
-    user = await user_from_token_or_header(request, token)
+@api.get("/documents/{doc_id}/link")
+async def document_link(doc_id: str, request: Request, kind: str = "file"):
+    """Fresh signed link for opening a file in a new tab / image (logged-in owner only)."""
+    user = await current_user(request)
     d = await db.documents.find_one({"doc_id": doc_id, "user_id": user["user_id"], "deleted": {"$ne": True}}, {"_id": 0})
     if not d or kind not in ("file", "thumb") or (kind == "thumb" and not d.get("thumb_path")):
+        raise HTTPException(404, "Document not found")
+    return {"url": doc_link(d, kind), "expires_in": DOC_LINK_TTL}
+
+
+@api.get("/documents/{doc_id}/{kind}")
+async def document_file(doc_id: str, kind: str, request: Request, exp: int = 0, sig: str = ""):
+    """Either a signed link from /documents/{id}/link (or the list), or the Authorization header. No ?token=."""
+    if kind not in ("file", "thumb"):
+        raise HTTPException(404, "Not found")
+    if sig:
+        d = await db.documents.find_one({"doc_id": doc_id[:64], "deleted": {"$ne": True}}, {"_id": 0})
+        if not d or not security.check_link(JWT_SECRET, "doc-" + kind, d["doc_id"], d["user_id"], exp, sig, DOC_LINK_TTL) \
+                or not await link_viewer_ok(request, d["user_id"]):
+            raise HTTPException(404, "Not found")  # expired / forged / someone else's links look like missing files
+    else:
+        user = await current_user(request)
+        d = await db.documents.find_one({"doc_id": doc_id, "user_id": user["user_id"], "deleted": {"$ne": True}}, {"_id": 0})
+    if not d or (kind == "thumb" and not d.get("thumb_path")):
         raise HTTPException(404, "Not found")
     try:
         data, ctype = await run_in_threadpool(get_object, d["storage_path"] if kind == "file" else d["thumb_path"])
     except storage.ObjectNotFound:
         raise HTTPException(404, "File not found in storage")
-    headers = {"Cache-Control": "private, max-age=86400"}
+    headers = {"Cache-Control": f"private, max-age={DOC_LINK_TTL}"}
     if kind == "file":
         headers["Content-Disposition"] = f'inline; filename="{quote(d["filename"])}"'
     return Response(content=data, media_type=d["mime"] if kind == "file" else "image/png", headers=headers)
@@ -1065,15 +1223,22 @@ def author_name(u: dict) -> str:
     return (u.get("name") or u["email"].split("@")[0]).split("(")[0].strip()
 
 
+def forum_out(item: dict, user: dict) -> dict:
+    """Forum item as other users see it: the display name stays, the internal account id never leaves the server."""
+    out = {k: v for k, v in item.items() if k not in ("_id", "user_id", "likes")}
+    out["is_mine"] = item.get("user_id") == user["user_id"]
+    if "comment_id" not in item:  # posts carry likes, comments don't
+        out["liked"] = user["user_id"] in item.get("likes", [])
+        out["like_count"] = len(item.get("likes", []))
+    return out
+
+
 @api.get("/forum/posts")
 async def forum_posts(request: Request, category: str = ""):
     user = await current_user(request)
     q = {"category": category} if category in FORUM_CATS else {}
     posts = await db.forum_posts.find(q, {"_id": 0}).sort("created_at", -1).to_list(100)
-    for p in posts:
-        p["liked"] = user["user_id"] in p.get("likes", [])
-        p["like_count"] = len(p.pop("likes", []))
-    return posts
+    return [forum_out(p, user) for p in posts]
 
 
 @api.post("/forum/posts")
@@ -1085,10 +1250,8 @@ async def forum_create(body: PostIn, request: Request):
     doc = {"post_id": new_id("post"), "user_id": user["user_id"], "author": author_name(user),
            "category": body.category if body.category in FORUM_CATS else "general", "title": body.title.strip()[:150],
            "body": body.body.strip()[:4000], "likes": [], "comment_count": 0, "created_at": now()}
-    await db.forum_posts.insert_one(doc)
-    doc.pop("_id", None)
-    doc["liked"], doc["like_count"] = False, len(doc.pop("likes"))
-    return doc
+    await db.forum_posts.insert_one(dict(doc))
+    return forum_out(doc, user)
 
 
 @api.get("/forum/posts/{post_id}")
@@ -1097,10 +1260,10 @@ async def forum_get(post_id: str, request: Request):
     p = await db.forum_posts.find_one({"post_id": post_id}, {"_id": 0})
     if not p:
         raise HTTPException(404, "Post not found")
-    p["liked"] = user["user_id"] in p.get("likes", [])
-    p["like_count"] = len(p.pop("likes", []))
-    p["comments"] = await db.forum_comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(500)
-    return p
+    out = forum_out(p, user)
+    out["comments"] = [forum_out(c, user) for c in
+                       await db.forum_comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(500)]
+    return out
 
 
 @api.post("/forum/posts/{post_id}/comments")
@@ -1113,10 +1276,9 @@ async def forum_comment(post_id: str, body: CommentIn, request: Request):
         raise HTTPException(404, "Post not found")
     c = {"comment_id": new_id("cmt"), "post_id": post_id, "user_id": user["user_id"], "author": author_name(user),
          "body": body.body.strip()[:2000], "created_at": now()}
-    await db.forum_comments.insert_one(c)
+    await db.forum_comments.insert_one(dict(c))
     await db.forum_posts.update_one({"post_id": post_id}, {"$inc": {"comment_count": 1}})
-    c.pop("_id", None)
-    return c
+    return forum_out(c, user)
 
 
 @api.post("/forum/posts/{post_id}/like")
@@ -1304,7 +1466,8 @@ async def admin_create_user(body: AdminUserIn, request: Request):
     check_password(body.password)
     if await db.users.find_one({"email": email}, {"_id": 1}):
         raise HTTPException(409, "Email already registered")
-    uid = await create_user(email, body.name.strip(), None, password_hash=passwords.hash(body.password))
+    uid = await create_user(email, body.name.strip(), None, password_hash=passwords.hash(body.password),
+                            email_verified=True, verified_via="admin")  # created by an admin, who vouches for it
     return await db.users.find_one({"user_id": uid}, USER_PROJ)
 
 
@@ -1324,9 +1487,48 @@ async def admin_delete_user(user_id: str, request: Request):
     admin = await require_admin(request)
     if user_id == admin["user_id"]:
         raise HTTPException(400, "You cannot delete yourself")
-    if not (await db.users.delete_one({"user_id": user_id})).deleted_count:
+    if not await db.users.find_one({"user_id": user_id}, {"_id": 1}):
         raise HTTPException(404, "User not found")
-    await db.user_sessions.delete_many({"user_id": user_id})
+    counts = await delete_account(user_id)
+    return {"ok": True, "deleted": counts}
+
+
+async def delete_account(user_id: str) -> dict:
+    return await account_deletion.delete_user_data(db, user_id, storage, STORAGE_APP, run_in_threadpool)
+
+
+class DeleteAccountIn(BaseModel):
+    confirm: bool = False
+    password: Optional[str] = None
+
+
+@api.post("/account/delete")
+async def delete_own_account(body: DeleteAccountIn, request: Request):
+    """'Usuń konto' in Profil: removes the account and all its data (see account_deletion.py). Cannot be undone."""
+    user = await current_user(request)
+    rate_limit(f"account-delete:{user['user_id']}", 5, 900)
+    if not body.confirm:
+        raise CodedError(400, "confirm_required", "Please confirm the deletion")
+    if user["email"] in ADMIN_EMAILS:
+        raise CodedError(400, "admin_protected", "This admin account is listed in ADMIN_EMAILS and can't be deleted in the app")
+    row = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 1})
+    if row and row.get("password_hash"):
+        if not body.password or len(body.password) > 256 or not passwords.verify(body.password, row["password_hash"]):
+            raise CodedError(403, "wrong_password", "Wrong password")
+    sub = await db.subscriptions.find_one({"user_id": user["user_id"], "status": "ACTIVE"}, {"_id": 0})
+    if sub and paypal_configured():  # never leave someone paying for an account that no longer exists
+        try:
+            async with httpx.AsyncClient(timeout=30) as hc:
+                headers = await paypal_headers(hc)
+                r = await hc.post(f"{PAYPAL_API_BASE}/v1/billing/subscriptions/{sub['subscription_id']}/cancel",
+                                  headers=headers, json={"reason": "Account deleted by user"})
+            ok = r.status_code in (200, 204)
+        except Exception:
+            ok = False
+        if not ok:
+            raise CodedError(409, "subscription_active", "Cancel your subscription first, then delete the account")
+        await db.subscriptions.update_one({"subscription_id": sub["subscription_id"]}, {"$set": {"status": "CANCELLED"}})
+    await delete_account(user["user_id"])
     return {"ok": True}
 
 
@@ -1468,13 +1670,14 @@ async def update_letter(letter_id: str, body: LetterPatch, request: Request):
     res = await db.letters.update_one({"letter_id": letter_id, "user_id": user["user_id"]}, {"$set": {"status": body.status}})
     if not res.matched_count:
         raise HTTPException(404, "Letter not found")
-    return await db.letters.find_one({"letter_id": letter_id}, {"_id": 0})
+    return await db.letters.find_one({"letter_id": letter_id, "user_id": user["user_id"]}, {"_id": 0})
 
 
 @api.delete("/letters/{letter_id}")
 async def delete_letter(letter_id: str, request: Request):
     user = await current_user(request)
-    await db.letters.delete_one({"letter_id": letter_id, "user_id": user["user_id"]})
+    if not (await db.letters.delete_one({"letter_id": letter_id, "user_id": user["user_id"]})).deleted_count:
+        raise HTTPException(404, "Letter not found")
     return {"ok": True}
 
 
@@ -1649,15 +1852,43 @@ async def payment_return(redirect: str, subscription_id: str = "", cancelled: st
 <body style="font-family:sans-serif;text-align:center;padding:40px;background:#FBF8F3;color:#0F1A24">
 <h2>ask Elon</h2><p>Subscription: {status}</p><a href="{target}">Return to app</a></body></html>""")
 
+async def migrate_security(db) -> dict:
+    """One-off, idempotent migrations run at every start (nobody is logged out or locked out):
+    1) accounts created before e-mail verification existed are marked verified ("grandfathered");
+    2) sessions stored with the raw token are converted to token_hash (users stay logged in)."""
+    res = await db.users.update_many({"email_verified": {"$exists": False}},
+                                     {"$set": {"email_verified": True, "email_verified_via": "grandfathered"}})
+    if "session_token_1" in await db.user_sessions.index_information():
+        await db.user_sessions.drop_index("session_token_1")
+    converted = 0
+    async for sess in db.user_sessions.find({"session_token": {"$exists": True}}, {"_id": 1, "session_token": 1}):
+        await db.user_sessions.update_one({"_id": sess["_id"]}, {"$set": {"token_hash": security.token_hash(sess["session_token"])},
+                                                                "$unset": {"session_token": ""}})
+        converted += 1
+    if res.modified_count or converted:
+        logger.info("security migration: %d accounts marked verified (existing), %d sessions converted to hashes",
+                    res.modified_count, converted)
+    return {"grandfathered": res.modified_count, "sessions_hashed": converted}
+
+
 @app.on_event("startup")
 async def startup():
     await db.users.create_index("email", unique=True)
     await db.users.create_index("user_id", unique=True)
-    await db.user_sessions.create_index("session_token", unique=True)
+    await migrate_security(db)
+    await db.user_sessions.create_index("token_hash", unique=True)
     await db.user_sessions.create_index("user_id")
     await db.user_sessions.create_index("expires_at", expireAfterSeconds=0)
     await db.messages.create_index([("user_id", 1), ("thread_id", 1), ("created_at", 1)])
     await db.cases.create_index("case_id", unique=True)
+    await db.cases.create_index([("user_id", 1), ("updated_at", -1)])
+    await db.letters.create_index([("user_id", 1), ("sent_at", -1)])
+    await db.letters.create_index("letter_id")
+    await db.messages.create_index("message_id")
+    await db.forum_posts.create_index("user_id")
+    await db.forum_comments.create_index("user_id")
+    await db.email_verifications.create_index("user_id")
+    await db.email_verifications.create_index("expires_at", expireAfterSeconds=0)
     await db.subscriptions.create_index("subscription_id", unique=True)
     await db.paypal_config.create_index("key", unique=True)
     await db.password_resets.create_index("user_id")
@@ -1705,6 +1936,11 @@ async def security_middleware(request: Request, call_next):
     if not IS_DEV:
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     return response
+
+
+@app.exception_handler(CodedError)
+async def coded_error(request: Request, exc: CodedError):
+    return JSONResponse({"detail": exc.detail, "code": exc.code}, status_code=exc.status)
 
 
 @app.exception_handler(Exception)

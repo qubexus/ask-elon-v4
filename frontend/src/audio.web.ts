@@ -22,7 +22,7 @@ let el: HTMLAudioElement | null = null;
 let unlocked = false;
 let seq = 0;
 let onEnd: (() => void) | null = null;
-const urls = new Map<string, string>(); // message_id -> audio URL (server cache hit = instant replay)
+const urls = new Map<string, { url: string; until: number }>(); // message_id -> signed audio URL until it expires
 
 function audioEl(): HTMLAudioElement | null {
   if (typeof document === "undefined") return null;
@@ -107,12 +107,14 @@ export async function speakMessage({ messageId, text, lang, onStart, onDone }: S
   const mySeq = ++seq;
   onEnd = onDone;
   const a = audioEl();
-  let url = urls.get(messageId);
+  // Audio links are signed and expire (server: TTS_LINK_TTL); re-ask /tts shortly before that (cached = free).
+  const hit = urls.get(messageId);
+  let url = hit && hit.until > Date.now() ? hit.url : undefined;
   try {
     if (!url) {
-      const res = await api<{ url: string }>("/tts", { method: "POST", body: { message_id: messageId } });
+      const res = await api<{ url: string; expires_in?: number }>("/tts", { method: "POST", body: { message_id: messageId } });
       url = `${API_BASE}${res.url.replace(/^\/api/, "")}`;
-      urls.set(messageId, url);
+      urls.set(messageId, { url, until: Date.now() + Math.max(30, (res.expires_in ?? 900) - 60) * 1000 });
     }
     if (mySeq !== seq) return; // stopped or replaced meanwhile
     if (!a) throw new Error("no audio element");

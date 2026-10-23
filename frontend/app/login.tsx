@@ -11,14 +11,15 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { api } from "@/src/api";
+import { api, ApiError } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
 import { DEMO_LOCALES, dt } from "@/src/demo/content";
 import { Locale, useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
-type Mode = "login" | "register" | "reset";
+type Mode = "login" | "register" | "reset" | "verify";
+const RESEND_SECONDS = 60;
 const LANGS: { id: Locale; flag: string; label: string }[] = [
   { id: "en", flag: "🇬🇧", label: "EN" },
   { id: "pl", flag: "🇵🇱", label: "PL" },
@@ -51,7 +52,7 @@ function Field({ icon, right, onFocus, onBlur, ...props }: { icon: any; right?: 
 }
 
 export default function Login() {
-  const { signIn, emailLogin, emailRegister, googleEnabled, resetPassword, locale, setLocale } = useAuth();
+  const { signIn, emailLogin, emailRegister, verifyEmail, resendVerification, googleEnabled, resetPassword, locale, setLocale } = useAuth();
   const t = useT();
   const toast = useToast();
   const insets = useSafeAreaInsets();
@@ -78,22 +79,55 @@ export default function Login() {
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  const toVerify = () => {
+    setMode("verify");
+    setCode("");
+    setPassword("");
+    setCooldown(RESEND_SECONDS);
+  };
+
+  // Server error codes → clear messages in the user's language
+  const message = (e: any) => {
+    const c = e instanceof ApiError ? e.code : undefined;
+    if (c === "email_unverified") return t("verifyNeeded");
+    if (c === "code_invalid") return t("verifyBad");
+    if (c === "email_unavailable") return t("verifyMailOff");
+    return e.message;
+  };
 
   const run = async (key: string, fn: () => Promise<unknown>) => {
     setBusy(key);
     try {
       await fn();
     } catch (e: any) {
-      toast(e.message, "error");
+      if (e instanceof ApiError && e.code === "email_unverified") toVerify();
+      toast(message(e), "error");
     } finally {
       setBusy(null);
     }
   };
 
+  const resend = () =>
+    run("resend", async () => {
+      await resendVerification(email.trim());
+      setCooldown(RESEND_SECONDS);
+      toast(t("verifyResent"));
+    });
+
   const submit = () =>
     run("submit", async () => {
       if (mode === "login") await emailLogin(email.trim(), password);
-      else if (mode === "register") await emailRegister(name.trim(), email.trim(), password);
+      else if (mode === "register") {
+        await emailRegister(name.trim(), email.trim(), password);
+        toVerify();
+      } else if (mode === "verify") await verifyEmail(email.trim(), code);
       else if (!codeSent) {
         await api("/auth/request-reset", { method: "POST", body: { email: email.trim() } });
         setCodeSent(true);
@@ -102,8 +136,11 @@ export default function Login() {
     });
 
   const canSubmit =
-    email.includes("@") && (mode === "reset" && !codeSent ? true : password.length >= (mode === "login" ? 1 : 8)) && (mode !== "reset" || !codeSent || code.length === 6);
-  const ctaLabel = mode === "login" ? t("loginCta") : mode === "register" ? t("registerCta") : codeSent ? t("resetCta") : t("resetSend");
+    mode === "verify"
+      ? email.includes("@") && code.length === 6
+      : email.includes("@") && (mode === "reset" && !codeSent ? true : password.length >= (mode === "login" ? 1 : 8)) && (mode !== "reset" || !codeSent || code.length === 6);
+  const ctaLabel =
+    mode === "verify" ? t("verifyCta") : mode === "login" ? t("loginCta") : mode === "register" ? t("registerCta") : codeSent ? t("resetCta") : t("resetSend");
 
   return (
     <View style={styles.root} testID="login-screen">
@@ -138,7 +175,13 @@ export default function Login() {
           </View>
         </Animated.View>
 
-        {mode !== "reset" ? (
+        {mode === "verify" ? (
+          <View style={styles.resetHead} testID="verify-head">
+            <View style={styles.verifyIcon}><Ionicons name="mail-unread-outline" size={30} color={colors.askOrange} /></View>
+            <Text style={styles.resetTitle} testID="verify-title">{t("verifyTitle")}</Text>
+            <Text style={styles.verifySub}>{t("verifySub", { email: email.trim() })}</Text>
+          </View>
+        ) : mode !== "reset" ? (
           <View style={styles.tabs}>
             {(["login", "register"] as const).map((m) => (
               <Pressable key={m} testID={`auth-tab-${m}`} onPress={() => setMode(m)} style={[styles.tab, mode === m && styles.tabActive]}>
@@ -153,6 +196,38 @@ export default function Login() {
           </View>
         )}
 
+        {mode === "verify" ? (
+          <View style={styles.form}>
+            <Field
+              testID="verify-code-input"
+              icon="keypad-outline"
+              placeholder={t("verifyCode")}
+              value={code}
+              onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
+              keyboardType="number-pad"
+              autoComplete="one-time-code"
+              textContentType="oneTimeCode"
+              maxLength={6}
+              onSubmitEditing={() => canSubmit && submit()}
+              style={[styles.fieldInput, styles.codeInput, Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : null]}
+            />
+            <Pressable
+              testID="verify-resend-button"
+              onPress={resend}
+              disabled={cooldown > 0 || !!busy}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.resendBtn, (cooldown > 0 || !!busy) && { opacity: 0.55 }, pressed && { opacity: 0.8 }]}
+            >
+              {busy === "resend" ? <ActivityIndicator color={colors.askOrange} /> : (
+                <>
+                  <Ionicons name="refresh" size={16} color={colors.askOrange} />
+                  <Text style={styles.forgotText}>{cooldown > 0 ? t("verifyResendIn", { s: String(cooldown) }) : t("verifyResend")}</Text>
+                </>
+              )}
+            </Pressable>
+            <Text style={[styles.hint, { textAlign: "center" }]}>{t("verifySpam")}</Text>
+          </View>
+        ) : (
         <View style={styles.form}>
           {mode === "register" && <Field testID="register-name-input" icon="person-outline" placeholder={t("name")} value={name} onChangeText={setName} />}
           <Field
@@ -192,6 +267,7 @@ export default function Login() {
             </Pressable>
           )}
         </View>
+        )}
 
         <Pressable testID="auth-submit-button" onPress={submit} disabled={!canSubmit || !!busy} style={({ pressed }) => [styles.ctaWrap, (!canSubmit || !!busy) && { opacity: 0.6 }, pressed && { transform: [{ scale: 0.98 }] }]}>
           <LinearGradient colors={[colors.askGreen, colors.askGreenLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
@@ -204,7 +280,7 @@ export default function Login() {
           </LinearGradient>
         </Pressable>
 
-        {mode !== "reset" && (
+        {mode !== "reset" && mode !== "verify" && (
           <Pressable
             testID="demo-link"
             onPress={() => router.push({ pathname: "/demo", params: { lang: locale } })}
@@ -217,7 +293,7 @@ export default function Login() {
           </Pressable>
         )}
 
-        {mode === "reset" ? (
+        {mode === "reset" || mode === "verify" ? (
           <Pressable testID="reset-back-button" onPress={() => { setMode("login"); setCode(""); setPassword(""); }} style={styles.backLink}>
             <Text style={styles.backText}>← {t("back")}</Text>
           </Pressable>
@@ -298,4 +374,8 @@ const useStyles = makeStyles((c) => ({
   demoLinkSub: { color: c.muted, fontWeight: "600", fontSize: 13 },
   backLink: { alignSelf: "center", minHeight: 44, justifyContent: "center" },
   backText: { color: c.askOrange, fontWeight: "700", fontSize: 14 },
+  verifyIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: c.askOrangeTint, borderWidth: 1, borderColor: c.askBorder, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  verifySub: { color: c.askNavy, fontSize: 14, lineHeight: 20, textAlign: "center", marginTop: 8, paddingHorizontal: 8 },
+  codeInput: { fontSize: 24, letterSpacing: 8, fontWeight: "800", textAlign: "center" },
+  resendBtn: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingHorizontal: 14 },
 }));

@@ -8,6 +8,7 @@ import os
 import time
 import pytest
 import requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 BASE_URL = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -60,8 +61,7 @@ def demo_h(demo_token):
 def fresh_free_user():
     """Register a brand-new free (non-PRO) user and return (token, email)."""
     email = f"TEST_iter9_{int(time.time()*1000)}@example.com"
-    r = requests.post(f"{API}/auth/register",
-                      json={"name": "TEST Iter9", "email": email, "password": "FreeUser123!"},
+    r = devmail.register(API, json={"name": "TEST Iter9", "email": email, "password": "FreeUser123!"},
                       timeout=15)
     assert r.status_code == 200, r.text
     token = r.json()["session_token"]

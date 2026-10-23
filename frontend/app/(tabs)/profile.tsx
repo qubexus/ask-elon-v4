@@ -13,6 +13,7 @@ import { api } from "@/src/api";
 import { usePro } from "@/src/revenuecat";
 import { useAuth } from "@/src/auth";
 import { AdminAndContact } from "@/src/components/AdminAndContact";
+import { DeleteAccount } from "@/src/components/DeleteAccount";
 import { DocumentsPanel } from "@/src/components/DocumentsPanel";
 import { LanguageSwitch } from "@/src/components/LanguageSwitch";
 import { ProfileCard, ProfileSections } from "@/src/components/ProfileCard";
@@ -197,6 +198,7 @@ export default function Profile() {
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>{t("logout")}</Text>
         </Pressable>
+        <DeleteAccount />
         <Text style={styles.disclaimer} testID="profile-disclaimer">{withBrand(t("disclaimer"))}</Text>
         <SiteFooter testID="profile-footer" />
         </>

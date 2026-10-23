@@ -1,4 +1,5 @@
 import os, uuid, pytest, requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 # Tests run against a locally started backend (see README: "Testy").
 BASE_URL = (os.environ.get('TEST_BASE_URL') or 'http://localhost:8001').rstrip('/')
@@ -7,7 +8,7 @@ BASE_URL = (os.environ.get('TEST_BASE_URL') or 'http://localhost:8001').rstrip('
 def _bootstrap_token() -> str:
     """Registers a fresh test user with a complete profile and returns its session token."""
     try:
-        r = requests.post(f"{BASE_URL}/api/auth/register", timeout=10, json={
+        r = devmail.register(f"{BASE_URL}/api", timeout=10, json={
             "name": "Test User", "email": f"pytest_{uuid.uuid4().hex[:8]}@example.com", "password": "TestPass123!"})
         r.raise_for_status()
         tok = r.json()["session_token"]

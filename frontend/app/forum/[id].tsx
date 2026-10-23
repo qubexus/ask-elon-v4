@@ -15,7 +15,7 @@ import { FocusTextInput } from "@/src/components/Brand";
 import { makeStyles, useTheme } from "@/src/theme";
 import { Post, timeAgo } from "../(tabs)/forum";
 
-type Comment = { comment_id: string; author: string; body: string; created_at: string };
+type Comment = { comment_id: string; author: string; author_deleted?: boolean; is_mine?: boolean; body: string; created_at: string };
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,7 +65,7 @@ export default function PostDetail() {
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <View style={styles.post}>
-              <Text style={styles.meta}>{post.author} · {timeAgo(post.created_at)} · {t(`fc_${post.category}` as any)}</Text>
+              <Text style={styles.meta}>{post.author_deleted ? t("deletedUser") : post.author} · {timeAgo(post.created_at)} · {t(`fc_${post.category}` as any)}</Text>
               <Text style={styles.title} testID="forum-post-title">{post.title}</Text>
               <Text style={styles.body}>{post.body}</Text>
               <Pressable testID="forum-post-like" onPress={() => (isPro ? like() : router.push("/paywall"))} style={styles.like}>
@@ -77,7 +77,7 @@ export default function PostDetail() {
           }
           renderItem={({ item }) => (
             <View style={styles.comment} testID="forum-comment">
-              <Text style={styles.cAuthor}>{item.author} <Text style={styles.cTime}>· {timeAgo(item.created_at)}</Text></Text>
+              <Text style={styles.cAuthor}>{item.author_deleted ? t("deletedUser") : item.author} <Text style={styles.cTime}>· {timeAgo(item.created_at)}</Text></Text>
               <Text style={styles.cBody}>{item.body}</Text>
             </View>
           )}

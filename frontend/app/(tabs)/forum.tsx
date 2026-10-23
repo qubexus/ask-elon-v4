@@ -11,7 +11,8 @@ import { useT } from "@/src/i18n";
 import { usePro } from "@/src/revenuecat";
 import { makeStyles, useTheme } from "@/src/theme";
 
-export type Post = { post_id: string; author: string; category: string; title: string; body: string; like_count: number; liked: boolean; comment_count: number; created_at: string };
+// author_deleted: the author deleted their account (shown as "Deleted user"); is_mine: computed by the server (no account ids)
+export type Post = { post_id: string; author: string; author_deleted?: boolean; is_mine?: boolean; category: string; title: string; body: string; like_count: number; liked: boolean; comment_count: number; created_at: string };
 export const FORUM_CATS = ["wages", "contracts", "agency", "housing", "health", "general"];
 
 export function timeAgo(iso: string) {
@@ -73,8 +74,8 @@ export default function Forum() {
             <Animated.View entering={FadeInDown.delay(index * 50).duration(280)}>
               <AccentCard testID={`forum-post-${item.post_id}`} onPress={() => router.push(`/forum/${item.post_id}`)}>
                 <View style={styles.meta}>
-                  <View style={styles.avatar}><Text style={styles.avatarText}>{item.author[0]?.toUpperCase()}</Text></View>
-                  <Text style={styles.author} numberOfLines={1}>{item.author}</Text>
+                  <View style={styles.avatar}><Text style={styles.avatarText}>{item.author_deleted ? "?" : item.author[0]?.toUpperCase()}</Text></View>
+                  <Text style={styles.author} numberOfLines={1}>{item.author_deleted ? t("deletedUser") : item.author}</Text>
                   <Text style={styles.time}>· {timeAgo(item.created_at)}</Text>
                   <View style={styles.catTag}><Text style={styles.catText}>{t(`fc_${item.category}` as any)}</Text></View>
                 </View>

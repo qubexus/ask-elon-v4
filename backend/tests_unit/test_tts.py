@@ -131,16 +131,23 @@ def test_tts_generates_caches_and_serves(env):
     r = env.client.post("/api/tts", json={"message_id": "msg_a"}, headers=h("tok-a"))
     assert r.status_code == 200, r.text
     url = r.json()["url"]
-    assert url.startswith("/api/tts/audio/") and url.endswith(".mp3") and r.json()["lang"] == "pl"
+    path = url.split("?")[0]
+    assert path.startswith("/api/tts/audio/") and path.endswith(".mp3") and r.json()["lang"] == "pl"
+    assert "m=msg_a" in url and "sig=" in url and "exp=" in url  # signed, short-lived, bound to the own message
     chunks, style = env.calls[0]
     assert chunks == ["Masz prawo do urlopu Zobacz gov.uk."]
     assert "Polish" in style
     # second request: served from cache, no new synthesis
-    assert env.client.post("/api/tts", json={"message_id": "msg_a"}, headers=h("tok-a")).json()["url"] == url
+    assert env.client.post("/api/tts", json={"message_id": "msg_a"}, headers=h("tok-a")).json()["url"].split("?")[0] == path
     assert len(env.calls) == 1
     a = env.client.get(url)
     assert a.status_code == 200 and a.headers["content-type"] == "audio/mpeg" and a.content == b"ID3fake"
+    assert a.headers["cache-control"].startswith("private")
     assert env.client.get("/api/tts/audio/nothex.mp3").status_code == 404
+    # no signature / tampered signature / wrong message id → 404 (no login-free access to cached audio)
+    assert env.client.get(path).status_code == 404
+    assert env.client.get(url.replace("sig=", "sig=0")).status_code == 404
+    assert env.client.get(url.replace("m=msg_a", "m=msg_b")).status_code == 404
 
 
 def test_tts_language_follows_user(env):

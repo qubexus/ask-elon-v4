@@ -4,6 +4,7 @@ import time
 import uuid
 import pytest
 import requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 BASE_URL = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
@@ -26,7 +27,7 @@ def _login(email, pw):
 
 def _register(name="User"):
     email = f"TEST_{uuid.uuid4().hex[:10]}@example.com"
-    r = requests.post(f"{API}/auth/register", json={"name": name, "email": email, "password": "Secret123!"}, timeout=30)
+    r = devmail.register(API, json={"name": name, "email": email, "password": "Secret123!"}, timeout=30)
     assert r.status_code == 200, r.text
     return email, r.json()["session_token"]
 

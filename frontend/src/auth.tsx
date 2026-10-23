@@ -94,7 +94,13 @@ export type User = {
   workplace_address?: string;
   employer_company_number?: string;
   hr_email?: string;
+  email_verified?: boolean;
+  /** Only from /auth/me: the account can sign in with a password (asked again before deleting the account). */
+  has_password?: boolean;
 };
+
+/** Result of creating an account: it stays inactive until the e-mailed 6-digit code is entered. */
+export type RegisterResult = { verification_required: true; email: string; code_minutes?: number };
 
 type AuthCtx = {
   user: User | null;
@@ -106,7 +112,10 @@ type AuthCtx = {
   setUser: (u: User) => void;
   refreshUser: () => Promise<void>;
   emailLogin: (email: string, password: string) => Promise<void>;
-  emailRegister: (name: string, email: string, password: string) => Promise<void>;
+  emailRegister: (name: string, email: string, password: string) => Promise<RegisterResult>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
   googleEnabled: boolean;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
 };
@@ -187,10 +196,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => persist(await api("/auth/login", { method: "POST", body: { email, password } })),
     [persist],
   );
+  // No session yet: the account is activated by verifyEmail() with the code from the e-mail.
   const emailRegister = useCallback(
     async (name: string, email: string, password: string) =>
-      persist(await api("/auth/register", { method: "POST", body: { name, email, password, locale: localLocale } })),
-    [persist, localLocale],
+      api<RegisterResult>("/auth/register", { method: "POST", body: { name, email, password, locale: localLocale } }),
+    [localLocale],
+  );
+  const verifyEmail = useCallback(
+    async (email: string, code: string) => persist(await api("/auth/verify-email", { method: "POST", body: { email, code } })),
+    [persist],
+  );
+  const resendVerification = useCallback(async (email: string) => {
+    await api("/auth/resend-verification", { method: "POST", body: { email } });
+  }, []);
+  const deleteAccount = useCallback(
+    async (password?: string) => {
+      await api("/account/delete", { method: "POST", body: { confirm: true, password: password || null } });
+      await clear();
+    },
+    [clear],
   );
   const resetPassword = useCallback(
     async (email: string, code: string, new_password: string) =>
@@ -211,7 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ user, loading, locale, setLocale, signIn, signOut, setUser: setUserState, refreshUser, emailLogin, emailRegister, googleEnabled, resetPassword }}
+      value={{ user, loading, locale, setLocale, signIn, signOut, setUser: setUserState, refreshUser, emailLogin, emailRegister, verifyEmail, resendVerification, deleteAccount, googleEnabled, resetPassword }}
     >
       {googleEnabled ? <GoogleBridge promptRef={googlePrompt} onIdToken={exchangeGoogle} pending={googlePending} /> : null}
       {children}

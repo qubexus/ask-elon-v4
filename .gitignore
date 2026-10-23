@@ -103,3 +103,6 @@ test-na-zywo/dane/
 test-na-zywo/run/
 test-na-zywo/dist/
 test-na-zywo/node_modules/
+
+# dev-only e-mail outbox (MAIL_BACKEND=outbox) – contains one-time codes
+backend/mail_outbox/

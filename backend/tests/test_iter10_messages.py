@@ -11,6 +11,7 @@ import os
 import time
 import pytest
 import requests
+import devmail  # noqa: E402  (confirms test accounts via the dev e-mail outbox)
 
 BASE = (os.environ.get("TEST_BASE_URL") or "http://localhost:8001").rstrip("/")
 API = f"{BASE}/api"
@@ -42,9 +43,7 @@ def admin_token():
 def fresh_user_token():
     """Register a brand-new user to test 'created after signup' visibility rule."""
     email = f"test_iter10_{int(time.time())}@example.com"
-    r = requests.post(
-        f"{API}/auth/register",
-        json={"name": "Iter10 Fresh", "email": email, "password": "Password123!"},
+    r = devmail.register(API, json={"name": "Iter10 Fresh", "email": email, "password": "Password123!"},
         timeout=15,
     )
     assert r.status_code == 200, r.text
@@ -186,9 +185,7 @@ class TestVisibility:
         # Register user AFTER
         time.sleep(1.2)  # ensure created_at > message created_at
         email = f"test_iter10_after_{int(time.time())}@example.com"
-        reg = requests.post(
-            f"{API}/auth/register",
-            json={"name": "Iter10 After", "email": email, "password": "Password123!"},
+        reg = devmail.register(API, json={"name": "Iter10 After", "email": email, "password": "Password123!"},
             timeout=15,
         )
         assert reg.status_code == 200, reg.text

@@ -20,6 +20,8 @@ export type Doc = {
   mime: string;
   size: number;
   has_thumb: boolean;
+  /** signed thumbnail link (relative to /api), valid a few minutes */
+  thumb_url?: string | null;
   status: "processing" | "ready" | "failed";
   category: string;
   title?: string;
@@ -43,7 +45,8 @@ type Asset = { uri: string; name: string; type: string; file?: Blob };
 
 const CATS = ["", "contract", "annex", "policy", "correspondence", "payslip"] as const;
 const MAX = 20 * 1024 * 1024;
-const fileUrl = (id: string, kind: "file" | "thumb") => `${API_BASE}/documents/${id}/${kind}?token=${encodeURIComponent(getApiToken() ?? "")}`;
+// Files open through short-lived signed links from the server (no session token in any URL).
+const absolute = (path: string) => `${API_BASE}${path}`;
 
 export function DocumentsPanel() {
   const t = useT();
@@ -142,10 +145,18 @@ export function DocumentsPanel() {
     load();
   };
 
-  const open = (d: Doc) => {
-    const url = fileUrl(d.doc_id, "file");
-    if (Platform.OS === "web") window.open(url, "_blank");
-    else WebBrowser.openBrowserAsync(url);
+  const open = async (d: Doc) => {
+    // web: open the tab inside the tap (popup blockers), then point it at a fresh signed link
+    const tab = Platform.OS === "web" ? window.open("about:blank", "_blank") : null;
+    try {
+      const { url } = await api<{ url: string }>(`/documents/${d.doc_id}/link?kind=file`);
+      if (Platform.OS !== "web") await WebBrowser.openBrowserAsync(absolute(url));
+      else if (tab) tab.location.href = absolute(url);
+      else window.location.assign(absolute(url));
+    } catch (e: any) {
+      tab?.close();
+      toast(e.message, "error");
+    }
   };
 
   return (
@@ -216,8 +227,8 @@ export function DocumentsPanel() {
           <Animated.View key={d.doc_id} entering={FadeInDown.delay(i * 50).duration(280)}>
             <Pressable testID={`document-card-${d.doc_id}`} onPress={() => open(d)} style={({ pressed }) => [styles.docCard, pressed && { opacity: 0.92 }]}>
               <View style={styles.thumb}>
-                {d.has_thumb ? (
-                  <Image source={{ uri: fileUrl(d.doc_id, "thumb") }} style={styles.thumbImg} contentFit="cover" contentPosition="top" />
+                {d.has_thumb && d.thumb_url ? (
+                  <Image source={{ uri: absolute(d.thumb_url) }} style={styles.thumbImg} contentFit="cover" contentPosition="top" />
                 ) : (
                   <Ionicons name={d.mime === "application/pdf" ? "document-text" : "image"} size={28} color={colors.muted} />
                 )}
