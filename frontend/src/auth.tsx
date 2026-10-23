@@ -38,6 +38,9 @@ function GoogleBridge({
     iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID || undefined,
     selectAccount: true,
+    // Web: Google sends the user back to the app's main address (add it in Google Cloud Console →
+    // Authorized redirect URIs, e.g. http://localhost:8081 and your production web address).
+    ...(Platform.OS === "web" && typeof window !== "undefined" ? { redirectUri: window.location.origin } : {}),
   });
   useEffect(() => {
     promptRef.current = request ? () => promptAsync() : null;
