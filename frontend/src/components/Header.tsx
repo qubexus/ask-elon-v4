@@ -161,7 +161,8 @@ const useStyles = makeStyles((c) => ({
   // Negative margins keep the header only ~6 px taller and the title column only ~6 px narrower.
   robot: { width: 56, height: 56, marginVertical: -3, marginHorizontal: -3, flexShrink: 0 },
   textBlock: { flex: 1, minWidth: 0, justifyContent: "center", minHeight: 44 },
-  title: { color: c.onBrandSecondary, fontWeight: "800", lineHeight: 22 },
+  // Screen title in the site orange (#FF6A00, 6.7:1 on the #070F1A bar), same orange as the active tab.
+  title: { color: c.askOrange, fontWeight: "800", lineHeight: 22 },
   // Detail screens (user content titles): wrap to 2 lines instead of cutting.
   titleBack: { fontSize: 16, lineHeight: 20 },
   subRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 1, minWidth: 0 },

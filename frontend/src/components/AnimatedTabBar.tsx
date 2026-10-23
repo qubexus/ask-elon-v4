@@ -86,7 +86,7 @@ function ChatButton({ focused, onPress }: { focused: boolean; onPress: () => voi
         <Image source={require("@/assets/brand/czat-przycisk.png")} style={styles.chatImg} contentFit="contain" accessible={false} alt="" draggable={false} />
         <View style={styles.aiBadge}><Text style={styles.aiBadgeText}>AI</Text></View>
       </Animated.View>
-      <Text style={[styles.label, styles.chatLabel]}>Elon</Text>
+      <Text style={[styles.label, styles.chatLabel, focused && styles.chatLabelOn]}>Elon</Text>
     </Pressable>
   );
 }
@@ -137,5 +137,6 @@ const useStyles = makeStyles((c) => ({
   aiBadge: { position: "absolute", top: -3, right: -8, backgroundColor: c.askOrange, borderRadius: 9, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 2, borderColor: c.tabBarBg },
   aiBadgeText: { color: c.onAccent, fontSize: 10, fontWeight: "800" },
   chatLabel: { color: c.onSurface, fontWeight: "700", marginTop: 2 },
+  chatLabelOn: { color: c.tabCases }, // active = same orange as the other tabs
   breath: { position: "absolute", top: 0, left: 0, width: 64, height: 64, borderRadius: 32 },
 }));
