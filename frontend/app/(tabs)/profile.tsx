@@ -1,6 +1,4 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { withBrand } from "@/src/components/BrandName";
 import { SiteFooter } from "@/src/components/SiteFooter";
 import * as Linking from "expo-linking";
@@ -16,11 +14,12 @@ import { usePro } from "@/src/revenuecat";
 import { useAuth } from "@/src/auth";
 import { AdminAndContact } from "@/src/components/AdminAndContact";
 import { DocumentsPanel } from "@/src/components/DocumentsPanel";
-import { LANG_FLAGS, LanguageSwitch } from "@/src/components/LanguageSwitch";
+import { LanguageSwitch } from "@/src/components/LanguageSwitch";
+import { ProfileCard } from "@/src/components/ProfileCard";
 import { ProfileForm } from "@/src/components/ProfileForm";
 import { useToast } from "@/src/components/Toast";
 import { Header } from "@/src/components/Header";
-import { formatDate, formatEmploymentLength } from "@/src/format";
+import { formatDate } from "@/src/format";
 import { useT } from "@/src/i18n";
 import { useUnreadCount } from "@/src/inbox";
 import { usesNativeTabs } from "@/src/navigation";
@@ -108,92 +107,12 @@ export default function Profile() {
   const proOn = isPro || active;
   const price = plans?.price ?? "9.99";
 
-  const initials = (user?.name || user?.email || "?").split(" ").filter(Boolean).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const accountId = user?.user_id ? `AE-${user.user_id.slice(-6).toUpperCase()}` : "";
-  const createdAt = (user as any)?.created_at as string | undefined;
-  const langName = t("langName");
-  const service = formatEmploymentLength(user?.start_date, locale);
-
   return (
     <View style={styles.root} testID="profile-screen">
       <Header robot="profil" title={t("profileTitle")} subtitle={t("profileSubtitle")} hideAvatar />
       <KeyboardAwareScrollView bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: bottomChrome + 28 + 32 }}>
-        {/* Ask Elon card */}
-        <View style={[styles.cardOuter, fx("profileCardGlow")]} testID="profile-card">
-          <LinearGradient colors={[colors.surfaceSecondary, colors.brand, colors.surfaceSecondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardBg}>
-            <View style={styles.cardStripe} />
-            <Image source={require("@/assets/brand/robot-watermark.png")} style={styles.watermark} contentFit="contain" accessible={false} alt="" />
-            <View style={styles.cardTop}>
-              <Text style={styles.cardKicker} numberOfLines={1}>
-                {withBrand(t("profileCard"), "soft", (s) => s.toUpperCase())}
-              </Text>
-              <Text style={styles.cardTag} numberOfLines={1}>{t("profileCardTag").toUpperCase()}</Text>
-            </View>
-            {!!user?.employer && (
-              <View style={styles.employerRow} testID="profile-card-employer">
-                <View style={styles.employerIcon}><Ionicons name="business" size={18} color={colors.askOrange} /></View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.employerLabel} numberOfLines={1}>{t("cardEmployer").toUpperCase()}</Text>
-                  <Text style={styles.employerName} numberOfLines={1} ellipsizeMode="tail">{user.employer}</Text>
-                </View>
-              </View>
-            )}
-            <View style={styles.cardMid}>
-              {user?.picture ? (
-                <Image source={{ uri: user.picture }} style={styles.avatar} testID="profile-avatar" />
-              ) : (
-                <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.initials}>{initials}</Text></View>
-              )}
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.name} testID="profile-name" numberOfLines={2}>{user?.name}</Text>
-                <Text style={styles.email} testID="profile-email" numberOfLines={1}>{user?.email}</Text>
-              </View>
-            </View>
-            {(!!user?.industry || !!service) && (
-              <View style={styles.stats}>
-                {!!user?.industry && (
-                  <View style={styles.stat} testID="profile-card-industry">
-                    <Text style={styles.statLabel} numberOfLines={1}>{t("industry")}</Text>
-                    <Text style={styles.statVal} numberOfLines={1}>{user.industry}</Text>
-                  </View>
-                )}
-                {!!service && (
-                  <View style={styles.stat} testID="profile-card-service">
-                    <Text style={styles.statLabel} numberOfLines={1}>{t("cardService")}</Text>
-                    <Text style={[styles.statVal, styles.statAccent]} numberOfLines={2} testID="profile-card-service-value">{service}</Text>
-                    <Text style={styles.statSub} numberOfLines={1}>{t("cardSince", { date: formatDate(user!.start_date, locale) })}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-            <View style={styles.pills}>
-              {proOn ? (
-                <View style={[styles.pill, styles.pillPro, fx("chipProGlow")]} testID="profile-member-badge">
-                  <Text style={styles.pillProText}>★ {t("proActive")}</Text>
-                </View>
-              ) : (
-                <View style={[styles.pill, styles.pillGlass]} testID="profile-no-sub-badge">
-                  <Text style={styles.pillText}>{t("noSubscription")}</Text>
-                </View>
-              )}
-              <View style={[styles.pill, styles.pillGlass]}>
-                <Text style={styles.pillText}>{LANG_FLAGS[locale]} {langName}</Text>
-              </View>
-            </View>
-            <View style={styles.cardFoot}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.footLabel}>{t("accountId")}</Text>
-                <Text style={styles.footVal} testID="profile-account-id">{accountId}</Text>
-              </View>
-              {!!createdAt && (
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text style={styles.footLabel}>{t("accountSince")}</Text>
-                  <Text style={styles.footVal}>{formatDate(createdAt, locale)}</Text>
-                </View>
-              )}
-            </View>
-          </LinearGradient>
-        </View>
+        {/* ask Elon card: personal · employer · contact · employment tiles */}
+        <ProfileCard proOn={proOn} />
 
         <View style={styles.segment}>
           {(["data", "docs"] as const).map((k) => (
@@ -214,33 +133,15 @@ export default function Profile() {
           ) : (
             <View style={[styles.section0, fx("cardShadow")]} testID="profile-view">
               <View style={styles.viewHead}>
-                <Text style={[styles.sectionTitle, { flex: 1 }]}>{t("secPersonal")} · {t("secEmployer")}</Text>
+                <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+                  <Text style={styles.sectionTitle}>{t("secPersonal")} · {t("secEmployer")}</Text>
+                  <Text style={styles.muted}>{t("pfEditHint")}</Text>
+                </View>
                 <Pressable testID="profile-edit-button" onPress={() => setEditing(true)} style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.8 }]}>
                   <Ionicons name="create-outline" size={16} color={colors.brandPrimaryText} />
                   <Text style={styles.editText}>{t("edit")}</Text>
                 </Pressable>
               </View>
-              {([
-                ["person-outline", t("name"), user?.name],
-                ["mail-outline", t("email"), user?.email],
-                ["home-outline", t("homeAddress"), user?.address],
-                ["call-outline", t("phone"), user?.phone],
-                ["business-outline", t("employer"), user?.employer],
-                ["layers-outline", t("industry"), user?.industry],
-                ["briefcase-outline", t("jobTitle"), user?.job_title],
-                ["document-text-outline", t("contractType"), user?.contract_type ? t(`ct_${user.contract_type}` as any) : ""],
-                ["calendar-outline", t("startDate"), user?.start_date ? `${formatDate(user.start_date, locale)}${service ? ` · ${service}` : ""}` : ""],
-                ["location-outline", t("workplaceAddress"), user?.workplace_address],
-                ["at-outline", t("hrEmail"), user?.hr_email],
-              ] as [any, string, string | undefined][]).map(([icon, label, val]) => (
-                <View key={label} style={styles.viewRow}>
-                  <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={colors.brandPrimaryText} /></View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.viewLabel}>{label}</Text>
-                    <Text style={styles.viewVal}>{val || "—"}</Text>
-                  </View>
-                </View>
-              ))}
             </View>
           )}
         </View>
@@ -319,39 +220,6 @@ export default function Profile() {
 
 const useStyles = makeStyles((c) => ({
   root: { flex: 1, backgroundColor: c.surface },
-  // Ask Elon card
-  cardOuter: { margin: 16, marginBottom: 0, borderRadius: 20 },
-  cardBg: { borderRadius: 20, padding: 18, paddingLeft: 24, overflow: "hidden", gap: 14, borderWidth: 1, borderColor: c.border },
-  cardStripe: { position: "absolute", left: 0, top: 0, bottom: 0, width: 6, backgroundColor: c.askOrange },
-  watermark: { position: "absolute", right: -34, bottom: -34, width: 150, height: 150, opacity: 0.1 },
-  cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
-  cardKicker: { color: c.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1.4, flexShrink: 1 },
-  cardTag: { color: c.askOrange, fontSize: 11, fontWeight: "700", letterSpacing: 1.4, flexShrink: 0 },
-  cardMid: { flexDirection: "row", alignItems: "center", gap: 14 },
-  avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: c.onBrandPrimary },
-  avatarFallback: { backgroundColor: c.askOrange, alignItems: "center", justifyContent: "center" },
-  initials: { color: c.onAccent, fontSize: 22, fontWeight: "900" },
-  name: { color: c.onSurface, fontSize: 20, fontWeight: "800" },
-  email: { color: c.muted, fontSize: 13, marginTop: 2 },
-  employerRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 14, backgroundColor: c.askOrangeTint, borderWidth: 1, borderColor: c.heritageOrangeSoft },
-  employerIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: c.surface, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  employerLabel: { color: c.askOrange, fontSize: 10.5, fontWeight: "800", letterSpacing: 1.2 },
-  employerName: { color: c.onSurface, fontSize: 17, fontWeight: "900", marginTop: 1 },
-  stats: { flexDirection: "row", gap: 10 },
-  stat: { flex: 1, minWidth: 0, padding: 10, borderRadius: 12, backgroundColor: c.glassFill, borderWidth: 1, borderColor: c.border },
-  statLabel: { color: c.muted, fontSize: 11, fontWeight: "700" },
-  statVal: { color: c.onSurface, fontSize: 14.5, fontWeight: "800", marginTop: 2 },
-  statAccent: { color: c.askOrange },
-  statSub: { color: c.footnote, fontSize: 11, marginTop: 1 },
-  pills: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pill: { height: 26, borderRadius: 999, paddingHorizontal: 10, alignItems: "center", justifyContent: "center", maxWidth: "100%" },
-  pillPro: { backgroundColor: c.askOrange },
-  pillProText: { color: c.onAccent, fontSize: 12, fontWeight: "700" },
-  pillGlass: { backgroundColor: c.glassFill, borderWidth: 1, borderColor: c.glassBorder },
-  pillText: { color: c.onBrandPrimary, fontSize: 12, fontWeight: "700" },
-  cardFoot: { flexDirection: "row", alignItems: "flex-end", borderTopWidth: 1, borderTopColor: c.glassDivider, paddingTop: 12 },
-  footLabel: { color: c.muted, fontSize: 11, fontWeight: "600" },
-  footVal: { color: c.onSurface, fontSize: 15, fontWeight: "800", letterSpacing: 1, marginTop: 2 },
   // segment
   segment: { flexDirection: "row", gap: 6, margin: 16, marginBottom: 0, padding: 4, borderRadius: 14, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border },
   segItem: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderBottomWidth: 3, borderBottomColor: "transparent" },
@@ -363,10 +231,6 @@ const useStyles = makeStyles((c) => ({
   viewHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   editBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 38, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1.5, borderColor: c.brandPrimaryBorder, backgroundColor: c.surfaceSecondary, flexShrink: 0 },
   editText: { color: c.brandPrimaryText, fontWeight: "800", fontSize: 13 },
-  viewRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: c.divider },
-  rowIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center" },
-  viewLabel: { color: c.muted, fontSize: 12, fontWeight: "500" },
-  viewVal: { color: c.onSurface, fontSize: 15, fontWeight: "600", marginTop: 1 },
   section: { marginHorizontal: 16, marginTop: 16, backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 12, borderWidth: 1, borderColor: c.border },
   sectionTitle: { color: c.brandSecondaryText, fontSize: 12.5, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
   muted: { color: c.muted, fontSize: 13, lineHeight: 19 },

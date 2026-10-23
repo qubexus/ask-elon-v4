@@ -112,7 +112,7 @@ export function ProfileForm({ onSaved, ctaLabel }: { onSaved?: (u: User) => void
           <Text style={styles.label}>{t("email")}<Text style={styles.req}> *</Text></Text>
           <View style={[styles.field, styles.fieldRO]}>
             <Ionicons name="mail-outline" size={18} color={colors.muted} />
-            <Text style={styles.ro} testID="profile-email-readonly">{user?.email}</Text>
+            <Text style={styles.ro} numberOfLines={1} ellipsizeMode="middle" testID="profile-email-readonly">{user?.email}</Text>
             <Ionicons name="lock-closed" size={14} color={colors.muted} />
           </View>
         </View>
