@@ -107,17 +107,24 @@ async def ensure_indexes(db):
 
 
 def build_router(db, current_user: Callable[[Request], Awaitable[dict]], rate_limit: Callable,
-                 new_id: Callable[[str], str], now: Callable) -> APIRouter:
+                 new_id: Callable[[str], str], now: Callable,
+                 require_pro: Optional[Callable[[dict], Awaitable[dict]]] = None) -> APIRouter:
+    """require_pro: when given, reading/creating/editing notes needs PRO (raises 402 "pro_required").
+    Deleting stays allowed for everyone, so a user can always remove their own data."""
     r = APIRouter(prefix="/api/notes", tags=["notes"])
+
+    async def pro_user(request: Request) -> dict:
+        user = await current_user(request)
+        return await require_pro(user) if require_pro else user
 
     @r.get("")
     async def list_notes(request: Request):
-        user = await current_user(request)
+        user = await pro_user(request)
         return await db.notes.find({"user_id": user["user_id"]}, PROJ).sort("updated_at", -1).to_list(MAX_NOTES)
 
     @r.post("")
     async def create_note(body: NoteIn, request: Request):
-        user = await current_user(request)
+        user = await pro_user(request)
         uid = user["user_id"]
         rate_limit(f"notes:{uid}", 60, 60)
         data = validate(body)
@@ -131,7 +138,7 @@ def build_router(db, current_user: Callable[[Request], Awaitable[dict]], rate_li
 
     @r.put("/{note_id}")
     async def update_note(note_id: str, body: NoteIn, request: Request):
-        user = await current_user(request)
+        user = await pro_user(request)
         uid = user["user_id"]
         rate_limit(f"notes:{uid}", 60, 60)
         data = validate(body)

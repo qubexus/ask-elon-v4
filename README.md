@@ -193,8 +193,16 @@ Pliki nigdy nie są publiczne: aplikacja pobiera je przez serwer po sprawdzeniu,
 - `ADMIN_EMAILS`: kto ma panel admina (po przecinku).
 - **PayPal**: `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_API_BASE` z https://developer.paypal.com (najpierw Sandbox).
   Na produkcji ustaw też `PUBLIC_BACKEND_URL` (adres serwera), bo na niego PayPal odsyła po płatności.
-- **RevenueCat** (`frontend/.env`): publiczne klucze z https://app.revenuecat.com. Projekt zakładała integracja Emergent;
-  jeśli nie masz do niego dostępu, załóż własny. Puste = zakup w sklepie nie działa, reszta tak.
+- **RevenueCat** (subskrypcja PRO w App Store / Google Play / na www) – pełna instrukcja krok po kroku:
+  [`docs/REVENUECAT-SETUP-PL.md`](docs/REVENUECAT-SETUP-PL.md).
+  - `frontend/.env` – klucze **publiczne**: `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` (appl_…), `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`
+    (goog_…), `EXPO_PUBLIC_REVENUECAT_WEB_KEY` (rcb_…, Web Billing) i `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` (test_…, tylko tryb deweloperski).
+    Puste = zakup przez sklep jest ukryty (na www zostaje PayPal), reszta działa.
+  - `backend/.env` – klucz **tajny** `REVENUECAT_SECRET_KEY` (+ `REVENUECAT_PROJECT_ID` dla API v2), `REVENUECAT_ENTITLEMENT_ID=pro`,
+    `REVENUECAT_WEBHOOK_AUTH`. Serwer sam sprawdza w RevenueCat, czy użytkownik ma PRO (app_user_id = `user_id`), i zapisuje to
+    w MongoDB w `users.pro_status`. Endpointy: `GET /api/billing/status`, `POST /api/billing/revenuecat/sync`,
+    `POST /api/billing/revenuecat/webhook`. PRO = admin **lub** `is_member` (PayPal / nadane przez admina) **lub** aktywne
+    uprawnienie `pro` w RevenueCat. Notatki są funkcją PRO (serwer zwraca 402 `pro_required`).
 
 ### 4.6 Identyfikator aplikacji (sklepy)
 W `frontend/app.json` jest już `uk.askelon.app` (iOS `bundleIdentifier` i Android `package`) i schemat linków `askelon`.
@@ -272,7 +280,7 @@ częściowo wymagają kont testowych i kluczy (`TEST_PRO_EMAIL`, `GEMINI_API_KEY
 
 Testy bez serwera i bez internetu (udawane odpowiedzi postcodes.io / Photon / Overpass / Companies House, nic nie trafia do bazy):
 ```bash
-cd backend && .venv/bin/python -m pytest -n 0 tests_unit      # wyszukiwanie adresu pracodawcy
+cd backend && .venv/bin/python -m pytest -n 0 tests_unit      # adres pracodawcy, notatki, RevenueCat (udawane odpowiedzi)
 cd frontend && npm run test:format                              # staż pracy na karcie profilu (PL/EN/RO)
 ```
 

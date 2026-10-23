@@ -1,14 +1,19 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BRAND_PLAIN, withBrand } from "@/src/components/BrandName";
 import { Header } from "@/src/components/Header";
 import { useToast } from "@/src/components/Toast";
+import { api } from "@/src/api";
+import { useAuth } from "@/src/auth";
+import { formatDate } from "@/src/format";
 import { StringKey, useT } from "@/src/i18n";
-import { rcSimulated, usePro, useSubscription } from "@/src/revenuecat";
+import { FALLBACK_PRICE, Plans, startPayPalSubscription } from "@/src/paypal";
+import { BillingStatus, rcEnabled, rcSimulated, usePro, useSubscription } from "@/src/revenuecat";
 import { makeStyles, useTheme } from "@/src/theme";
 
 const PERKS: [any, StringKey][] = [
@@ -17,6 +22,7 @@ const PERKS: [any, StringKey][] = [
   ["scan", "pwPerk3"],
   ["stats-chart", "pwPerk4"],
   ["people", "pwPerk5"],
+  ["document-text-outline", "pwPerkNotes"],
 ];
 
 export default function Paywall() {
@@ -28,9 +34,18 @@ export default function Paywall() {
   const isPro = usePro();
   const { offerings, isLoading, purchase, restore, isPurchasing, isRestoring, identityReady, purchaseIdentityError } = useSubscription();
   const [confirm, setConfirm] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const { user, locale } = useAuth();
+  // Server view: PayPal fallback price/config and the stored RevenueCat status (MongoDB pro_status).
+  const plans = useQuery({ queryKey: ["payments", "plans", user?.user_id], queryFn: () => api<Plans>("/payments/plans"), enabled: !!user });
+  const status = useQuery({ queryKey: ["billing", "status", user?.user_id], queryFn: () => api<BillingStatus>("/billing/status"), enabled: !!user });
 
-  const pkg = offerings?.current?.monthly ?? offerings?.current?.availablePackages[0];
-  const price = pkg?.product.priceString;
+  // Prices come from the RevenueCat offering (store/Web Billing price); the server price is only a fallback.
+  const pkg = rcEnabled ? (offerings?.current?.monthly ?? offerings?.current?.availablePackages[0]) : undefined;
+  const fallbackPrice = `£${plans.data?.price ?? FALLBACK_PRICE}`;
+  const price = pkg?.product.priceString ?? fallbackPrice;
+  const paypalReady = !pkg && !!plans.data?.configured;
+  const expires = status.data?.revenuecat?.expires_at;
 
   const buy = async () => {
     setConfirm(false);
@@ -39,6 +54,7 @@ export default function Paywall() {
       const info = await purchase(pkg);
       if (info.entitlements.active.pro) {
         toast(t("pwSuccess"));
+        status.refetch();
         router.back();
       }
     } catch (e: any) {
@@ -47,10 +63,27 @@ export default function Paywall() {
     }
   };
 
+  const payPal = async () => {
+    setPaying(true);
+    try {
+      const r = await startPayPalSubscription("profile");
+      if (r === "redirected") return;
+      if (r === "active") {
+        toast(t("pwSuccess"));
+        router.back();
+      } else toast(t("payFail"), "error");
+    } catch (e: any) {
+      toast(e?.message ?? String(e), "error");
+    } finally {
+      setPaying(false);
+    }
+  };
+
   const doRestore = async () => {
     try {
-      const info = await restore();
-      toast(info.entitlements.active.pro ? t("pwRestored") : t("pwNothing"), info.entitlements.active.pro ? "success" : "error");
+      const pro = await restore();
+      status.refetch();
+      toast(pro ? t("pwRestored") : t("pwNothing"), pro ? "success" : "error");
     } catch (e: any) {
       toast(e?.message ?? String(e), "error");
     }
@@ -85,38 +118,61 @@ export default function Paywall() {
           </View>
         )}
 
+        {!isPro && (
+          <View style={styles.priceCard} testID="paywall-price-card">
+            <Text style={styles.priceLabel}>{t("pwPriceLabel")}</Text>
+            <Text style={styles.priceBig} testID="paywall-price">{t("pwPerMonth", { price })}</Text>
+            <Text style={styles.priceNote}>{t("pwCancelAnytime")}</Text>
+          </View>
+        )}
+
         {isPro ? (
           <View style={styles.active} testID="paywall-active">
             <Ionicons name="checkmark-circle" size={22} color={colors.success} />
-            <Text style={styles.activeText}>{t("pwActive")}</Text>
+            <View style={{ flexShrink: 1 }}>
+              <Text style={styles.activeText}>{t("pwActive")}</Text>
+              {!!expires && <Text style={styles.activeSub}>{t("pwActiveUntil", { date: formatDate(expires, locale) })}</Text>}
+            </View>
           </View>
-        ) : isLoading ? (
+        ) : isLoading || plans.isLoading ? (
           <ActivityIndicator color={colors.heritageOrange} style={{ marginVertical: 20 }} />
-        ) : !pkg ? (
-          <Text style={styles.unavailable} testID="paywall-unavailable">{t("pwUnavailable")}</Text>
-        ) : (
+        ) : pkg ? (
           <Pressable
             testID="paywall-subscribe-button"
             onPress={() => (rcSimulated ? setConfirm(true) : buy())}
             disabled={isPurchasing || !identityReady}
+            accessibilityRole="button"
             style={({ pressed }) => [styles.buy, (isPurchasing || !identityReady) && { opacity: 0.5 }, pressed && { opacity: 0.85 }]}
           >
             {isPurchasing ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
               <>
                 <Text style={styles.buyText}>{t("pwSubscribe")}</Text>
-                <Text style={styles.buyPrice} testID="paywall-price">{price} / {t("month")}</Text>
+                <Text style={styles.buyPrice}>{t("pwPerMonth", { price })}</Text>
               </>
             )}
           </Pressable>
+        ) : paypalReady ? (
+          <Pressable testID="paywall-paypal-button" onPress={payPal} disabled={paying} accessibilityRole="button"
+            style={({ pressed }) => [styles.buy, paying && { opacity: 0.5 }, pressed && { opacity: 0.85 }]}>
+            {paying ? <ActivityIndicator color={colors.onBrandPrimary} /> : (
+              <>
+                <Text style={styles.buyText}>{t("pwSubscribe")}</Text>
+                <Text style={styles.buyPrice}>{t("pwPayPal")}</Text>
+              </>
+            )}
+          </Pressable>
+        ) : (
+          <Text style={styles.unavailable} testID="paywall-unavailable">{t("pwUnavailable")}</Text>
         )}
 
         {!isPro && !!pkg && !identityReady && !purchaseIdentityError && (
           <Text style={styles.legal} testID="paywall-preparing">{t("pwPreparing")}</Text>
         )}
-        <Pressable testID="paywall-restore-button" onPress={doRestore} disabled={isRestoring} style={styles.restore}>
-          {isRestoring ? <ActivityIndicator color={colors.brandPrimaryText} /> : <Text style={styles.restoreText}>{t("pwRestore")}</Text>}
+        <Pressable testID="paywall-restore-button" onPress={doRestore} disabled={isRestoring} style={styles.restore} accessibilityRole="button">
+          {isRestoring ? <ActivityIndicator color={colors.brandPrimaryText} /> : <Text style={styles.restoreText}>{rcEnabled ? t("pwRestore") : t("pwRefresh")}</Text>}
         </Pressable>
-        <Text style={styles.legal}>{t("pwLegal")}</Text>
+        <Text style={styles.legal}>{Platform.OS === "web" ? t("pwLegalWeb") : t("pwLegal")}</Text>
+        <Text style={styles.legal} testID="paywall-disclaimer">{withBrand(t("disclaimer"))}</Text>
       </ScrollView>
 
       <Modal visible={confirm} transparent animationType="fade" onRequestClose={() => setConfirm(false)}>
@@ -141,7 +197,7 @@ export default function Paywall() {
 
 const useStyles = makeStyles((c) => ({
   root: { flex: 1, backgroundColor: c.heritageCream },
-  body: { padding: 20, gap: 12 },
+  body: { padding: 20, gap: 12, width: "100%", maxWidth: 640, alignSelf: "center" },
   hero: { alignItems: "center", gap: 8, paddingVertical: 12 },
   heroTitle: { color: c.onSurface, fontSize: 24, fontWeight: "900", textAlign: "center" },
   heroSub: { color: c.onSurfaceTertiary, fontSize: 14, textAlign: "center", lineHeight: 20 },
@@ -154,6 +210,11 @@ const useStyles = makeStyles((c) => ({
   errText: { color: c.error, fontSize: 12, fontWeight: "700" },
   active: { flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", padding: 16, borderRadius: 14, backgroundColor: c.successSoft },
   activeText: { color: c.onSurface, fontWeight: "800", fontSize: 15 },
+  activeSub: { color: c.onSurfaceTertiary, fontSize: 12, marginTop: 2 },
+  priceCard: { alignItems: "center", gap: 2, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: c.askOrange, backgroundColor: c.surfaceSecondary },
+  priceLabel: { color: c.askOrange, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8 },
+  priceBig: { color: c.onSurface, fontSize: 26, fontWeight: "900" },
+  priceNote: { color: c.muted, fontSize: 12 },
   unavailable: { color: c.muted, textAlign: "center", padding: 16 },
   buy: { marginTop: 8, minHeight: 60, borderRadius: 14, backgroundColor: c.heritageOrange, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 },
   buyText: { color: c.onAccent, fontWeight: "900", fontSize: 16, textTransform: "uppercase", letterSpacing: 0.6 },

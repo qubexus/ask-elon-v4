@@ -4,36 +4,65 @@ import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { api } from "@/src/api";
 import { useAuth } from "@/src/auth";
 
 const REVENUECAT_TEST_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
 const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
+// Web Billing public key (rcb_...). react-native-purchases runs purchases-js in the browser with it.
+const REVENUECAT_WEB_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_WEB_KEY;
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
 
-export const rcEnabled = Platform.OS !== "web" || __DEV__; // web preview uses the Test Store
-export const rcSimulated = Platform.OS === "web" || __DEV__; // Test Store purchases are simulated
-
-function getRevenueCatApiKey() {
-  if (!REVENUECAT_TEST_API_KEY || !REVENUECAT_IOS_API_KEY || !REVENUECAT_ANDROID_API_KEY) {
-    throw new Error("RevenueCat public API keys not found — run the Setup section first");
-  }
-  if (Platform.OS === "web" || __DEV__) return REVENUECAT_TEST_API_KEY;
-  if (Platform.OS === "ios") return REVENUECAT_IOS_API_KEY;
-  if (Platform.OS === "android") return REVENUECAT_ANDROID_API_KEY;
-  return REVENUECAT_TEST_API_KEY;
+/** Public SDK key for this platform/build, or null when none is set (the app then falls back to PayPal). */
+function getRevenueCatApiKey(): string | null {
+  const pick = (...keys: (string | undefined)[]) => keys.find((k) => !!k && !k.includes("placeholder")) ?? null;
+  if (Platform.OS === "web") return pick(REVENUECAT_WEB_API_KEY, __DEV__ ? REVENUECAT_TEST_API_KEY : undefined);
+  if (__DEV__ && REVENUECAT_TEST_API_KEY) return REVENUECAT_TEST_API_KEY; // never ship a Test Store key in release
+  if (Platform.OS === "ios") return pick(REVENUECAT_IOS_API_KEY);
+  if (Platform.OS === "android") return pick(REVENUECAT_ANDROID_API_KEY);
+  return null;
 }
 
+const RC_KEY = getRevenueCatApiKey();
+export const rcEnabled = !!RC_KEY;
+export const rcSimulated = !!RC_KEY && RC_KEY.startsWith("test_"); // Test Store purchases are simulated
+
+let rcConfigured = false;
 export function initializeRevenueCat() {
-  if (!rcEnabled) return;
-  Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.WARN);
-  Purchases.configure({ apiKey: getRevenueCatApiKey() });
+  if (!RC_KEY || rcConfigured) return;
+  try {
+    Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.WARN);
+    Purchases.configure({ apiKey: RC_KEY });
+    rcConfigured = true;
+  } catch (e) {
+    console.warn("[RevenueCat] configure failed", e);
+  }
+}
+
+export type BillingStatus = {
+  is_pro: boolean;
+  source: "admin" | "revenuecat" | "paypal_or_admin" | null;
+  revenuecat_configured: boolean;
+  revenuecat: { active: boolean; expires_at: string | null; product_id: string | null; store: string | null; environment: string | null };
+};
+
+/** Asks our server to re-check RevenueCat (after a purchase/restore) and refreshes the user's is_pro flag. */
+async function syncServer(refreshUser: () => Promise<void>): Promise<BillingStatus | null> {
+  let st: BillingStatus | null = null;
+  try {
+    st = await api<BillingStatus>("/billing/revenuecat/sync", { method: "POST" });
+  } catch {
+    st = await api<BillingStatus>("/billing/status").catch(() => null);
+  }
+  await refreshUser().catch(() => {});
+  return st;
 }
 
 function useSubscriptionContext() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const rcIdentityRef = useRef<string | null>(null);
   const [purchaseIdentityError, setPurchaseIdentityError] = useState<string | null>(null);
 
@@ -87,11 +116,24 @@ function useSubscriptionContext() {
       const id = (await Purchases.getCustomerInfo()).originalAppUserId;
       if (id.startsWith("$RCAnonymousID:")) throw new Error("identity_not_ready");
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      await syncServer(refreshUser); // server stores PRO in MongoDB (pro_status) from RevenueCat's REST API
       return customerInfo;
     },
   });
 
-  const restoreMutation = useMutation({ mutationFn: () => Purchases.restorePurchases() });
+  /** Restore: store purchases (if the SDK is on) + a fresh server-side check. Resolves to "is PRO now". */
+  const restoreMutation = useMutation({
+    mutationFn: async () => {
+      let storePro = false;
+      if (rcEnabled) {
+        const info = await Purchases.restorePurchases();
+        queryClient.setQueryData(["revenuecat", "customer-info"], info);
+        storePro = info.entitlements.active?.[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined;
+      }
+      const st = await syncServer(refreshUser);
+      return storePro || !!st?.is_pro;
+    },
+  });
 
   const isSubscribed = customerInfoQuery.data?.entitlements.active?.[REVENUECAT_ENTITLEMENT_IDENTIFIER] !== undefined;
   const originalAppUserId = customerInfoQuery.data?.originalAppUserId;
@@ -126,9 +168,9 @@ export function useSubscription() {
   return ctx;
 }
 
-/** PRO = active RevenueCat "pro" entitlement, or membership granted by PayPal / admin. */
+/** PRO = active RevenueCat "pro" entitlement (SDK or server-verified), or PayPal / admin membership. */
 export function usePro() {
   const { user } = useAuth();
   const { isSubscribed } = useSubscription();
-  return isSubscribed || !!user?.is_member;
+  return isSubscribed || !!user?.is_pro || !!user?.is_member;
 }

@@ -79,6 +79,8 @@ export type User = {
   job_title: string;
   locale: Locale;
   is_member?: boolean;
+  /** Computed by the server: admin, PayPal/admin membership or an active RevenueCat entitlement. */
+  is_pro?: boolean;
   member_plan?: string;
   onboarded?: boolean;
   profile_complete?: boolean;

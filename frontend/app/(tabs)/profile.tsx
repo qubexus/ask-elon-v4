@@ -1,15 +1,14 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { withBrand } from "@/src/components/BrandName";
 import { SiteFooter } from "@/src/components/SiteFooter";
-import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { api } from "@/src/api";
+import { FALLBACK_PRICE, Plans, startPayPalSubscription } from "@/src/paypal";
 import { usePro } from "@/src/revenuecat";
 import { useAuth } from "@/src/auth";
 import { AdminAndContact } from "@/src/components/AdminAndContact";
@@ -25,8 +24,6 @@ import { useUnreadCount } from "@/src/inbox";
 import { usesNativeTabs } from "@/src/navigation";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
-type Sub = { subscription_id: string; status: string; next_billing_time?: string };
-type Plans = { configured: boolean; currency: string; price: string; interval: string; subscription: Sub | null };
 
 export default function Profile() {
   const { user, signOut, refreshUser, locale } = useAuth();
@@ -69,15 +66,9 @@ export default function Profile() {
     }
     setPaying(true);
     try {
-      const redirect = Platform.OS === "web" ? window.location.origin + "/profile" : Linking.createURL("profile");
-      const res = await api<{ subscription_id: string; approve_url: string }>("/payments/subscribe", { method: "POST", body: { app_redirect: redirect } });
-      if (Platform.OS === "web") {
-        window.location.href = res.approve_url;
-        return;
-      }
-      await WebBrowser.openAuthSessionAsync(res.approve_url, redirect);
-      const sub = await api<Sub>(`/payments/subscriptions/${res.subscription_id}/verify`, { method: "POST" });
-      if (sub.status === "ACTIVE") {
+      const r = await startPayPalSubscription("profile");
+      if (r === "redirected") return;
+      if (r === "active") {
         toast(t("payOk"));
         await refreshUser();
         await loadPlans();
@@ -105,7 +96,7 @@ export default function Profile() {
 
   const active = plans?.subscription?.status === "ACTIVE";
   const proOn = isPro || active;
-  const price = plans?.price ?? "9.99";
+  const price = plans?.price ?? FALLBACK_PRICE;
 
   return (
     <View style={styles.root} testID="profile-screen">

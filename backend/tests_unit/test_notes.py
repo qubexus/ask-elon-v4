@@ -215,3 +215,29 @@ def test_server_wires_notes():
     assert c.get("/api/notes").status_code == 401  # auth enforced before any DB access
     import inspect
     assert "notes.notes_context(db, uid)" in inspect.getsource(server.chat_stream)
+
+
+# ---------------- PRO gating (require_pro) ----------------
+def _gated_env(pro_ids):
+    db = FakeDB()
+
+    async def require_pro(user):
+        if user["user_id"] not in pro_ids:
+            raise HTTPException(402, "This is a PRO feature")
+        return user
+
+    app = FastAPI()
+    app.include_router(notes.build_router(db, fake_user, lambda *a: None, lambda p: f"{p}_{next(ids)}", fake_now,
+                                          require_pro=require_pro))
+    return db, TestClient(app)
+
+
+def test_free_user_blocked_pro_user_allowed():
+    db, c = _gated_env({"user_a"})
+    assert c.post("/api/notes", json={"title": "pro note"}, headers=A).status_code == 200
+    assert c.get("/api/notes", headers=A).status_code == 200
+    assert c.get("/api/notes", headers=B).status_code == 402
+    assert c.post("/api/notes", json={"title": "x"}, headers=B).status_code == 402
+    db.notes.docs.append({"note_id": "old", "user_id": "user_b", "title": "kept", "content": "", "updated_at": fake_now()})
+    assert c.put("/api/notes/old", json={"title": "edit"}, headers=B).status_code == 402
+    assert c.delete("/api/notes/old", headers=B).json() == {"ok": True}  # deleting own data always allowed

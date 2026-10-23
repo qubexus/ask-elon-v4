@@ -37,6 +37,7 @@ import mailer  # noqa: E402
 import storage  # noqa: E402
 import lookup  # noqa: E402
 import notes  # noqa: E402
+import billing_revenuecat as billing  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -214,12 +215,40 @@ async def auth_google(body: GoogleIn, request: Request):
         user_id = await create_user(email, data.get("name", ""), data.get("picture"))
         await db.users.update_one({"user_id": user_id}, {"$set": {"google_sub": data.get("sub")}})
     token = await issue_session(user_id, "google")
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
+    return {"session_token": token, "user": await public_user(user_id)}
 
 
 @api.get("/auth/me")
 async def auth_me(request: Request):
-    return await current_user(request)
+    user = await current_user(request)
+    return await public_user(user["user_id"])
+
+
+async def public_user(user_id: str) -> dict:
+    """User document for the app, plus the computed `is_pro` flag."""
+    user = await db.users.find_one({"user_id": user_id}, USER_PROJ)
+    if not user:
+        raise HTTPException(401, "User not found")
+    pro = await user_is_pro(user)
+    return {**(await db.users.find_one({"user_id": user_id}, USER_PROJ) or user), "is_pro": pro}
+
+
+# ---------------- PRO status (admin, PayPal/admin-granted is_member, RevenueCat entitlement) ----------------
+async def user_is_pro(user: dict) -> bool:
+    """The one server-side PRO check. Re-checks RevenueCat only when nothing else grants PRO and the
+    stored status is stale (billing.cache_ttl, default 10 min)."""
+    if billing.is_pro(user, ADMIN_EMAILS):
+        if billing.rc_active(user) and billing.needs_refresh(user):  # RC-only PRO: keep expiry fresh
+            user = await billing.refresh_user(db, user)
+        return billing.is_pro(user, ADMIN_EMAILS)
+    user = await billing.refresh_user(db, user)
+    return billing.is_pro(user, ADMIN_EMAILS)
+
+
+async def require_pro(user: dict, feature: str = "") -> dict:
+    if not await user_is_pro(user):
+        raise billing.ProRequired(feature)
+    return user
 
 
 @api.post("/auth/logout")
@@ -289,7 +318,7 @@ async def register(body: RegisterIn, request: Request):
         raise HTTPException(409, "Email already registered")
     user_id = await create_user(email, body.name.strip()[:120], None, password_hash=passwords.hash(body.password))
     token = await issue_password_session(user_id)
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user_id}, USER_PROJ)}
+    return {"session_token": token, "user": await public_user(user_id)}
 
 
 @api.post("/auth/login")
@@ -307,7 +336,7 @@ async def login(body: LoginIn, request: Request):
         raise HTTPException(401, "Invalid email or password")
     await db.login_attempts.delete_many({"email": email})
     token = await issue_password_session(user["user_id"])
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
+    return {"session_token": token, "user": await public_user(user["user_id"])}
 
 
 RESET_MINUTES = 15
@@ -364,7 +393,7 @@ async def reset_password(body: ResetIn, request: Request):
     await db.password_resets.delete_many({"user_id": user["user_id"]})
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
     token = await issue_password_session(user["user_id"])
-    return {"session_token": token, "user": await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)}
+    return {"session_token": token, "user": await public_user(user["user_id"])}
 
 
 
@@ -404,7 +433,7 @@ async def update_profile(body: ProfileIn, request: Request):
     merged = {**user, **upd}
     upd["profile_complete"] = is_profile_complete(merged)
     await db.users.update_one({"user_id": user["user_id"]}, {"$set": upd})
-    return await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)
+    return await public_user(user["user_id"])
 
 
 # ---------------- Employer address lookup (postcode -> nearby businesses, company number -> address) ----------------
@@ -581,7 +610,8 @@ async def chat_stream(body: ChatIn, request: Request):
                f"- Typ umowy: {p('contract_type')}; zatrudniony od: {p('start_date')}; adres zakładu: {p('workplace_address')}; "
                f"e-mail HR: {p('hr_email')}\n- Język aplikacji: {LANG_NAMES.get(user.get('locale', 'pl'))}.")
     context += await documents_context(uid, text)
-    context += await notes.notes_context(db, uid)  # user's notes, read fresh every request
+    if await user_is_pro(user):  # notes are a PRO feature: free users' notes stay stored but are not used
+        context += await notes.notes_context(db, uid)  # user's notes, read fresh every request
     if tid != "main":
         c = await db.cases.find_one({"case_id": tid, "user_id": uid}, {"_id": 0})
         if c:
@@ -1633,6 +1663,11 @@ async def startup():
     await db.documents.create_index("doc_id", unique=True)
     await db.tts_cache.create_index("key", unique=True)
     await notes.ensure_indexes(db)
+    await billing.ensure_indexes(db)
+    if billing.configured():
+        logger.info("RevenueCat PRO check enabled (REST API %s, entitlement %s)", billing.api_version(), billing.entitlement_id())
+    else:
+        logger.warning("REVENUECAT_SECRET_KEY is not set – PRO comes only from PayPal / admin until it is added")
     try:
         await run_in_threadpool(storage.init_storage)
     except Exception:
@@ -1661,6 +1696,11 @@ async def security_middleware(request: Request, call_next):
     return response
 
 
+@app.exception_handler(billing.ProRequired)
+async def pro_required_error(request: Request, exc: billing.ProRequired):
+    return JSONResponse({"detail": exc.detail, "code": "pro_required", "feature": exc.feature}, status_code=402)
+
+
 @app.exception_handler(Exception)
 async def unhandled_error(request: Request, exc: Exception):
     logger.exception("Unhandled error on %s %s", request.method, request.url.path)
@@ -1668,7 +1708,9 @@ async def unhandled_error(request: Request, exc: Exception):
 
 
 app.include_router(api)
-app.include_router(notes.build_router(db, current_user, rate_limit, new_id, now))
+app.include_router(notes.build_router(db, current_user, rate_limit, new_id, now,
+                                     require_pro=lambda u: require_pro(u, "notes")))
+app.include_router(billing.build_router(db, current_user, rate_limit, ADMIN_EMAILS))
 app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=ALLOWED_ORIGINS,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type", "Accept"])

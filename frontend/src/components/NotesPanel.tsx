@@ -2,15 +2,17 @@
 // Notes live in MongoDB per user (/api/notes) and are added to Elon's chat context on every message.
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from "react-native";
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { api } from "@/src/api";
+import { api, ApiError } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
 import { useReduceMotion } from "@/src/motion";
+import { usePro } from "@/src/revenuecat";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
 export type Note = { note_id: string; title: string; content: string; color?: string; created_at: string; updated_at: string };
@@ -22,27 +24,52 @@ const NOTES_KEY = ["notes"];
 
 function useNotes(enabled: boolean) {
   const { user } = useAuth();
-  return useQuery({ queryKey: [...NOTES_KEY, user?.user_id], queryFn: () => api<Note[]>("/notes"), enabled: enabled && !!user });
+  return useQuery({ queryKey: [...NOTES_KEY, user?.user_id], queryFn: () => api<Note[]>("/notes"), enabled: enabled && !!user,
+    retry: (n, e) => !(e instanceof ApiError && e.status === 402) && n < 2 });
 }
 
-/** Header icon button that opens the notes drawer. Mounted once in Header (right group). */
+/** Header icon button that opens the notes drawer. Mounted once in Header (right group).
+ *  Notes are a PRO feature: free users see a small lock and get the PRO upsell (drawer) instead of their notes. */
 export function NotesButton() {
   const [open, setOpen] = useState(false);
   const styles = useStyles();
   const { colors } = useTheme();
   const t = useT();
+  const isPro = usePro();
   const onClose = useCallback(() => setOpen(false), []);
   return (
     <>
-      <Pressable testID="header-notes-button" onPress={() => setOpen(true)} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notesOpen")}>
+      <Pressable testID="header-notes-button" onPress={() => setOpen(true)} style={styles.iconBtn} accessibilityRole="button"
+        accessibilityLabel={isPro ? t("notesOpen") : t("notesLockedA11y")}>
         <Ionicons name="document-text-outline" size={23} color={colors.onBrandSecondary} />
+        {!isPro && (
+          <View style={styles.lockBadge} testID="header-notes-lock">
+            <Ionicons name="lock-closed" size={10} color={colors.onAccent} />
+          </View>
+        )}
       </Pressable>
-      {open && <NotesDrawer onClose={onClose} />}
+      {open && <NotesDrawer onClose={onClose} locked={!isPro} />}
     </>
   );
 }
 
-function NotesDrawer({ onClose }: { onClose: () => void }) {
+function NotesUpsell({ onUnlock }: { onUnlock: () => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const t = useT();
+  return (
+    <View style={styles.upsell} testID="notes-pro-upsell">
+      <View style={styles.upsellIcon}><Ionicons name="lock-closed" size={26} color={colors.askOrange} /></View>
+      <Text style={styles.upsellTitle} accessibilityRole="header">{t("notesProTitle")}</Text>
+      <Text style={styles.upsellText}>{t("notesProText")}</Text>
+      <Pressable onPress={onUnlock} style={({ pressed }) => [styles.upsellBtn, pressed && styles.pressed]} accessibilityRole="button" testID="notes-pro-unlock">
+        <Text style={styles.upsellBtnText}>{t("pwUnlock")}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function NotesDrawer({ onClose, locked }: { onClose: () => void; locked: boolean }) {
   const styles = useStyles();
   const { colors } = useTheme();
   const t = useT();
@@ -51,7 +78,12 @@ function NotesDrawer({ onClose }: { onClose: () => void }) {
   const reduceMotion = useReduceMotion();
   const panelW = width < 600 ? Math.round(width * 0.85) : 380;
   const [editing, setEditing] = useState<Note | "new" | null>(null);
-  const notes = useNotes(true);
+  const notes = useNotes(!locked);
+  const proRequired = locked || (notes.error instanceof ApiError && notes.error.status === 402);
+  const unlock = () => {
+    onClose();
+    router.push("/paywall");
+  };
 
   const x = useSharedValue(panelW);
   const fade = useSharedValue(0);
@@ -104,12 +136,16 @@ function NotesDrawer({ onClose }: { onClose: () => void }) {
               <Ionicons name="close" size={24} color={colors.onSurface} />
             </Pressable>
           </View>
-          <View style={styles.hint} testID="notes-hint">
-            <Ionicons name="eye-outline" size={15} color={colors.warning} />
-            <Text style={styles.hintText}>{t("notesHint")}</Text>
-          </View>
+          {!proRequired && (
+            <View style={styles.hint} testID="notes-hint">
+              <Ionicons name="eye-outline" size={15} color={colors.warning} />
+              <Text style={styles.hintText}>{t("notesHint")}</Text>
+            </View>
+          )}
 
-          {editing ? (
+          {proRequired ? (
+            <NotesUpsell onUnlock={unlock} />
+          ) : editing ? (
             <NoteEditor key={editing === "new" ? "new" : editing.note_id} note={editing === "new" ? null : editing} onDone={() => setEditing(null)} />
           ) : notes.isLoading ? (
             <View style={styles.center} testID="notes-loading"><ActivityIndicator color={colors.askOrange} /></View>
@@ -213,6 +249,13 @@ function NoteEditor({ note, onDone }: { note: Note | null; onDone: () => void })
 
 const useStyles = makeStyles((c) => ({
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  lockBadge: { position: "absolute", right: 3, bottom: 5, width: 16, height: 16, borderRadius: 8, backgroundColor: c.askOrange, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: c.headerBg },
+  upsell: { alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 28 },
+  upsellIcon: { width: 60, height: 60, borderRadius: 30, backgroundColor: c.askOrangeTint, alignItems: "center", justifyContent: "center" },
+  upsellTitle: { color: c.onSurface, fontSize: 18, fontWeight: "900", textAlign: "center" },
+  upsellText: { color: c.onSurfaceTertiary, fontSize: 14, lineHeight: 20, textAlign: "center" },
+  upsellBtn: { marginTop: 6, minHeight: 48, paddingHorizontal: 22, borderRadius: 12, backgroundColor: c.askOrange, alignItems: "center", justifyContent: "center", alignSelf: "stretch" },
+  upsellBtnText: { color: c.onAccent, fontWeight: "900", fontSize: 14, textTransform: "uppercase", letterSpacing: 0.5 },
   root: { flex: 1, flexDirection: "row", justifyContent: "flex-end" },
   backdrop: { ...({ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const), backgroundColor: "rgba(4,10,18,0.62)" },
   panel: { height: "100%", backgroundColor: c.surface, borderLeftWidth: 1, borderLeftColor: c.headerBorder, paddingHorizontal: 14, ...fx("shadowOrangeSoft") },
