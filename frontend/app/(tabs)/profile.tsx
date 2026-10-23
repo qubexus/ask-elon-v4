@@ -119,7 +119,7 @@ export default function Profile() {
         <View style={[styles.cardOuter, fx("profileCardGlow")]} testID="profile-card">
           <LinearGradient colors={[colors.brandPrimary, colors.brandPrimaryDeep, colors.brandSecondary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardBg}>
             <View style={styles.cardStripe} />
-            <Image source={require("@/assets/brand/robot-header@3x.png")} style={styles.watermark} contentFit="contain" accessible={false} alt="" />
+            <Image source={require("@/assets/brand/robot-watermark.png")} style={styles.watermark} contentFit="contain" accessible={false} alt="" />
             <View style={styles.cardTop}>
               <Text style={styles.cardKicker} numberOfLines={1}>
                 {t("profileCard").toUpperCase().split("ASK ELON").map((part, i) => (

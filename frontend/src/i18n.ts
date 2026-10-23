@@ -32,7 +32,6 @@ const S = {
     "Ask Elon este un asistent AI. Nu este un sindicat și nu înlocuiește consultanța juridică.",
   ],
   loginPageTitle: ["Ask Elon – Logowanie", "Ask Elon – Log in", "Ask Elon – Autentificare"],
-  demo: ["Szybkie logowanie (Demo)", "Quick login (Demo)", "Autentificare rapidă (Demo)"],
   pwHint: ["Minimum 8 znaków", "At least 8 characters", "Minimum 8 caractere"],
   resetTitle: ["Reset hasła", "Reset password", "Resetare parolă"],
   resetSend: ["Wyślij kod", "Send code", "Trimite codul"],

@@ -1,9 +1,8 @@
-import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { ChatView } from "@/src/components/ChatView";
-import { Header } from "@/src/components/Header";
+import { Header, HeaderIconButton } from "@/src/components/Header";
 import { useT } from "@/src/i18n";
 import { useTheme } from "@/src/theme";
 
@@ -13,7 +12,7 @@ export default function CaseChat() {
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }} testID="case-chat-screen">
-      <Header back title={title || t("elonTitle")} subtitle={t("elonTitle")} right={<Pressable testID="case-details-button" onPress={() => router.push(`/case/${threadId}`)} hitSlop={8} style={{ width: 40, height: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name="information-circle-outline" size={24} color={colors.onBrandSecondary} /></Pressable>} />
+      <Header back title={title || t("elonTitle")} subtitle={t("online")} online onlineA11y={t("onlineA11y")} right={<HeaderIconButton testID="case-details-button" icon="information-circle-outline" onPress={() => router.push(`/case/${threadId}`)} label={t("caseTitle")} />} />
       <ChatView threadId={threadId} bottomOffset={0} />
     </View>
   );

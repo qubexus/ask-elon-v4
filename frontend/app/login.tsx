@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import Head from "expo-router/head";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +12,7 @@ import { api } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
 import { Locale, useT } from "@/src/i18n";
-import { makeStyles, useTheme } from "@/src/theme";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 
 type Mode = "login" | "register" | "reset";
 const LANGS: { id: Locale; flag: string; label: string }[] = [
@@ -21,13 +21,26 @@ const LANGS: { id: Locale; flag: string; label: string }[] = [
   { id: "ro", flag: "🇷🇴", label: "RO" },
 ];
 
-function Field({ icon, right, ...props }: { icon: any; right?: React.ReactNode } & React.ComponentProps<typeof TextInput>) {
+function Field({ icon, right, onFocus, onBlur, ...props }: { icon: any; right?: React.ReactNode } & React.ComponentProps<typeof TextInput>) {
   const styles = useStyles();
   const { colors } = useTheme();
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.field}>
+    <View style={[styles.field, focused && fx("focusRing"), focused && styles.fieldFocus]}>
       <Ionicons name={icon} size={20} color={colors.askNavy} />
-      <TextInput placeholderTextColor={colors.muted} style={styles.fieldInput} {...props} />
+      <TextInput
+        placeholderTextColor={colors.muted}
+        style={[styles.fieldInput, Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : null]}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        {...props}
+      />
       {right}
     </View>
   );
@@ -227,19 +240,20 @@ const useStyles = makeStyles((c) => ({
   taglineText: { color: c.askOrange, fontWeight: "700", fontSize: 13 },
   tabs: { flexDirection: "row", gap: 8, padding: 4, borderRadius: 16, backgroundColor: c.askField, borderWidth: 1, borderColor: c.askBorder },
   tab: { flex: 1, minHeight: 48, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderColor: c.askBorder, backgroundColor: c.askField },
-  tabActive: { backgroundColor: c.askOrange, borderColor: c.askOrange, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  tabActive: { backgroundColor: c.askOrange, borderColor: c.askOrange, ...fx("buttonShadow") },
   tabText: { color: c.askNavy, fontWeight: "700", fontSize: 15 },
   tabTextActive: { color: c.onBrandPrimary, fontWeight: "800" },
   resetHead: { alignItems: "center" },
   resetTitle: { color: c.askNavy, fontSize: 22, fontWeight: "900" },
   form: { gap: 12 },
   field: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, paddingHorizontal: 16, borderRadius: 14, backgroundColor: c.askField, borderWidth: 1, borderColor: c.askBorder },
+  fieldFocus: { borderColor: c.askOrange },
   fieldInput: { flex: 1, fontSize: 16, color: c.askInk, fontWeight: "500", paddingVertical: 14 },
   eye: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   hint: { color: c.muted, fontSize: 12, marginLeft: 4 },
   forgot: { alignSelf: "flex-end", minHeight: 32, justifyContent: "center" },
   forgotText: { color: c.askOrange, fontWeight: "700", fontSize: 13 },
-  ctaWrap: { borderRadius: 999, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+  ctaWrap: { borderRadius: 999, ...fx("buttonShadow") },
   cta: { minHeight: 60, borderRadius: 999, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 20 },
   ctaText: { color: c.onBrandPrimary, fontWeight: "900", fontSize: 15, letterSpacing: 1.2, textTransform: "uppercase" },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 12 },
