@@ -1,7 +1,7 @@
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,6 +11,7 @@ import { ProLock } from "@/src/components/ProLock";
 import { usePro } from "@/src/revenuecat";
 import { useToast } from "@/src/components/Toast";
 import { useT } from "@/src/i18n";
+import { FocusTextInput } from "@/src/components/Brand";
 import { makeStyles, useTheme } from "@/src/theme";
 import { Post, timeAgo } from "../(tabs)/forum";
 
@@ -89,7 +90,7 @@ export default function PostDetail() {
       ) : (
       <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
         <View style={[styles.composer, { paddingBottom: insets.bottom + 12 }]}>
-          <TextInput testID="forum-comment-input" value={text} onChangeText={setText} placeholder={t("writeComment")} placeholderTextColor={colors.muted} style={styles.input} multiline />
+          <FocusTextInput testID="forum-comment-input" value={text} onChangeText={setText} placeholder={t("writeComment")} placeholderTextColor={colors.muted} style={styles.input} multiline />
           <Pressable testID="forum-comment-send" onPress={send} disabled={!text.trim() || sending} style={[styles.send, (!text.trim() || sending) && { opacity: 0.4 }]}>
             {sending ? <ActivityIndicator color={colors.onBrandPrimary} size="small" /> : <Ionicons name="arrow-up" size={20} color={colors.onBrandPrimary} />}
           </Pressable>

@@ -12,9 +12,9 @@ import { ProLock } from "@/src/components/ProLock";
 import { usePro } from "@/src/revenuecat";
 import { Header } from "@/src/components/Header";
 import { useToast } from "@/src/components/Toast";
-import { localeSuffix, useT } from "@/src/i18n";
+import { localeSuffix, templateTitle, useT } from "@/src/i18n";
 import { getTemplates, LegalTemplate, renderLetter } from "@/src/templates";
-import { makeStyles, useTheme } from "@/src/theme";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 
 export default function TemplateForm() {
   const { id, from_audit, ...auditVals } = useLocalSearchParams<{ id: string; from_audit?: string; amount_owed?: string; pay_period?: string; hours_worked?: string }>();
@@ -88,7 +88,7 @@ export default function TemplateForm() {
 
   return (
     <View style={styles.root} testID="template-screen">
-      <Header back title={(tpl as any)[`title${sfx}`]} subtitle={tpl.statutoryReference} />
+      <Header back title={templateTitle(locale, tpl)} subtitle={tpl.statutoryReference} />
       {isPro && (
       <View style={styles.steps}>
         {(["form", "preview"] as const).map((s) => (
@@ -147,7 +147,7 @@ export default function TemplateForm() {
           </View>
           <View style={[styles.footer, { paddingTop: 0, borderTopWidth: 0, paddingBottom: insets.bottom + 16 }]}>
             <Pressable testID="template-copy-button" onPress={copy} style={styles.secondary}>
-              <Ionicons name="copy-outline" size={18} color={colors.brandTertiary} />
+              <Ionicons name="copy-outline" size={18} color={colors.brandPrimary} />
               <Text style={styles.secondaryText}>{t("copy")}</Text>
             </Pressable>
             <Pressable testID="template-share-button" onPress={() => Share.share({ message: letter })} style={[styles.cta, { flex: 1, marginTop: 0 }]}>
@@ -178,11 +178,11 @@ const useStyles = makeStyles((c) => ({
   auditBannerText: { flex: 1, color: c.onSurface, fontSize: 13, fontWeight: "600" },
   label: { color: c.onSurfaceTertiary, fontSize: 13, fontWeight: "700" },
   input: { backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 48, fontSize: 15, color: c.onSurface },
-  cta: { minHeight: 52, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 8, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  cta: { minHeight: 52, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 8, ...fx("buttonShadow") },
   ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 15 },
   paper: { backgroundColor: c.surfaceSecondary, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: c.border },
   letter: { color: c.onSurface, fontSize: 13, lineHeight: 20, fontFamily: "Georgia" },
   footer: { flexDirection: "row", gap: 12, paddingHorizontal: 16, paddingTop: 12, backgroundColor: c.surfaceSecondary, borderTopWidth: 1, borderTopColor: c.border },
-  secondary: { minHeight: 52, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandTertiary, backgroundColor: "transparent", flexDirection: "row", alignItems: "center", gap: 8 },
-  secondaryText: { color: c.brandTertiary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
+  secondary: { minHeight: 52, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: "transparent", flexDirection: "row", alignItems: "center", gap: 8 },
+  secondaryText: { color: c.brandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
 }));

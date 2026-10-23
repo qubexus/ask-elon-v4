@@ -2,6 +2,7 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { Image } from "expo-image";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,7 +16,7 @@ import { usePro } from "@/src/revenuecat";
 import { useAuth } from "@/src/auth";
 import { useToast } from "@/src/components/Toast";
 import { useT } from "@/src/i18n";
-import { makeStyles, useTheme } from "@/src/theme";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 
 type Msg = { message_id: string; role: "user" | "assistant"; text: string };
 
@@ -39,7 +40,7 @@ function RichText({ text, style, boldStyle }: { text: string; style: any; boldSt
 function ElonTag({ styles }: { styles: any }) {
   return (
     <View style={styles.senderRow}>
-      <View style={styles.avatar}><Text style={styles.avatarText}>E</Text></View>
+      <Image source={require("@/assets/brand/robot-header.png")} style={styles.avatar} contentFit="contain" accessible={false} alt="" />
       <Text style={styles.sender}>Elon</Text>
     </View>
   );
@@ -74,6 +75,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [input, setInput] = useState("");
+  const [inputFocused, setInputFocused] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const listRef = useRef<FlatList>(null);
   const idRef = useRef(0);
@@ -170,6 +172,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
     }
   };
 
+  const canSend = !!input.trim() && !streaming;
   const firstName = (user?.name || "").split(" ")[0] || "";
   const welcome = t("welcome", { name: firstName });
   const quick = [t("q1"), t("q2"), t("q3"), t("q4")];
@@ -248,7 +251,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
               <View style={styles.quickWrap}>
                 {quick.map((q, i) => (
                   <Pressable key={i} testID={`quick-action-${i}`} onPress={() => send(q)} style={({ pressed }) => [styles.quick, pressed && { opacity: 0.7 }]}>
-                    <Ionicons name="flash-outline" size={14} color={colors.brandTertiary} />
+                    <Ionicons name="flash-outline" size={14} color={colors.askOrange} />
                     <Text style={styles.quickText}>{q}</Text>
                   </Pressable>
                 ))}
@@ -316,16 +319,20 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase }: { threadId
             onChangeText={setInput}
             placeholder={t("placeholder")}
             placeholderTextColor={colors.muted}
-            style={styles.input}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
+            style={[styles.input, inputFocused && fx("focusRing"), inputFocused && styles.inputFocused]}
             multiline
           />
           <Pressable
             testID="chat-send-button"
             onPress={() => send(input)}
-            disabled={!input.trim() || streaming}
-            style={[styles.send, (!input.trim() || streaming) && { opacity: 0.4 }]}
+            disabled={!canSend}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canSend }}
+            style={({ pressed }) => [styles.send, canSend ? [styles.sendReady, pressed ? fx("glowOrange") : fx("shadowOrangeSoft")] : { opacity: 0.35 }]}
           >
-            {streaming ? <ActivityIndicator color={colors.onBrandPrimary} size="small" /> : <Ionicons name="arrow-up" size={22} color={colors.onBrandPrimary} />}
+            {streaming ? <ActivityIndicator color={colors.onBrandPrimary} size="small" /> : <Ionicons name="arrow-up" size={22} color={canSend ? colors.askInk : colors.onBrandPrimary} />}
           </Pressable>
         </View>
       </KeyboardStickyView>
@@ -348,22 +355,21 @@ const useStyles = makeStyles((c) => ({
   banner: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: c.brandPrimarySoft, borderBottomWidth: 1, borderBottomColor: c.border },
   overdue: { backgroundColor: c.surfaceSecondary, borderBottomColor: c.error, borderBottomWidth: 2 },
   bannerText: { flex: 1, color: c.onSurface, fontSize: 12, fontWeight: "600" },
-  bannerCta: { color: c.brandPrimary, fontSize: 12, fontWeight: "800" },
+  bannerCta: { color: c.brandPrimary, fontSize: 12, fontWeight: "800", flexShrink: 0 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { color: c.muted, fontSize: 14 },
   retry: { backgroundColor: c.brandPrimary, paddingHorizontal: 20, height: 44, borderRadius: 12, justifyContent: "center" },
   retryText: { color: c.onBrandPrimary, fontWeight: "700" },
   list: { padding: 16, gap: 12 },
   bubble: { maxWidth: "86%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  ai: { alignSelf: "flex-start", backgroundColor: c.surfaceTertiary, borderWidth: 1, borderColor: c.border, borderBottomLeftRadius: 6 },
+  ai: { alignSelf: "flex-start", backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, borderBottomLeftRadius: 6 },
   user: { alignSelf: "flex-end", backgroundColor: c.brandPrimary, borderBottomRightRadius: 6 },
   sender: { color: c.brandPrimary, fontWeight: "900", fontSize: 12 },
   senderRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
-  avatar: { width: 20, height: 20, borderRadius: 10, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center" },
-  avatarText: { color: c.onBrandPrimary, fontSize: 10, fontWeight: "900" },
+  avatar: { width: 28, height: 28 },
   aiText: { color: c.onSurface, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   bold: { fontWeight: "800" },
-  listen: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 8, minHeight: 32, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.surfaceSecondary },
+  listen: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 8, minHeight: 32, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surfaceSecondary },
   listenText: { color: c.brandPrimary, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
   userText: { color: c.onBrandPrimary, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   quickWrap: { gap: 8, marginTop: 12 },
@@ -400,11 +406,15 @@ const useStyles = makeStyles((c) => ({
     maxHeight: 120,
     backgroundColor: c.surfaceTertiary,
     borderRadius: 22,
+    borderWidth: 1,
+    borderColor: c.borderStrong,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,
     fontSize: 15,
     color: c.onSurface,
   },
+  inputFocused: { borderColor: c.askOrange },
   send: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.brandPrimary, alignItems: "center", justifyContent: "center" },
+  sendReady: { backgroundColor: c.askOrange },
 }));

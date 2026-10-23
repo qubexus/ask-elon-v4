@@ -164,7 +164,7 @@ export function VoiceInputButton({ onText, disabled }: { onText: (t: string) => 
 }
 
 const useStyles = makeStyles((c) => ({
-  mic: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.surfaceTertiary, borderWidth: 1, borderColor: c.border, alignItems: "center", justifyContent: "center" },
+  mic: { width: 44, height: 44, borderRadius: 22, backgroundColor: c.brandPrimarySoft, borderWidth: 1, borderColor: c.brandPrimarySoft, alignItems: "center", justifyContent: "center" },
   micActive: { backgroundColor: c.error, borderColor: c.error },
   ring: { position: "absolute", width: 44, height: 44, borderRadius: 22, backgroundColor: c.error },
   timer: { position: "absolute", top: -26, left: 16, color: c.error, fontSize: 12, fontWeight: "800" },

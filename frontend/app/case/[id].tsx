@@ -8,13 +8,16 @@ import { api } from "@/src/api";
 import { Header } from "@/src/components/Header";
 import { StatusPill } from "@/src/components/StatusPill";
 import { useToast } from "@/src/components/Toast";
+import { useAuth } from "@/src/auth";
+import { formatDate } from "@/src/format";
 import { useT } from "@/src/i18n";
-import { makeStyles, useTheme } from "@/src/theme";
+import { fx, makeStyles, useTheme } from "@/src/theme";
 import type { Case } from "../(tabs)/cases";
 
 export default function CaseDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const t = useT();
+  const { locale } = useAuth();
   const toast = useToast();
   const styles = useStyles();
   const { colors } = useTheme();
@@ -63,12 +66,12 @@ export default function CaseDetail() {
           <ScrollView contentContainerStyle={styles.body}>
             <View style={styles.meta}>
               <StatusPill status={c.status} />
-              <Text style={styles.muted}>{t("updated")}: {new Date(c.updated_at).toLocaleDateString()}</Text>
+              <Text style={styles.muted}>{t("updated")}: {formatDate(c.updated_at, locale)}</Text>
             </View>
             <Text style={styles.title} testID="case-detail-title">{c.title}</Text>
             {!!c.sector && (
               <View style={styles.sector}>
-                <Ionicons name="business-outline" size={16} color={colors.brandTertiary} />
+                <Ionicons name="business-outline" size={16} color={colors.brandPrimary} />
                 <Text style={styles.sectorText}>{c.sector}</Text>
               </View>
             )}
@@ -110,9 +113,9 @@ const useStyles = makeStyles((c) => ({
   card: { backgroundColor: c.surfaceSecondary, borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: c.border },
   label: { color: c.muted, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   desc: { color: c.onSurface, fontSize: 15, lineHeight: 23 },
-  secondary: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandTertiary, backgroundColor: "transparent", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
-  secondaryText: { color: c.brandTertiary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
+  secondary: { minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: c.brandPrimary, backgroundColor: "transparent", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  secondaryText: { color: c.brandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 14 },
   footer: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: c.surfaceSecondary, borderTopWidth: 1, borderTopColor: c.border },
-  cta: { minHeight: 52, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  cta: { minHeight: 52, borderRadius: 12, backgroundColor: c.brandPrimary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, ...fx("buttonShadow") },
   ctaText: { color: c.onBrandPrimary, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.8, fontSize: 15 },
 }));

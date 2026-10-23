@@ -1,10 +1,9 @@
-import Ionicons from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ChatView } from "@/src/components/ChatView";
-import { Header } from "@/src/components/Header";
+import { Header, HeaderIconButton } from "@/src/components/Header";
 import { useT } from "@/src/i18n";
 import { usesNativeTabs } from "@/src/navigation";
 import { useTheme } from "@/src/theme";
@@ -23,14 +22,12 @@ export default function ChatTab() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface, paddingBottom: usesNativeTabs ? insets.bottom : 0 }} testID="chat-screen">
       <Header
-        robot
-        title={t("elonTitle")}
+        robot="elon"
+        title={t("elonTabTitle")}
         subtitle={t("online")}
-        right={
-          <Pressable testID="chat-clear-button" onPress={fresh} hitSlop={8} accessibilityLabel={t("clearChat")} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="refresh-outline" size={22} color={colors.onBrandSecondary} />
-          </Pressable>
-        }
+        online
+        onlineA11y={t("onlineA11y")}
+        right={<HeaderIconButton testID="chat-clear-button" icon="refresh-outline" onPress={fresh} label={t("clearChat")} />}
       />
       <ChatView key={threadId} threadId={threadId} isMain onSavedAsCase={fresh} bottomOffset={tabBar} />
     </View>

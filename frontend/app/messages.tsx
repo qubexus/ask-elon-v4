@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "@/src/api";
 import { Header } from "@/src/components/Header";
 import { useToast } from "@/src/components/Toast";
+import { useAuth } from "@/src/auth";
+import { formatDate } from "@/src/format";
 import { useT } from "@/src/i18n";
 import { useRefreshUnread } from "@/src/inbox";
 import { makeStyles, useTheme } from "@/src/theme";
@@ -14,6 +16,7 @@ type Msg = { id: string; title: string; body: string; link?: string | null; crea
 
 function useDateLabel() {
   const t = useT();
+  const { locale } = useAuth();
   return (iso: string) => {
     const d = new Date(iso);
     const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -21,7 +24,7 @@ function useDateLabel() {
     const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     if (diff === 0) return `${t("msgToday")}, ${time}`;
     if (diff === 1) return `${t("msgYesterday")}, ${time}`;
-    return d.toLocaleDateString();
+    return formatDate(d, locale);
   };
 }
 

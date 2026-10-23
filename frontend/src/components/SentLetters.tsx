@@ -5,6 +5,8 @@ import { useFocusEffect } from "expo-router";
 
 import { api } from "@/src/api";
 import { useToast } from "@/src/components/Toast";
+import { useAuth } from "@/src/auth";
+import { formatDate } from "@/src/format";
 import { useT } from "@/src/i18n";
 import { makeStyles, useTheme } from "@/src/theme";
 
@@ -22,6 +24,7 @@ export async function reportToAcas(id: string) {
 /** "Sent letters" card with a 7-day reply countdown; shown at the top of the Cases tab. */
 export function SentLetters() {
   const t = useT();
+  const { locale } = useAuth();
   const toast = useToast();
   const styles = useStyles();
   const { colors } = useTheme();
@@ -59,7 +62,7 @@ export function SentLetters() {
               </Pressable>
             </View>
             <Text style={styles.meta}>
-              {new Date(l.sent_at).toLocaleDateString()} · {l.recipient || "HR"}{l.amount_gbp ? ` · £${l.amount_gbp.toFixed(2)}` : ""}
+              {formatDate(l.sent_at, locale)} · {l.recipient || "HR"}{l.amount_gbp ? ` · £${l.amount_gbp.toFixed(2)}` : ""}
             </Text>
             {l.status === "awaiting" ? (
               <>

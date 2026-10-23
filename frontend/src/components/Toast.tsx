@@ -3,7 +3,7 @@ import { Text } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { makeStyles } from "@/src/theme";
+import { fx, makeStyles } from "@/src/theme";
 
 type Kind = "success" | "error";
 const Ctx = createContext<(msg: string, kind?: Kind) => void>(() => {});
@@ -47,11 +47,7 @@ const useStyles = makeStyles((c) => ({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    ...fx("toastShadow"),
   },
   error: { backgroundColor: c.error },
   text: { color: c.onSurfaceInverse, fontSize: 14, fontWeight: "600" },
