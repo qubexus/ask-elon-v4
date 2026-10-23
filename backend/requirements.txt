@@ -16,6 +16,8 @@ PyJWT==2.15.1
 pwdlib[argon2,bcrypt]==0.3.1
 # AI: Google Gemini (czat, dokumenty, głos)
 google-genai==2.26.0
+# MP3 dla czytania na głos (bez ffmpeg)
+lameenc==1.9.0
 # Logowanie przez Google (weryfikacja tokenu ID)
 google-auth==2.59.1
 # Pliki w chmurze S3 / Cloudflare R2 (opcjonalnie, STORAGE_BACKEND=s3)

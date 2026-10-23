@@ -613,8 +613,20 @@ async def chat_stream(body: ChatIn, request: Request):
 
 
 # ---------------- Voice: speech-to-text & text-to-speech ----------------
-TTS_INSTRUCTIONS = ("You are Elon, the ask Elon AI assistant for UK work rights. Read the following text aloud "
-                    "clearly, at a steady, reassuring pace, warm but professional, like a trusted colleague:")
+TTS_STYLE_VERSION = "2"  # bump to invalidate cached audio after changing the reading style
+TTS_MAX_CHARS = 3600     # longer replies are read up to this point (cost + latency cap)
+TTS_CHUNK_CHARS = 1200   # few requests per reply (API quota); chunks run in parallel, then joined
+TTS_CACHE_MAX = 3000     # cached audio files kept in MongoDB (oldest removed first)
+
+
+def tts_instructions(lang: str) -> str:
+    name = LANG_NAMES.get(lang, "Polish")
+    return (f"Read the following {name} text aloud as Elon, a friendly assistant for UK work rights. "
+            f"Use natural, native {name} pronunciation, a warm, calm and clear human voice and a steady "
+            f"conversational pace, like a trusted colleague. Read only the text, do not add anything:")
+
+
+TTS_INSTRUCTIONS = tts_instructions("pl")
 STT_PROMPT = "UK employment law: payslip, grievance, ACAS, SSP, holiday pay, zero-hours, HR, Employment Tribunal, agencja, nadgodziny."
 
 
@@ -640,11 +652,24 @@ async def transcribe(request: Request, audio: UploadFile = File(...), language: 
 
 
 def clean_for_tts(text: str) -> str:
-    text = emoji.replace_emoji(text, replace="")
-    text = re.sub(r"https?://\S+", "", text)
-    text = re.sub(r"`{1,3}[^`]*`{1,3}", "", text)
+    """Turns Elon's markdown reply into plain sentences that read well aloud."""
+    text = emoji.replace_emoji(text or "", replace="")
+    text = re.sub(r"```.*?```", " ", text, flags=re.S)                  # code blocks
+    text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", text)                     # images
+    text = re.sub(r"\[([^\]]+)\]\((?:[^)]*)\)", r"\1", text)              # [label](url) -> label
+    text = re.sub(r"(?:https?://|www\.)\S+", "", text)                    # bare links
+    text = re.sub(r"`([^`]*)`", r"\1", text)                             # inline code keeps its words
+    text = re.sub(r"^\s{0,3}#{1,6}\s*(.+?)\s*#*\s*$", r"\1.", text, flags=re.M)  # headings end a sentence
+    text = re.sub(r"^\s*(?:[-*•+]|\d+[.)])\s+(.+)$",                    # list items -> sentences
+                  lambda m: m.group(1) if re.search(r"[.!?:;]$", m.group(1)) else m.group(1) + ".", text, flags=re.M)
+    text = re.sub(r"^\s*(?:-{3,}|\*{3,}|_{3,}|={3,}|═+)\s*$", " ", text, flags=re.M)  # rules
     text = re.sub(r"[*_#>~|]", "", text)
-    return re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([.,;:!?])", r"\1", text)          # space left before punctuation by removed links
+    text = re.sub(r"[:;,]\s*(?=[.!?]|$)", "", text)          # "Więcej: ." -> "Więcej."
+    text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"^[\s.]+", "", text)
+    return text.strip()
 
 
 def chunk_text(text: str, limit: int = 4000) -> List[str]:
@@ -669,15 +694,21 @@ async def tts(body: TtsIn, request: Request):
     msg = await db.messages.find_one({"message_id": body.message_id, "user_id": user["user_id"]}, {"_id": 0})
     if not msg:
         raise HTTPException(404, "Message not found")
-    text = clean_for_tts(msg["text"])
+    text = clean_for_tts(msg.get("text") or "")
     if not text:
         raise HTTPException(400, "Nothing to read")
-    key = hashlib.sha256(f"{text}|{ai.tts_signature()}|{TTS_INSTRUCTIONS}".encode()).hexdigest()
+    if len(text) > TTS_MAX_CHARS:
+        cut = text[:TTS_MAX_CHARS]
+        text = cut[: max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? ")) + 1] or cut
+    lang = user.get("locale") if user.get("locale") in LANG_NAMES else "pl"
+    style = tts_instructions(lang)
+    key = hashlib.sha256(f"{text}|{ai.tts_signature()}|{style}|{TTS_STYLE_VERSION}".encode()).hexdigest()
     cached = await db.tts_cache.find_one({"key": key}, {"_id": 0, "ext": 1})
     if not cached:
         rate_limit(f"tts:{user['user_id']}", 15, 60)
+        rate_limit(f"tts-day:{user['user_id']}", 300, 86400)
         try:
-            audio, mime, ext = await ai.synthesize(chunk_text(text, 1500), TTS_INSTRUCTIONS)
+            audio, mime, ext = await ai.synthesize(chunk_text(text, TTS_CHUNK_CHARS), style)
         except ai.AINotConfigured:
             raise HTTPException(503, "Read-aloud is not configured on the server yet")
         except Exception:
@@ -686,7 +717,14 @@ async def tts(body: TtsIn, request: Request):
         await db.tts_cache.update_one({"key": key}, {"$set": {"key": key, "audio": audio, "mime": mime, "ext": ext,
                                                               "created_at": now()}}, upsert=True)
         cached = {"ext": ext}
-    return {"url": f"/api/tts/audio/{key}.{cached.get('ext') or 'mp3'}"}
+        try:  # keep the cache bounded
+            extra = await db.tts_cache.count_documents({}) - TTS_CACHE_MAX
+            if extra > 0:
+                old = await db.tts_cache.find({}, {"_id": 1}).sort("created_at", 1).limit(extra).to_list(extra)
+                await db.tts_cache.delete_many({"_id": {"$in": [d["_id"] for d in old]}})
+        except Exception:
+            logger.warning("TTS cache trim failed", exc_info=True)
+    return {"url": f"/api/tts/audio/{key}.{cached.get('ext') or 'mp3'}", "lang": lang}
 
 
 @api.get("/tts/audio/{name}")

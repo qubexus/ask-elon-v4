@@ -9,7 +9,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { withBrand } from "@/src/components/BrandName";
 import { api, streamChat } from "@/src/api";
-import { speakMessage, stopSpeaking } from "@/src/audio";
+import { primeAudio, speakMessage, stopSpeaking } from "@/src/audio";
+import { storage } from "@/src/utils/storage";
 import { VoiceInputButton } from "@/src/components/VoiceInputButton";
 import { isOverdue, Letter, reportToAcas } from "@/src/components/SentLetters";
 import { ProLock } from "@/src/components/ProLock";
@@ -147,24 +148,57 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
 
   useFocusEffect(useCallback(() => () => stopSpeaking(), []));
 
-  const toggleSpeak = async (id: string) => {
+  // Read-aloud: Listen button on every Elon reply, plus an optional "read replies aloud" switch (saved per device).
+  const [autoRead, setAutoRead] = useState(false);
+  const autoReadRef = useRef(false);
+  useEffect(() => {
+    storage.getItem("ae.autoRead", false).then((v) => {
+      autoReadRef.current = !!v;
+      setAutoRead(!!v);
+    });
+  }, []);
+  const toggleAutoRead = () => {
+    primeAudio();
+    const next = !autoReadRef.current;
+    autoReadRef.current = next;
+    setAutoRead(next);
+    storage.setItem("ae.autoRead", next);
+    if (!next) {
+      stopSpeaking();
+      setSpeaking(null);
+    }
+    toast(t(next ? "autoReadOnToast" : "autoReadOffToast"));
+  };
+
+  const speak = async (id: string, text: string, quiet = false) => {
+    setSpeaking({ id, phase: "loading" });
+    try {
+      await speakMessage({
+        messageId: id,
+        text,
+        lang: locale,
+        onStart: () => setSpeaking({ id, phase: "playing" }),
+        onDone: () => setSpeaking((s) => (s?.id === id ? null : s)),
+      });
+    } catch (e: any) {
+      setSpeaking((s) => (s?.id === id ? null : s));
+      if (e?.name === "TapAgain") {
+        if (!quiet) toast(t("ttsTapAgain"));
+        return;
+      }
+      console.warn("tts failed", e);
+      if (!quiet) toast(/Too many/i.test(String(e?.message)) ? t("ttsLimit") : t("ttsError"), "error");
+    }
+  };
+
+  const toggleSpeak = (id: string, text: string) => {
     if (speaking?.id === id) {
       stopSpeaking();
       setSpeaking(null);
       return;
     }
-    setSpeaking({ id, phase: "loading" });
-    try {
-      await speakMessage(
-        id,
-        () => setSpeaking({ id, phase: "playing" }),
-        () => setSpeaking((s) => (s?.id === id ? null : s)),
-      );
-    } catch (e) {
-      console.warn("tts stage failed", e);
-      toast(t("ttsError"), "error");
-      setSpeaking(null);
-    }
+    primeAudio(); // synchronously inside the tap – lets the browser play the voice a few seconds later
+    speak(id, text);
   };
 
   const load = useCallback(async () => {
@@ -201,6 +235,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
   const send = async (text: string) => {
     const msg = text.trim();
     if (!msg || streaming || freeBlocked) return;
+    if (autoReadRef.current) primeAudio();
     setInput("");
     nearBottom.current = true;
     const stamp = idRef.current++;
@@ -208,10 +243,15 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
     setMessages((m) => [...m, { message_id: `u_${stamp}`, role: "user", text: msg }, { message_id: aiId, role: "assistant", text: "" }]);
     setStreaming(true);
     try {
-      const realId = await streamChat(msg, threadId, (d) =>
-        setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, text: x.text + d } : x))),
-      );
-      if (realId) setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, message_id: realId } : x)));
+      let replyText = "";
+      const realId = await streamChat(msg, threadId, (d) => {
+        replyText += d;
+        setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, text: x.text + d } : x)));
+      });
+      if (realId) {
+        setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, message_id: realId } : x)));
+        if (autoReadRef.current && replyText.trim()) speak(realId, replyText, true);
+      }
       setUsage((u) => (u ? { ...u, today: u.today + 1 } : u));
     } catch {
       toast(t("aiError"), "error");
@@ -367,7 +407,9 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
                   {item.message_id.startsWith("msg_") && (
                     <Pressable
                       testID={`chat-listen-button-${item.message_id}`}
-                      onPress={() => toggleSpeak(item.message_id)}
+                      onPress={() => toggleSpeak(item.message_id, item.text)}
+                      accessibilityRole="button"
+                      accessibilityLabel={speaking?.id === item.message_id ? t("stopListen") : t("listen")}
                       style={({ pressed }) => [styles.listen, pressed && { opacity: 0.7 }]}
                       hitSlop={6}
                     >
@@ -393,12 +435,25 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
         </View>
       ) : (
       <KeyboardStickyView offset={{ closed: 0, opened: bottomOffset }} style={styles.composerBox} testID="chat-composer">
-        {isMain && messages.length > 0 && !streaming && (
-          <Pressable testID="chat-save-as-case" onPress={saveAsCase} disabled={saving} hitSlop={8} style={styles.saveCase}>
-            <Ionicons name="add-circle-outline" size={13} color={colors.muted} />
-            <Text style={styles.saveCaseText}>{t("chatSaveCase")}</Text>
+        <View style={styles.toolsRow}>
+          {isMain && messages.length > 0 && !streaming && (
+            <Pressable testID="chat-save-as-case" onPress={saveAsCase} disabled={saving} hitSlop={8} style={styles.saveCase}>
+              <Ionicons name="add-circle-outline" size={13} color={colors.muted} />
+              <Text style={styles.saveCaseText}>{t("chatSaveCase")}</Text>
+            </Pressable>
+          )}
+          <Pressable
+            testID="chat-auto-read-toggle"
+            onPress={toggleAutoRead}
+            hitSlop={8}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: autoRead }}
+            style={[styles.autoRead, autoRead && styles.autoReadOn]}
+          >
+            <Ionicons name={autoRead ? "volume-high" : "volume-mute-outline"} size={13} color={autoRead ? colors.askOrange : colors.muted} />
+            <Text style={[styles.autoReadText, autoRead && { color: colors.askOrange }]}>{t(autoRead ? "autoReadOn" : "autoReadOff")}</Text>
           </Pressable>
-        )}
+        </View>
         {!isPro && usage && (
           <Pressable testID="chat-free-counter" onPress={() => router.push("/paywall")} style={styles.freeBar}>
             <Ionicons name="time-outline" size={14} color={colors.gold} />
@@ -467,6 +522,10 @@ const useStyles = makeStyles((c) => ({
   aiText: { color: c.onSurface, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   bold: { fontWeight: "800" },
   listen: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 8, minHeight: 32, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surfaceSecondary },
+  toolsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, marginBottom: 2, minHeight: 26 },
+  autoRead: { flexDirection: "row", alignItems: "center", gap: 5, marginLeft: "auto", marginBottom: 2, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: c.border },
+  autoReadOn: { borderColor: c.askOrange },
+  autoReadText: { color: c.muted, fontSize: 11, fontWeight: "700" },
   listenText: { color: c.brandPrimaryText, fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
   userText: { color: c.onBrandPrimary, fontSize: 14, lineHeight: 21, fontWeight: "500" },
   quickWrap: { gap: 8, marginTop: 12 },

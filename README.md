@@ -159,6 +159,10 @@ Modele (domyślne zwykle wystarczą):
 - `GEMINI_MODEL=gemini-3.5-flash`: czat (i domyślnie dokumenty oraz dyktowanie). Uwaga: nowe klucze Google nie mają już dostępu do `gemini-2.5-flash` (błąd 404 „no longer available to new users”),
 - `GEMINI_FALLBACK_MODEL=gemini-flash-lite-latest`: model zapasowy, gdy główny odpowiada „high demand” (503). Serwer sam ponawia próbę kilka razy, a potem używa zapasowego,
 - `GEMINI_TTS_MODEL=gemini-2.5-flash-preview-tts`: czytanie odpowiedzi na głos, głos `GEMINI_TTS_VOICE=Charon`,
+  plik MP3 (biblioteka `lameenc`, bez ffmpeg); gdy model wyczerpie limit, serwer przechodzi na `GEMINI_TTS_FALLBACK_MODELS`
+  (domyślnie `gemini-3.8-flash-lite-tts,gemini-3.1-flash-tts-preview`). Uwaga: darmowy klucz ma tylko ok. 10 odsłuchań dziennie
+  na model, więc na produkcji włącz płatności dla klucza. Gdy głos z serwera nie działa, aplikacja webowa czyta głosem przeglądarki.
+  W czacie: przycisk „Odsłuchaj” przy każdej odpowiedzi Elona i przełącznik „Czytanie na głos” (odpowiedzi czytane automatycznie).
 - opcjonalnie `GEMINI_DOC_MODEL`, `GEMINI_STT_MODEL`.
 - Opcjonalnie głos przez OpenAI: `OPENAI_API_KEY` + `STT_PROVIDER=openai` / `TTS_PROVIDER=openai`. Domyślnie wszystko idzie przez Gemini.
 

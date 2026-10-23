@@ -6,6 +6,7 @@ Optionally speech can use OpenAI instead (STT_PROVIDER=openai / TTS_PROVIDER=ope
 import asyncio
 import io
 import os
+import time
 import wave
 import logging
 from typing import AsyncIterator, Iterable, List, Optional, Tuple
@@ -25,6 +26,9 @@ GEMINI_DOC_MODEL = _env("GEMINI_DOC_MODEL", GEMINI_MODEL)            # documents
 GEMINI_STT_MODEL = _env("GEMINI_STT_MODEL", GEMINI_MODEL)            # dictation (audio -> text)
 GEMINI_TTS_MODEL = _env("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
 GEMINI_TTS_VOICE = _env("GEMINI_TTS_VOICE", "Charon")
+# Used in order when the main TTS model is out of quota or unavailable (each model has its own quota).
+GEMINI_TTS_FALLBACK_MODELS = [m.strip() for m in _env(
+    "GEMINI_TTS_FALLBACK_MODELS", "gemini-3.8-flash-lite-tts,gemini-3.1-flash-tts-preview").split(",") if m.strip()]
 TTS_SAMPLE_RATE = 24000  # Gemini TTS returns 16-bit mono PCM @ 24 kHz
 
 OPENAI_API_KEY = _env("OPENAI_API_KEY")
@@ -186,10 +190,54 @@ async def _openai_transcribe(data: bytes, filename: str, language: Optional[str]
 
 
 # ---------------- Text-to-speech ----------------
+TTS_PARALLEL = 3  # chunks synthesised at the same time (long replies would otherwise take minutes)
+_tts_cooldown: dict = {}  # model -> monotonic time until which it is skipped (quota exhausted / unavailable)
+
+
+def tts_models() -> List[str]:
+    out = []
+    for m in [GEMINI_TTS_MODEL, *GEMINI_TTS_FALLBACK_MODELS]:
+        if m and m not in out:
+            out.append(m)
+    return out
+
+
+def _skip_model_error(e: Exception) -> Optional[float]:
+    """Seconds to skip a model after this error, or None when the error is not model-specific."""
+    code = getattr(e, "code", None) or getattr(e, "status_code", None)
+    text = str(e)
+    if code == 429 or "RESOURCE_EXHAUSTED" in text:
+        return 15 * 60
+    if code in (404, 400) and ("not found" in text.lower() or "not supported" in text.lower()):
+        return 6 * 3600
+    if code in (500, 502, 503, 504) or "UNAVAILABLE" in text:
+        return 60
+    return None
+
+
+def _mp3_encoder():
+    try:
+        import lameenc  # small wheel, no ffmpeg needed
+        return lameenc
+    except Exception:  # pragma: no cover - optional dependency
+        return None
+
+
 def tts_signature() -> str:
     if TTS_PROVIDER == "openai" and OPENAI_API_KEY:
         return f"openai|{OPENAI_TTS_MODEL}|{OPENAI_TTS_VOICE}|mp3"
-    return f"gemini|{GEMINI_TTS_MODEL}|{GEMINI_TTS_VOICE}|wav"
+    fmt = "mp3" if _mp3_encoder() else "wav"
+    return f"gemini|{GEMINI_TTS_MODEL}|{GEMINI_TTS_VOICE}|{fmt}"
+
+
+def pcm_to_mp3(pcm: bytes, rate: int = TTS_SAMPLE_RATE, kbps: int = 48) -> bytes:
+    lameenc = _mp3_encoder()
+    enc = lameenc.Encoder()
+    enc.set_bit_rate(kbps)
+    enc.set_in_sample_rate(rate)
+    enc.set_channels(1)
+    enc.set_quality(2)
+    return bytes(enc.encode(pcm) + enc.flush())
 
 
 def pcm_to_wav(pcm: bytes, rate: int = TTS_SAMPLE_RATE) -> bytes:
@@ -220,13 +268,41 @@ async def synthesize(chunks: List[str], style: str) -> Tuple[bytes, str, str]:
         response_modalities=["AUDIO"],
         speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=GEMINI_TTS_VOICE))))
-    pcm = b""
-    for part in chunks:
-        resp = await client().aio.models.generate_content(
-            model=GEMINI_TTS_MODEL, contents=f"{style}\n\n{part}", config=cfg)
-        for p in resp.candidates[0].content.parts:
-            if p.inline_data and p.inline_data.data:
-                pcm += p.inline_data.data
+    sem = asyncio.Semaphore(TTS_PARALLEL)
+    gap = b"\x00\x00" * int(TTS_SAMPLE_RATE * 0.25)  # short pause between chunks
+
+    async def one(part: str) -> bytes:
+        async with sem:
+            last: Exception = RuntimeError("no TTS model available")
+            for model in tts_models():
+                if _tts_cooldown.get(model, 0) > time.monotonic():
+                    continue
+                for attempt in range(2):  # preview TTS models occasionally return an empty candidate
+                    try:
+                        resp = await client().aio.models.generate_content(
+                            model=model, contents=f"{style}\n\n{part}", config=cfg)
+                        cand = (resp.candidates or [None])[0]
+                        parts = (cand.content.parts if cand and cand.content else None) or []
+                        data = b"".join(p.inline_data.data for p in parts
+                                        if getattr(p, "inline_data", None) and p.inline_data.data)
+                        if data:
+                            return data
+                        last = RuntimeError("TTS returned no audio")
+                    except AINotConfigured:
+                        raise
+                    except Exception as e:
+                        last = e
+                        skip = _skip_model_error(e)
+                        if skip:
+                            _tts_cooldown[model] = time.monotonic() + skip
+                            logger.warning("TTS model %s skipped for %ss: %s", model, int(skip), str(e)[:160])
+                            break  # next model
+            raise last
+
+    parts = await asyncio.gather(*(one(p) for p in chunks if p.strip()))
+    pcm = gap.join(x for x in parts if x)
     if not pcm:
         raise RuntimeError("TTS returned no audio")
+    if _mp3_encoder():
+        return pcm_to_mp3(pcm), "audio/mpeg", "mp3"
     return pcm_to_wav(pcm), "audio/wav", "wav"

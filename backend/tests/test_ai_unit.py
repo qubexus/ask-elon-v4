@@ -77,11 +77,14 @@ def test_transcribe_sends_audio(ai):
     assert ai.audio_mime("recording.m4a", "application/octet-stream") == "audio/mp4"
 
 
-def test_tts_returns_wav(ai):
+def test_tts_returns_audio(ai):
     audio, mime, ext = asyncio.run(ai.synthesize(["Cześć"], "Read calmly:"))
-    assert (mime, ext) == ("audio/wav", "wav")
-    with wave.open(io.BytesIO(audio)) as w:
-        assert w.getframerate() == 24000 and w.getnchannels() == 1 and w.getsampwidth() == 2
+    if ai._mp3_encoder():
+        assert (mime, ext) == ("audio/mpeg", "mp3") and len(audio) > 0
+    else:
+        assert (mime, ext) == ("audio/wav", "wav")
+        with wave.open(io.BytesIO(audio)) as w:
+            assert w.getframerate() == 24000 and w.getnchannels() == 1 and w.getsampwidth() == 2
     kw = ai._fake.calls[0][1]
     assert kw["model"] == ai.GEMINI_TTS_MODEL
     assert kw["config"].speech_config.voice_config.prebuilt_voice_config.voice_name == ai.GEMINI_TTS_VOICE
