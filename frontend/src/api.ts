@@ -1,0 +1,72 @@
+import { fetch as expoFetch } from "expo/fetch";
+
+export const API_BASE = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`;
+
+let token: string | null = null;
+let onUnauthorized: (() => void) | null = null;
+
+export function setApiToken(t: string | null) {
+  token = t;
+}
+export const getApiToken = () => token;
+export function setUnauthorizedHandler(fn: () => void) {
+  onUnauthorized = fn;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+export async function api<T = any>(path: string, opts: { method?: string; body?: unknown } = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: opts.method ?? "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 401 && token) onUnauthorized?.();
+  if (!res.ok) {
+    let msg = `Error ${res.status}`;
+    try {
+      msg = (await res.json()).detail ?? msg;
+    } catch {}
+    throw new ApiError(res.status, msg);
+  }
+  return res.json();
+}
+
+// Streams SSE events from /chat/stream. Calls onDelta per token chunk.
+export async function streamChat(text: string, threadId: string, onDelta: (d: string) => void): Promise<string | null> {
+  let messageId: string | null = null;
+  const res = await expoFetch(`${API_BASE}/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, Accept: "text/event-stream" },
+    body: JSON.stringify({ text, thread_id: threadId }),
+  });
+  if (!res.ok || !res.body) throw new ApiError(res.status, `Error ${res.status}`);
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split("\n\n");
+    buf = parts.pop() ?? "";
+    for (const p of parts) {
+      const line = p.trim();
+      if (!line.startsWith("data:")) continue;
+      const ev = JSON.parse(line.slice(5));
+      if (ev.error) throw new Error(ev.error);
+      if (ev.delta) onDelta(ev.delta);
+      if (ev.done) messageId = ev.message_id;
+    }
+  }
+  return messageId;
+}

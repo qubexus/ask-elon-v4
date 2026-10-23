@@ -1,0 +1,1838 @@
+[
+  {
+    "id": "formal_grievance",
+    "titleEn": "Formal Letter of Grievance to Employer",
+    "titlePl": "Oficjalna Skarga Pracownicza (Formal Grievance)",
+    "titleRo": "Plângere Oficială la Angajator (Formal Grievance)",
+    "statutoryReference": "ACAS Code of Practice No. 1 on Disciplinary & Grievance Procedures (s.199 TULRCA 1992)",
+    "category": "Employment Grievance",
+    "descriptionEn": "Formal statutory workplace grievance under the ACAS Code of Practice regarding unfair treatment, bullying, health & safety violations, or contractual breaches.",
+    "descriptionPl": "Oficjalne zgłoszenie formalnej skargi (Grievance) u pracodawcy w UK zgodnie z procedurą ACAS. Pracodawca ma prawny obowiązek zwołać spotkanie wyjaśniające.",
+    "descriptionRo": "Depunerea unei plângeri oficiale la angajator în conformitate cu codul ACAS privind tratamentul incorect sau încălcarea contractului.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău Complet",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "job_title",
+        "labelEn": "Job Title / Department",
+        "labelPl": "Stanowisko / Dział",
+        "labelRo": "Funcție / Departament",
+        "placeholder": "np. Warehouse Operative / Order Picker",
+        "defaultValue": "Warehouse Operative (Inbound)"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Company Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Companiei",
+        "placeholder": "np. Amazon UK Services Ltd",
+        "defaultValue": "Amazon Fulfilment LCY2"
+      },
+      {
+        "key": "manager_name",
+        "labelEn": "Recipient / HR Manager",
+        "labelPl": "Osoba Decyzyjna / Manager HR",
+        "labelRo": "Manager Resurse Umane",
+        "placeholder": "np. Head of Human Resources",
+        "defaultValue": "Head of Human Resources"
+      },
+      {
+        "key": "grievance_nature",
+        "labelEn": "Nature of Grievance (Details & Dates)",
+        "labelPl": "Szczegółowy Opis Problemu i Daty",
+        "labelRo": "Detalii și Date ale Problemei",
+        "placeholder": "np. Unfair shift allocation, aggressive behaviour from line supervisor, denial of mandatory break times",
+        "defaultValue": ""
+      },
+      {
+        "key": "resolution_sought",
+        "labelEn": "Resolution Sought",
+        "labelPl": "Oczekiwane Rozwiązanie Sprawy",
+        "labelRo": "Soluția Solicitată",
+        "placeholder": "np. Immediate reassignment of shift supervisor, restoration of agreed shifts, written apology",
+        "defaultValue": "Formal investigation, restoration of agreed shifts, and meeting with union representative"
+      },
+      {
+        "key": "companion_name",
+        "labelEn": "Union Companion / Representative",
+        "labelPl": "Imię Przedstawiciela Związkowego",
+        "labelRo": "Reprezentant Sindical",
+        "placeholder": "np. Jan Nowak (Unite rep)",
+        "defaultValue": "[Trade Union Representative / Colleague]"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Employee Name]",
+      "job_title": "[Job Title]",
+      "employer_name": "[Employer Name]",
+      "manager_name": "Human Resources Department",
+      "grievance_nature": "[Details of grievance]",
+      "resolution_sought": "[Resolution sought]",
+      "companion_name": "a Trade Union Representative"
+    },
+    "letter": "FORMAL WRITTEN GRIEVANCE\nCONFIDENTIAL - TO BE RECORDED IN COMPANY GRIEVANCE REGISTER\n\nDate: {{date}}\n\nTO: {{manager_name}}, {{employer_name}}\nFROM: {{employee_name}} ({{job_title}})\nSUBJECT: FORMAL GRIEVANCE SUBMISSION PURSUANT TO THE ACAS CODE OF PRACTICE NO. 1\n\nDear {{manager_name}},\n\nPlease accept this letter as a formal submission of a grievance under the company's Grievance Procedure and the ACAS statutory Code of Practice on Disciplinary and Grievance Procedures (issued under Section 199 of the Trade Union and Labour Relations (Consolidation) Act 1992).\n\n1. STATEMENT OF GRIEVANCE:\n{{grievance_nature}}\n\n2. LEGAL GROUNDS & COMPANY POLICY BREACHES:\nThe conduct described above constitutes a serious failure to provide a safe and equitable working environment, contravenes fair employment principles, and breaches the implied contractual duty of mutual trust and confidence.\n\n3. DESIRED RESOLUTION:\nIn order to resolve this matter satisfactorily, I request the following remedial actions:\n{{resolution_sought}}\n\n4. FORMAL GRIEVANCE MEETING & RIGHT TO BE ACCOMPANIED:\nIn accordance with paragraph 32 of the ACAS Code of Practice and Section 10 of the Employment Relations Act 1999, I request that you convene a formal grievance hearing within five working days of this letter.\n\nI formally notify you of my intention to exercise my statutory right to be accompanied at this meeting by my union representative:\nCompanion: {{companion_name}}.\n\nPlease confirm receipt of this grievance in writing and provide details of the meeting time, venue, and the impartial manager assigned to hear this matter.\n\nYours sincerely,\n\n{{employee_name}}\n{{job_title}}"
+  },
+  {
+    "id": "unpaid_wages",
+    "titleEn": "Employer Demand: Unlawful Deduction from Wages & Overtime",
+    "titlePl": "Wezwanie Pracodawcy: Niewypłacone Wynagrodzenie i Nadgodziny",
+    "titleRo": "Notificare Angajator: Plata Salariului și a Orelor Suplimentare",
+    "statutoryReference": "Section 13, Employment Rights Act 1996 & National Minimum Wage Act 1998",
+    "category": "Wages & Hours",
+    "descriptionEn": "Statutory demand requiring employer to reimburse unlawful pay deductions, missing overtime payments, or unpaid working hours within 7 days.",
+    "descriptionPl": "Formalne wezwanie do zapłaty zaległych płac, nieopłaconych nadgodzin lub bezprawnych potrąceń z payslipu. Powołanie na art. 13 Employment Rights Act 1996.",
+    "descriptionRo": "Cerere oficială către angajator pentru plata salariilor restante, a orelor suplimentare și a deducerilor ilegale din fluturaș.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Company / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Companiei",
+        "placeholder": "np. Adecco UK / Amazon LCY2",
+        "defaultValue": "Adecco UK (Client: Amazon LCY2)"
+      },
+      {
+        "key": "payroll_ref",
+        "labelEn": "Payroll ID / Clocking Number",
+        "labelPl": "Numer Pracownika / Identyfikator",
+        "labelRo": "Număr Angajat / Insignă",
+        "placeholder": "np. Clocking ID: 98214",
+        "defaultValue": "98214"
+      },
+      {
+        "key": "pay_period",
+        "labelEn": "Unpaid Period / Dates",
+        "labelPl": "Okres / Daty Brakującej Wypłaty",
+        "labelRo": "Perioada Neplătită",
+        "placeholder": "np. August - September 2026",
+        "defaultValue": "August - September 2026"
+      },
+      {
+        "key": "hours_worked",
+        "labelEn": "Missing Hours / Overtime Hours",
+        "labelPl": "Liczba Brakujących Godzin",
+        "labelRo": "Ore Lipsă / Suplimentare",
+        "placeholder": "np. 36 hours standard + 18 hours overtime x 1.5",
+        "defaultValue": "36 hours overtime"
+      },
+      {
+        "key": "amount_owed",
+        "labelEn": "Total Amount Owed (£)",
+        "labelPl": "Łączna Kwota Należna (£)",
+        "labelRo": "Sumă Restantă (£)",
+        "placeholder": "np. 565.56",
+        "defaultValue": "565.56"
+      },
+      {
+        "key": "bank_details",
+        "labelEn": "Your Bank Details for Settlement",
+        "labelPl": "Twoje Konto Bankowe do Wpłaty",
+        "labelRo": "Date Bancare pentru Plată",
+        "placeholder": "Sort Code: XX-XX-XX, Account No: XXXXXXXX",
+        "defaultValue": "Sort Code: 20-00-00, Account: 12345678"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Employee Name]",
+      "employer_name": "[Company Name]",
+      "payroll_ref": "[Payroll Reference]",
+      "pay_period": "[Pay Period]",
+      "hours_worked": "[Missing Hours]",
+      "amount_owed": "[Amount £]",
+      "bank_details": "[Bank Details]"
+    },
+    "letter": "FORMAL LETTER BEFORE ACTION: UNLAWFUL DEDUCTION FROM WAGES\nPURSUANT TO SECTION 13 OF THE EMPLOYMENT RIGHTS ACT 1996\n\nDate: {{date}}\n\nTO: Payroll & HR Department, {{employer_name}}\nFROM: {{employee_name}} (Payroll Ref: {{payroll_ref}})\nSUBJECT: FORMAL DEMAND FOR PAYMENT OF OUTSTANDING WAGES (£{{amount_owed}})\n\nDear Sir or Madam,\n\nI am writing to formally place you on notice regarding unpaid remuneration due to me for the following period: {{pay_period}}.\n\n1. PARTICULARS OF ARREARS:\n- Unpaid / deducted working time: {{hours_worked}}\n- Total gross amount unlawfully withheld: £{{amount_owed}}\n- Relevant payslip references: {{pay_period}}\n\n2. STATUTORY BREACH:\nUnder Section 13(1) of the Employment Rights Act 1996, an employer shall not make a deduction from wages of a worker employed by him unless the deduction is required or authorised by statute or by a relevant provision of the worker's contract previously notified in writing.\n\nI have not provided written consent for any deduction, nor does any statutory exception apply. The withholding of payment for hours legitimately worked constitutes an unlawful deduction from wages.\n\n3. FORMAL DEMAND:\nPlease arrange for the full sum of £{{amount_owed}} to be paid into my bank account within 7 calendar days of the date of this letter:\nNominated Account: {{bank_details}}\n\nAdditionally, please issue an amended itemised pay statement (payslip) reflecting this payment pursuant to Section 8 of the Employment Rights Act 1996.\n\n4. LEGAL ESCALATION WARNING:\nIf this sum is not paid within 7 calendar days, I will immediately register this dispute with ACAS for Early Conciliation, preparatory to submitting an ET1 Claim to the Employment Tribunal. Please be advised that an Employment Tribunal has statutory power to order full repayment together with compensation for financial losses incurred.\n\nYours faithfully,\n\n{{employee_name}}\nWorker / Union Member"
+  },
+  {
+    "id": "ssp_demand",
+    "titleEn": "Statutory Sick Pay (SSP) Non-Payment Formal Demand",
+    "titlePl": "Wezwanie o Wypłatę Zasiłku Chorobowego SSP",
+    "titleRo": "Notificare Oficială pentru Plata Concediului Medical (SSP)",
+    "statutoryReference": "Social Security Contributions & Benefits Act 1992 & SSP Regulations 1982",
+    "category": "Sick Pay & Health",
+    "descriptionEn": "Formal demand demanding statutory sick pay (£116.75/week) withheld by employer or agency despite valid sickness notification and GP Fit Note.",
+    "descriptionPl": "Wezwanie pracodawcy do natychmiastowej wypłaty ustawowego chorobowego SSP (£116.75/tydzień). Wymóg wydania formularza SSP1 w razie odmowy.",
+    "descriptionRo": "Cerere oficială pentru plata indemnizației legale de boală SSP sau eliberarea imediată a formularului HMRC SSP1.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Companiei",
+        "placeholder": "np. Logistics Staffing UK",
+        "defaultValue": "Adecco UK (Site: Amazon LCY2)"
+      },
+      {
+        "key": "sickness_period",
+        "labelEn": "Period of Incapacity for Work",
+        "labelPl": "Okres Zwolnienia Lekarskiego",
+        "labelRo": "Perioada de Incapacitate",
+        "placeholder": "np. 12th - 26th September 2026 (14 days)",
+        "defaultValue": "12th - 26th September 2026"
+      },
+      {
+        "key": "fit_note_details",
+        "labelEn": "GP Fit Note Reference & Date Sent",
+        "labelPl": "Numer/Data Wystawienia Fit Note (GP)",
+        "labelRo": "Detalii Adeverință Medic (Fit Note)",
+        "placeholder": "np. NHS Fit Note issued by Dr. Evans on 12/09/2026",
+        "defaultValue": "NHS Fit Note Med 3 issued on 12/09/2026"
+      },
+      {
+        "key": "qualifying_days",
+        "labelEn": "Your Normal Qualifying Working Days",
+        "labelPl": "Dni Robocze w Tygodniu",
+        "labelRo": "Zile Lucrătoare Obișnuite",
+        "placeholder": "np. Monday to Friday (5 days)",
+        "defaultValue": "Monday to Friday (5 days)"
+      },
+      {
+        "key": "ssp_amount",
+        "labelEn": "Total SSP Owed (£)",
+        "labelPl": "Należna Kwota SSP (£)",
+        "labelRo": "Valoare Totală SSP (£)",
+        "placeholder": "np. 233.50 (£116.75/wk x 2 wks)",
+        "defaultValue": "233.50"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Employee Name]",
+      "employer_name": "[Employer Name]",
+      "sickness_period": "[Sickness Period]",
+      "fit_note_details": "[Fit Note Details]",
+      "qualifying_days": "Monday to Friday",
+      "ssp_amount": "233.50"
+    },
+    "letter": "FORMAL STATUTORY DEMAND FOR STATUTORY SICK PAY (SSP)\nPURSUANT TO PART XI OF THE SOCIAL SECURITY CONTRIBUTIONS AND BENEFITS ACT 1992\n\nDate: {{date}}\n\nTO: Payroll Department, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: WITHHELD STATUTORY SICK PAY (£{{ssp_amount}}) - FORMAL DEMAND\n\nDear Payroll Manager,\n\nI am writing to formally challenge the non-payment of Statutory Sick Pay (SSP) due to me for the period of incapacity: {{sickness_period}}.\n\n1. STATUTORY ENTITLEMENT CRITERIA MET:\nI confirm that I meet all statutory conditions for SSP eligibility under Section 151 of the Social Security Contributions and Benefits Act 1992:\n- Period of Incapacity for Work (PIW) exceeds four consecutive calendar days.\n- My average weekly earnings exceed the statutory Lower Earnings Limit (LEL) of £123.00 per week.\n- Qualifying Days: {{qualifying_days}}.\n- Timely medical evidence was provided: {{fit_note_details}}.\n\n2. ILLEGALITY OF WITHHOLDING SSP:\nSSP is a mandatory statutory entitlement. An employer cannot lawfully refuse SSP because a worker is engaged via an agency, on a zero-hours contract, or has recently started employment, provided the earnings threshold is satisfied.\n\n3. DEMAND FOR PAYMENT OR FORM SSP1:\nPlease confirm in writing within 5 working days that the sum of £{{ssp_amount}} will be disbursed in the next pay cycle.\n\nIf you dispute my entitlement, you are legally required under Regulation 15 of the Statutory Sick Pay (General) Regulations 1982 to furnish me immediately with an official HMRC Form SSP1 ('Statutory Sick Pay and an employee's claim for benefit'), stating your precise statutory reasons for refusal, so that I may lodge a formal dispute with HMRC's Statutory Payments Dispute Team.\n\nYours faithfully,\n\n{{employee_name}}\nEmployee / Agency Worker"
+  },
+  {
+    "id": "right_to_accompaniment",
+    "titleEn": "Notice of Statutory Right to Union Accompaniment",
+    "titlePl": "Zawiadomienie o Prawie do Asysty Związkowej (Art. 10 ERA 1999)",
+    "titleRo": "Notificare Oficială: Dreptul la Asistență Sindicală",
+    "statutoryReference": "Section 10, Employment Relations Act 1999 & ACAS Code of Practice",
+    "category": "Union & Disciplinary",
+    "descriptionEn": "Formal statutory demand asserting the absolute legal right to have a certified Trade Union representative accompany you to any disciplinary, grievance, or capability hearing.",
+    "descriptionPl": "Prawne wezwanie pracodawcy do obecności delegata związkowego na spotkaniu dyscyplinarnym lub grievance. Odmowa skutkuje grzywną do 2 tygodni płacy.",
+    "descriptionRo": "Cerere fermă pentru exercitarea dreptului legal de a fi asistat de reprezentantul sindical la orice ședință disciplinară.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Company / Employer Name",
+        "labelPl": "Nazwa Pracodawcy",
+        "labelRo": "Numele Companiei",
+        "placeholder": "np. Amazon UK Services Ltd",
+        "defaultValue": "Amazon Fulfilment LCY2"
+      },
+      {
+        "key": "hearing_type",
+        "labelEn": "Type of Hearing / Meeting",
+        "labelPl": "Rodzaj Spotkania",
+        "labelRo": "Tipul Ședinței",
+        "placeholder": "np. Disciplinary Investigation Hearing / Grievance Meeting",
+        "defaultValue": "Disciplinary Hearing"
+      },
+      {
+        "key": "hearing_date",
+        "labelEn": "Scheduled Meeting Date & Time",
+        "labelPl": "Data i Godzina Spotkania",
+        "labelRo": "Data și Ora Programată",
+        "placeholder": "np. Thursday 1st October 2026 at 10:00 AM",
+        "defaultValue": "Thursday 1st October 2026 at 10:00 AM"
+      },
+      {
+        "key": "companion_name",
+        "labelEn": "Name of Trade Union Representative",
+        "labelPl": "Nazwisko Delegata Związkowego",
+        "labelRo": "Nume Reprezentant Sindical",
+        "placeholder": "np. Elon",
+        "defaultValue": "[Trade Union Representative / Colleague]"
+      },
+      {
+        "key": "union_name",
+        "labelEn": "Trade Union Name & Credentials",
+        "labelPl": "Nazwa Związku Zawodowego",
+        "labelRo": "Sindicat",
+        "placeholder": "np. Workplace Rep · Unite / GMB",
+        "defaultValue": "[Trade Union Name, e.g. Unite / GMB]"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Employee Name]",
+      "employer_name": "[Employer Name]",
+      "hearing_type": "Disciplinary Hearing",
+      "hearing_date": "[Meeting Date]",
+      "companion_name": "[Companion Name]",
+      "union_name": "Trade Union"
+    },
+    "letter": "STATUTORY NOTICE OF RIGHT TO BE ACCOMPANIED\nPURSUANT TO SECTION 10 OF THE EMPLOYMENT RELATIONS ACT 1999\n\nDate: {{date}}\n\nTO: HR & Disciplining Manager, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: STATUTORY NOTICE OF COMPANION FOR {{hearing_type}} ON {{hearing_date}}\n\nDear Management,\n\nI refer to your notification requiring me to attend a {{hearing_type}} currently scheduled for:\nDate & Time: {{hearing_date}}.\n\n1. EXERCISE OF ABSOLUTE STATUTORY RIGHT:\nPursuant to Section 10(1) of the Employment Relations Act 1999, a worker has an absolute statutory right to be accompanied at any disciplinary or grievance hearing by a certified trade union official or workplace colleague.\n\nI formally notify you that I will be accompanied at this hearing by:\nCompanion: {{companion_name}}\nAffiliation: {{union_name}}.\n\n2. STATUTORY POWERS OF THE COMPANION:\nIn accordance with Section 10(2B) of the Employment Relations Act 1999 and the Employment Appeal Tribunal authority in Toal v GB Oils Ltd [2013], my companion is legally permitted to:\n- Address the hearing and present my case.\n- Sum up the submissions and respond on my behalf to any view expressed at the hearing.\n- Confer privately with me at any point during the meeting.\n\n3. REQUEST FOR POSTPONEMENT (IF REQUIRED):\nIf my chosen companion is unavailable at the time proposed, Section 10(4) and (5) obliges the employer to postpone the hearing to a reasonable alternative time within five working days proposed by the employee.\n\nPlease ensure all meeting documentation, CCTV footage, and witness statements are provided to me at least 48 hours prior to the hearing to allow adequate preparation with my representative.\n\nYours sincerely,\n\n{{employee_name}}\nUnion Member"
+  },
+  {
+    "id": "awr_equal_treatment",
+    "titleEn": "AWR 12-Week Equal Treatment Demand",
+    "titlePl": "Wniosek AWR: Równe Płace i Warunki Agencyjne po 12 Tygodniach",
+    "titleRo": "Cerere AWR: Egalitate Salarială după 12 Săptămâni de Agenție",
+    "statutoryReference": "Regulation 5, Agency Workers Regulations 2010 (SI 2010/93)",
+    "category": "Agency Workers",
+    "descriptionEn": "Formal statutory demand under the Agency Workers Regulations (AWR 2010) enforcing equal basic working and employment conditions (pay, overtime, holidays) after completing the 12-week qualifying period.",
+    "descriptionPl": "Oficjalny wniosek pracownika agencyjnego o wyrównanie stawki, płatnego urlopu i dodatków zmianowych do poziomu pracownika stałego po 12 tygodniach pracy.",
+    "descriptionRo": "Cerere oficială pentru egalitate de remunerare și concedii pentru lucrătorii temporari după perioada legală de calificare de 12 săptămâni.",
+    "fields": [
+      {
+        "key": "worker_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "agency_name",
+        "labelEn": "Temporary Work Agency Name",
+        "labelPl": "Nazwa Agencji Pracy",
+        "labelRo": "Numele Agenției",
+        "placeholder": "np. Adecco UK Ltd",
+        "defaultValue": "Adecco UK Ltd"
+      },
+      {
+        "key": "hirer_name",
+        "labelEn": "Hirer / Warehouse Client",
+        "labelPl": "Zakład Pracy / Klient",
+        "labelRo": "Compania Utilizatoare",
+        "placeholder": "np. Amazon Fulfilment LCY2",
+        "defaultValue": "Amazon Fulfilment LCY2"
+      },
+      {
+        "key": "start_date",
+        "labelEn": "Assignment Start Date",
+        "labelPl": "Data Rozpoczęcia Zlecenia",
+        "labelRo": "Data Începerii Activității",
+        "placeholder": "np. 1st June 2026",
+        "defaultValue": "1st June 2026"
+      },
+      {
+        "key": "qualifying_weeks",
+        "labelEn": "Total Consecutive Weeks Completed",
+        "labelPl": "Liczba Przepracowanych Tygodni",
+        "labelRo": "Număr de Săptămâni Lucrate",
+        "placeholder": "np. 16 weeks",
+        "defaultValue": "16 weeks"
+      },
+      {
+        "key": "disparity_details",
+        "labelEn": "Disparity in Pay, Overtime or Holiday",
+        "labelPl": "Różnice w Stawce, Nadgodzinach lub Urlopie",
+        "labelRo": "Discrepanțe Salariale sau Concedii",
+        "placeholder": "np. Permanent staff receive £14.50/hr base + 33 days holiday; agency rate is only £12.21/hr + 28 days",
+        "defaultValue": "Permanent warehouse operators receive £14.50/hr base, 1.5x overtime and 33 days holiday. I am paid £12.21/hr with 28 days holiday."
+      }
+    ],
+    "defaults": {
+      "worker_name": "[Worker Name]",
+      "agency_name": "[Agency Name]",
+      "hirer_name": "[Hirer Name]",
+      "start_date": "[Start Date]",
+      "qualifying_weeks": "12+ weeks",
+      "disparity_details": "[Disparity details]"
+    },
+    "letter": "STATUTORY REQUEST FOR INFORMATION & EQUAL TREATMENT\nPURSUANT TO REGULATION 5 & REGULATION 16 OF THE AGENCY WORKERS REGULATIONS 2010\n\nDate: {{date}}\n\nTO: Temporary Work Agency: {{agency_name}}\nCC: Hirer: {{hirer_name}}\nFROM: {{worker_name}}\nSUBJECT: AWR EQUAL TREATMENT ENTITLEMENT COMPLIANCE NOTICE\n\nDear Sir or Madam,\n\nI am engaged by {{agency_name}} on a temporary assignment at the premises of {{hirer_name}}, which commenced on {{start_date}}. To date, I have completed {{qualifying_weeks}} on this assignment in the same role without any disqualifying breaks in continuity.\n\n1. QUALIFYING PERIOD COMPLETED:\nIn accordance with Regulation 7 of the Agency Workers Regulations 2010 (SI 2010/93), I have completed the 12-week qualifying period in this role.\n\n2. STATUTORY ENTITLEMENT:\nUnder Regulation 5(1), an agency worker who has completed the qualifying period is entitled to the same basic working and employment conditions as if they had been recruited directly by the hirer to do the same job. This includes:\n- Basic hourly pay and shift premia.\n- Overtime calculation rates.\n- Annual leave entitlements.\n\n3. CURRENT DISPARITY:\n{{disparity_details}}\n\n4. FORMAL REQUEST FOR WRITTEN STATEMENT:\nUnder Regulation 16, I formally request a written statement setting out:\n(a) The relevant terms and conditions applicable to a comparable permanent employee recruited directly by {{hirer_name}}.\n(b) An explanation for any divergence in pay rates or benefits.\n(c) Backdated reimbursement of the differential owed to me since the completion of my 12th week.\n\nRegulation 16(3) stipulates that you must respond with this written statement within 28 days.\n\nYours faithfully,\n\n{{worker_name}}\nAgency Worker"
+  },
+  {
+    "id": "hours_cut_notice",
+    "titleEn": "Notice of Unlawful Hours Cut & Breach of Contract",
+    "titlePl": "Sprzeciw Wobec Obcięcia Godzin i Odwołania Zmian",
+    "titleRo": "Notificare Privind Tăierea Ilegală a Orelor de Muncă",
+    "statutoryReference": "Section 1, Employment Rights Act 1996 & Common Law Breach of Contract",
+    "category": "Wages & Hours",
+    "descriptionEn": "Formal letter disputing unilateral reduction of working hours, last-minute shift cancellations, or constructive breach of contract by warehouse or transport operators.",
+    "descriptionPl": "Sprzeciw pracownika wobec nagłego ucięcia godzin z grafiku bez wymaganego uprzedzenia. Żądanie wypłaty rekompensaty za odwołane zmiany.",
+    "descriptionRo": "Notificare de contestare a reducerii neanunțate a orelor sau anulării schimburilor fără preaviz rezonabil.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Firmy / Agencji",
+        "labelRo": "Numele Companiei",
+        "placeholder": "np. Adecco UK / Amazon LCY2",
+        "defaultValue": "Adecco UK (Site: Amazon LCY2)"
+      },
+      {
+        "key": "agreed_hours",
+        "labelEn": "Agreed Contractual / Customary Hours",
+        "labelPl": "Uzgodnione Godziny Tygodniowo",
+        "labelRo": "Ore Agreate Săptămânal",
+        "placeholder": "np. 40 hours per week (4 x 10h shifts)",
+        "defaultValue": "40 hours per week"
+      },
+      {
+        "key": "cancelled_shifts",
+        "labelEn": "Dates of Cancelled Shifts / Notice Given",
+        "labelPl": "Odwołane Zmiany i Czas Uprzedzenia",
+        "labelRo": "Schimburi Anulate și Notificare",
+        "placeholder": "np. Cancelled 2 hours before shift on 18th & 19th Sept",
+        "defaultValue": "Shifts on 18th and 19th September cancelled with only 2 hours notice"
+      },
+      {
+        "key": "lost_earnings",
+        "labelEn": "Total Lost Earnings (£)",
+        "labelPl": "Utracone Wynagrodzenie (£)",
+        "labelRo": "Salariu Pierdut (£)",
+        "placeholder": "np. 244.20",
+        "defaultValue": "244.20"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Employee Name]",
+      "employer_name": "[Employer Name]",
+      "agreed_hours": "contractual hours",
+      "cancelled_shifts": "[Cancelled shifts]",
+      "lost_earnings": "[Lost earnings £]"
+    },
+    "letter": "FORMAL PROTEST: UNILATERAL HOURS REDUCTION & SHIFT CANCELLATION\nWITHOUT PREJUDICE TO STATUTORY EMPLOYMENT RIGHTS\n\nDate: {{date}}\n\nTO: Operations Management, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: FORMAL OBJECTION TO UNILATERAL SHIFT CANCELLATION & LOSS OF EARNINGS (£{{lost_earnings}})\n\nDear Management,\n\nI am writing to register a formal protest against the recent arbitrary reduction in my scheduled working hours and last-minute shift cancellations:\n{{cancelled_shifts}}\n\n1. CONTRACTUAL COMMITMENT & CUSTOM AND PRACTICE:\nMy regular, established working arrangement is {{agreed_hours}}. I made myself fully available for work and incurred travel/childcare arrangements in reliance upon the published schedule.\n\n2. UNREASONABLE NOTICE & BREACH OF CONTRACT:\nCancelling confirmed shifts with minimal notice constitutes a unilateral breach of agreement. In accordance with ACAS guidance, cancelling pre-rostered shifts without reasonable compensatory notice is an unfair practice that leaves workers facing unexpected hardship.\n\n3. COMPENSATION DEMAND:\nI formally request compensation in the amount of £{{lost_earnings}} for the shifts improperly withdrawn. Additionally, I request a formal meeting to guarantee stable, predictable shift allocations going forward.\n\nPlease confirm in writing within 5 working days how this financial loss will be compensated.\n\nYours sincerely,\n\n{{employee_name}}\nWorker"
+  },
+  {
+    "id": "sar_clocking_records",
+    "titleEn": "Subject Access Request (SAR) for Clocking & HR Records",
+    "titlePl": "Wniosek SAR: Wydanie Rejestrów Odbić (Clocking) i Danych HR",
+    "titleRo": "Cerere Oficială SAR: Acces la Datele de Pontaj și Dosar HR",
+    "statutoryReference": "Article 15 UK GDPR & Section 45 Data Protection Act 2018",
+    "category": "GDPR & Records",
+    "descriptionEn": "Formal statutory GDPR request forcing employers or agencies to disclose your complete clocking records, electronic badge scans, emails, and disciplinary investigation notes within 30 days without charge.",
+    "descriptionPl": "Prawne żądanie udostępnienia pełnych logów odbić karty (clocking logs), e-maili menedżerów oraz notatek personalnych w terminie 30 dni bez żadnych opłat.",
+    "descriptionRo": "Solicitare oficială GDPR pentru obținerea gratuită în 30 de zile a evidenței complete de pontaj, scanărilor de cartelă și dosarului de personal.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "company_name",
+        "labelEn": "Data Controller / Employer Name",
+        "labelPl": "Nazwa Administratora Danych / Firmy",
+        "labelRo": "Compania / Operator Date",
+        "placeholder": "np. Amazon UK / Adecco Agency",
+        "defaultValue": "Amazon UK Services Ltd"
+      },
+      {
+        "key": "employee_id",
+        "labelEn": "Employee ID / National Insurance No.",
+        "labelPl": "Numer Identyfikacyjny / NI Number",
+        "labelRo": "Număr Angajat / Număr NINO",
+        "placeholder": "np. NI: AB123456C / Badge ID: 98214",
+        "defaultValue": "Badge ID: 98214 / NI: QQ123456A"
+      },
+      {
+        "key": "records_scope",
+        "labelEn": "Specific Records Requested",
+        "labelPl": "Zakres Wnioskowanych Danych",
+        "labelRo": "Date Solicitate",
+        "placeholder": "np. All badge clocking in/out records, break scans, supervisor emails mentioning my name",
+        "defaultValue": "All electronic turnstile and clock-in/clock-out timestamps from 01/06/2026 to present, supervisor shift logs, and internal communications regarding my hours."
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Name]",
+      "company_name": "[Company Name]",
+      "employee_id": "[Employee Reference]",
+      "records_scope": "[Requested records]"
+    },
+    "letter": "STATUTORY SUBJECT ACCESS REQUEST (SAR)\nPURSUANT TO ARTICLE 15 OF THE UK GENERAL DATA PROTECTION REGULATION (UK GDPR)\nAND SECTION 45 OF THE DATA PROTECTION ACT 2018\n\nDate: {{date}}\n\nTO: Data Protection Officer / HR Department, {{company_name}}\nFROM: {{employee_name}} (Reference: {{employee_id}})\nSUBJECT: FORMAL SUBJECT ACCESS REQUEST (SAR)\n\nDear Data Protection Officer,\n\nPlease supply the personal data you hold about me which I am entitled to receive under Article 15 of the UK General Data Protection Regulation and Section 45 of the Data Protection Act 2018.\n\n1. SPECIFIC DATA REQUESTED:\n{{records_scope}}\n\n2. TIME LIMIT FOR COMPLIANCE:\nUnder Article 12(3) of the UK GDPR, you are required to respond to this request without undue delay and at the latest within one calendar month of receipt.\n\n3. NO FEE CHARGEABLE:\nUnder UK data protection law, this information must be provided free of charge, in a structured, commonly used, and machine-readable electronic format.\n\nIf you require any specific verification of my identity beyond my Employee/Badge ID ({{employee_id}}) and National Insurance details, please contact me immediately so that the statutory compliance window is not delayed.\n\nYours faithfully,\n\n{{employee_name}}\nData Subject"
+  },
+  {
+    "id": "landlord_repairs",
+    "titleEn": "Notice to Landlord: Disrepair & Urgent Rectification",
+    "titlePl": "Wezwanie Landlorda: Usunięcie Usterek i Grzyba w Mieszkaniu",
+    "titleRo": "Notificare Proprietar: Reparații Urgente și Mucegai",
+    "statutoryReference": "Section 11, Landlord and Tenant Act 1985 & Homes (Fitness for Human Habitation) Act 2018",
+    "category": "Housing & Living",
+    "descriptionEn": "Formal statutory demand requiring your landlord or letting agency to repair heating, leaks, dampness or mould within a reasonable statutory timeframe.",
+    "descriptionPl": "Oficjalne wezwanie prawne zobowiązujące landlorda do usunięcia usterek (np. brak ogrzewania, pleśń, wycieki) w ustawowym terminie 14 dni.",
+    "descriptionRo": "Cerere oficială legală prin care se solicită proprietarului remedierea avariilor la încălzire, mucegai sau infiltrații.",
+    "fields": [
+      {
+        "key": "tenant_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău Complet",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "property_address",
+        "labelEn": "Rented Property Address",
+        "labelPl": "Adres Wynajmowanego Mieszkania",
+        "labelRo": "Adresa Locuinței Închiriate",
+        "placeholder": "np. Flat 4, 12 High Street, London, E16 2AB",
+        "defaultValue": "Flat 4, 12 High Street, London, E16 2AB"
+      },
+      {
+        "key": "landlord_name",
+        "labelEn": "Landlord or Agency Name",
+        "labelPl": "Nazwisko Landlorda / Agencji",
+        "labelRo": "Numele Proprietarului / Agenției",
+        "placeholder": "np. Apex Lettings UK Ltd",
+        "defaultValue": "Apex Lettings UK Ltd"
+      },
+      {
+        "key": "defect_description",
+        "labelEn": "Description of Disrepair",
+        "labelPl": "Opis Uszkodzeń / Wad",
+        "labelRo": "Descrierea Problemelor",
+        "placeholder": "np. Severe black mould in bedroom and non-functioning boiler providing no hot water",
+        "defaultValue": "Severe damp and mould in main bedroom; boiler broken with no heating or hot water"
+      },
+      {
+        "key": "first_reported_date",
+        "labelEn": "Date First Reported",
+        "labelPl": "Data Pierwszego Zgłoszenia",
+        "labelRo": "Data Primei Sesizări",
+        "placeholder": "np. 1st September 2026",
+        "defaultValue": "1st September 2026"
+      },
+      {
+        "key": "deadline_days",
+        "labelEn": "Response Deadline (Days)",
+        "labelPl": "Termin na Reakcję (Dni)",
+        "labelRo": "Termen de Răspuns (Zile)",
+        "placeholder": "14",
+        "defaultValue": "14"
+      }
+    ],
+    "defaults": {
+      "tenant_name": "[Tenant Full Name]",
+      "property_address": "[Rental Property Address]",
+      "landlord_name": "[Landlord / Letting Agent]",
+      "defect_description": "[Description of disrepair]",
+      "first_reported_date": "[Date originally reported]",
+      "deadline_days": "14"
+    },
+    "letter": "RECORDED DELIVERY / FORMAL NOTICE\nPURSUANT TO SECTION 11, LANDLORD AND TENANT ACT 1985\nAND THE HOMES (FITNESS FOR HUMAN HABITATION) ACT 2018\n\nDate: {{date}}\n\nTO: {{landlord_name}}\nFROM: {{tenant_name}}\nRE: TENANCY AT {{property_address}}\nSUBJECT: FORMAL NOTICE OF DISREPAIR AND STATUTORY REPAIR DEMAND\n\nDear {{landlord_name}},\n\nI am writing as the lawful tenant of {{property_address}} to formally notify you of outstanding disrepair requiring immediate remedy.\n\n1. SUMMARY OF DEFECTS:\n{{defect_description}}\n\nThese issues were first reported to you on {{first_reported_date}}. However, to date, no certified contractor has completed the necessary remedial works.\n\n2. STATUTORY OBLIGATIONS:\nUnder Section 11 of the Landlord and Tenant Act 1985 and the Homes (Fitness for Human Habitation) Act 2018, you have a mandatory statutory duty to keep the dwelling, heating installations, and water supply in good repair and fit for human habitation throughout the tenancy.\n\n3. REQUIRED ACTION:\nPlease confirm in writing within {{deadline_days}} days the appointment date of a licensed contractor to carry out full repairs.\n\nIf this matter is not resolved within {{deadline_days}} days, I will immediately report this property to the Private Housing Environmental Health Officer at the local Borough Council for enforcement action under the Housing Health and Safety Rating System (HHSRS), and reserve all rights to claim statutory damages through the County Court.\n\nYours sincerely,\n\n{{tenant_name}}\nTenant"
+  },
+  {
+    "id": "deposit_refund",
+    "titleEn": "Statutory Demand for Return of Tenancy Deposit",
+    "titlePl": "Wezwanie do Zwrotu Kaucji Mieszkaniowej",
+    "titleRo": "Cerere de Restituire a Garanției Locative (Deposit)",
+    "statutoryReference": "Housing Act 2004, Sections 213-214 & Tenant Fees Act 2019",
+    "category": "Housing & Living",
+    "descriptionEn": "Formal legal demand instructing your former landlord to release your tenancy deposit within 10 days, disputing unlawful deductions.",
+    "descriptionPl": "Wezwanie do bezzwłocznego zwrotu kaucji (do 10 dni) zgodnie z brytyjskim prawem oraz odrzucenie bezprawnych potrąceń.",
+    "descriptionRo": "Notificare oficială pentru restituirea garanției de chirie în 10 zile, cu contestarea reținerilor nejustificate.",
+    "fields": [
+      {
+        "key": "tenant_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău Complet",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "property_address",
+        "labelEn": "Former Rental Address",
+        "labelPl": "Adres Wynajmowanego Lokalu",
+        "labelRo": "Adresa Fostei Locuințe",
+        "placeholder": "np. 24 Queen's Rd, Manchester, M1 4ET",
+        "defaultValue": "Flat 4, 12 High Street, London, E16 2AB"
+      },
+      {
+        "key": "landlord_name",
+        "labelEn": "Landlord / Agent Name",
+        "labelPl": "Landlord / Agencja",
+        "labelRo": "Proprietar / Agenție",
+        "placeholder": "np. Apex Properties Ltd",
+        "defaultValue": "Apex Properties Ltd"
+      },
+      {
+        "key": "deposit_amount",
+        "labelEn": "Deposit Amount (£)",
+        "labelPl": "Kwota Kaucji (£)",
+        "labelRo": "Valoarea Garanției (£)",
+        "placeholder": "np. 950.00",
+        "defaultValue": "950.00"
+      },
+      {
+        "key": "scheme_name",
+        "labelEn": "Protection Scheme (DPS/TDS/MyDeposits)",
+        "labelPl": "Fundusz Kaucji",
+        "labelRo": "Schema de Protecție",
+        "placeholder": "np. Deposit Protection Service (DPS)",
+        "defaultValue": "Deposit Protection Service (DPS)"
+      },
+      {
+        "key": "bank_details",
+        "labelEn": "Your Bank Details for Refund",
+        "labelPl": "Dane Twojego Konta do Zwrotu",
+        "labelRo": "Date Bancare pentru Restituire",
+        "placeholder": "Sort Code: XX-XX-XX, Acc: XXXXXXXX",
+        "defaultValue": "Sort Code: 20-00-00, Account: 12345678"
+      }
+    ],
+    "defaults": {
+      "tenant_name": "[Tenant Name]",
+      "property_address": "[Property Address]",
+      "landlord_name": "[Landlord Name]",
+      "deposit_amount": "[Amount £]",
+      "scheme_name": "the custodial deposit scheme",
+      "bank_details": "[Bank Details]"
+    },
+    "letter": "FORMAL LETTER BEFORE ACTION: TENANCY DEPOSIT RETURN\nPURSUANT TO THE HOUSING ACT 2004 AND TENANT FEES ACT 2019\n\nDate: {{date}}\n\nTO: {{landlord_name}}\nFROM: {{tenant_name}}\nRE: RETURN OF FULL TENANCY DEPOSIT (£{{deposit_amount}}) FOR {{property_address}}\n\nDear {{landlord_name}},\n\nI vacated the property at {{property_address}} upon the conclusion of my tenancy, leaving the premises clean and undamaged, consistent with fair wear and tear.\n\nUnder the rules of {{scheme_name}} and the Housing Act 2004, you are legally required to return the tenancy deposit of £{{deposit_amount}} within 10 days of request.\n\nI do not consent to any unjustified deductions. Please transfer the full sum of £{{deposit_amount}} into my bank account within 10 calendar days:\nBank Details: {{bank_details}}\n\nIf full payment is not made or an agreement reached within 10 calendar days, I will escalate this dispute to formal adjudication through the deposit scheme and reserve my right to initiate County Court proceedings under Section 214 of the Housing Act 2004, which carries a statutory penalty of up to three times the deposit amount.\n\nYours sincerely,\n\n{{tenant_name}}\nFormer Tenant"
+  },
+  {
+    "id": "standard_employment_contract",
+    "titleEn": "Standard UK Employment Contract & Statement of Particulars",
+    "titlePl": "Standardowa Umowa o Pracę w UK (Employment Contract)",
+    "titleRo": "Contract Individual de Muncă în Marea Britanie (Employment Contract)",
+    "statutoryReference": "Section 1, Employment Rights Act 1996 (Mandatory Written Particulars)",
+    "category": "Employment Contracts",
+    "descriptionEn": "Comprehensive legally binding UK Employment Contract complying with Section 1 of the Employment Rights Act 1996. Includes statutory pay, working hours, sick pay (SSP), paid holidays, and termination notice clauses.",
+    "descriptionPl": "Oficjalny wzór brytyjskiej umowy o pracę (Statement of Written Particulars) zgodny z art. 1 Employment Rights Act 1996. Zawiera klauzule wynagrodzenia, urlopów (28 dni), nadgodzin, SSP, okresu wypowiedzenia i procedur dyscyplinarnych ACAS.",
+    "descriptionRo": "Contract individual de muncă oficial conform legislației muncii din Regatul Unit (ERA 1996). Include clauze salariale, ore de lucru, concedii, concediu medical SSP și perioadă de preaviz.",
+    "fields": [
+      {
+        "key": "employer_name",
+        "labelEn": "Employer Company / Business Name",
+        "labelPl": "Nazwa Pracodawcy / Firmy",
+        "labelRo": "Compania Angajatoare",
+        "placeholder": "np. Apex Logistics UK Ltd",
+        "defaultValue": "Apex Logistics UK Ltd"
+      },
+      {
+        "key": "employer_address",
+        "labelEn": "Registered Office Address",
+        "labelPl": "Adres Siedziby Pracodawcy",
+        "labelRo": "Adresa Sediu Angajator",
+        "placeholder": "np. 100 Logistics Way, London, E16 2AB",
+        "defaultValue": "100 Logistics Way, London, E16 2AB"
+      },
+      {
+        "key": "employee_name",
+        "labelEn": "Employee Full Legal Name",
+        "labelPl": "Imię i Nazwisko Pracownika",
+        "labelRo": "Numele Complet al Angajatului",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employee_address",
+        "labelEn": "Employee Residential Address",
+        "labelPl": "Adres Zamieszkania Pracownika",
+        "labelRo": "Adresa de Domiciliu",
+        "placeholder": "np. Flat 4, 12 High Street, London, E16 2AB",
+        "defaultValue": "Flat 4, 12 High Street, London, E16 2AB"
+      },
+      {
+        "key": "job_title",
+        "labelEn": "Job Title & Department",
+        "labelPl": "Stanowisko i Dział",
+        "labelRo": "Funcție și Departament",
+        "placeholder": "np. Senior Warehouse Operative / Forklift Driver",
+        "defaultValue": "Warehouse Logistics Operative"
+      },
+      {
+        "key": "start_date",
+        "labelEn": "Employment Commencement Date",
+        "labelPl": "Data Rozpoczęcia Zatrudnienia",
+        "labelRo": "Data Începerii Activității",
+        "placeholder": "np. 1st October 2026",
+        "defaultValue": "1st October 2026"
+      },
+      {
+        "key": "work_location",
+        "labelEn": "Place of Work / Operating Base",
+        "labelPl": "Miejsce Wykonywania Pracy",
+        "labelRo": "Locul de Muncă",
+        "placeholder": "np. Fulfilment Centre Unit 4, Barking, IG11 0HE",
+        "defaultValue": "Fulfilment Depot 2, Dartford, DA1 5PZ"
+      },
+      {
+        "key": "basic_pay",
+        "labelEn": "Remuneration / Hourly or Annual Pay Rate",
+        "labelPl": "Stawka Wynagrodzenia (£/godz. lub rocznie)",
+        "labelRo": "Salariu de Bază (£/oră sau anual)",
+        "placeholder": "np. £13.50 per hour",
+        "defaultValue": "£13.50 per hour"
+      },
+      {
+        "key": "working_hours",
+        "labelEn": "Standard Working Hours & Schedule",
+        "labelPl": "Wymiar Czasu Pracy i Grafik",
+        "labelRo": "Program de Lucru Săptămânal",
+        "placeholder": "np. 40 hours per week (Mon-Fri 08:00 - 16:30)",
+        "defaultValue": "40 hours per week (Monday to Friday)"
+      },
+      {
+        "key": "overtime_terms",
+        "labelEn": "Overtime Terms & Shift Premium",
+        "labelPl": "Warunki Nadgodzin i Dodatek Zmianowy",
+        "labelRo": "Ore Suplimentare și Sporuri",
+        "placeholder": "np. 1.5x basic hourly rate for hours over 40; +15% Night Premium",
+        "defaultValue": "1.5x basic hourly rate for hours worked in excess of 40 weekly"
+      },
+      {
+        "key": "holiday_entitlement",
+        "labelEn": "Annual Holiday Entitlement",
+        "labelPl": "Wymiar Płatnego Urlopu Wypoczynkowego",
+        "labelRo": "Zile de Concediu de Odihnă",
+        "placeholder": "np. 28 days per annum inclusive of 8 statutory bank holidays",
+        "defaultValue": "28 days per annum (including 8 statutory bank holidays)"
+      },
+      {
+        "key": "notice_period",
+        "labelEn": "Notice Period for Termination",
+        "labelPl": "Okres Wypowiedzenia Umowy",
+        "labelRo": "Perioadă de Preaviz",
+        "placeholder": "np. 1 week per year of continuous service (min. 1 week, max. 12 weeks)",
+        "defaultValue": "1 week during first 2 years; 1 week per complete year thereafter"
+      }
+    ],
+    "defaults": {
+      "employer_name": "[Employer Name]",
+      "employer_address": "[Employer Address]",
+      "employee_name": "[Employee Name]",
+      "employee_address": "[Employee Address]",
+      "job_title": "Operative",
+      "start_date": "",
+      "work_location": "Company Premises",
+      "basic_pay": "£13.50 per hour",
+      "working_hours": "40 hours per week",
+      "overtime_terms": "Overtime paid at 1.5x basic rate",
+      "holiday_entitlement": "28 days per annum",
+      "notice_period": "Statutory notice under Section 86 ERA 1996"
+    },
+    "letter": "PRINCIPAL STATEMENT OF TERMS OF EMPLOYMENT\nCONTRACT OF EMPLOYMENT (ENGLAND & WALES)\nISSUED PURSUANT TO SECTION 1 OF THE EMPLOYMENT RIGHTS ACT 1996\n\nDOCUMENT REFERENCE: UK-EMP-SECURE-2026\nCLASSIFICATION: PRIVILEGED & CONFIDENTIAL EMPLOYMENT INSTRUMENT\nISSUED ON: {{date}}\n\nPARTIES TO THIS AGREEMENT:\n1. THE EMPLOYER:\n   {{employer_name}}\n   Registered Address: {{employer_address}}\n\n2. THE EMPLOYEE:\n   {{employee_name}}\n   Residential Address: {{employee_address}}\n\n══════════════════════════════════════════════════════════════════════════════\nTERMS AND CONDITIONS OF EMPLOYMENT\n══════════════════════════════════════════════════════════════════════════════\n\n1. COMMENCEMENT AND CONTINUOUS EMPLOYMENT\n   1.1. The Employee's employment under this Agreement shall commence on: {{start_date}}.\n   1.2. No period of previous employment with any other employer counts as part of the Employee's continuous service.\n\n2. JOB TITLE AND DUTIES\n   2.1. The Employee is engaged as: {{job_title}}.\n   2.2. The Employee shall report to their assigned Operations Supervisor or Department Manager and perform the duties associated with this role with reasonable care, skill, and diligence.\n\n3. PLACE OF WORK\n   3.1. The Employee's primary place of work will be located at: {{work_location}}.\n   3.2. The Employer reserves the right to reasonably require the Employee to work at other operational sites within a 15-mile travel radius upon reasonable prior notice.\n\n4. REMUNERATION AND PAYMENT SCHEDULE\n   4.1. The Employee's basic remuneration shall be: {{basic_pay}}.\n   4.2. Remuneration is calculated weekly/monthly and shall be remitted directly by electronic BACS transfer into the Employee's nominated UK bank account.\n   4.3. The Employer shall issue a comprehensive itemised pay statement (payslip) on or before each pay day pursuant to Section 8 of the Employment Rights Act 1996.\n   4.4. Deductions: The Employer will make only statutory deductions for PAYE Income Tax, Class 1 National Insurance Contributions, and workplace pension contributions, unless specific written consent is provided in accordance with Section 13 ERA 1996.\n\n5. WORKING HOURS & OVERTIME\n   5.1. The Employee's normal working hours shall be: {{working_hours}}.\n   5.2. Mandatory break entitlements shall comply strictly with Regulation 12 of the Working Time Regulations 1998 (uninterrupted rest breaks of not less than 20 minutes for shifts exceeding 6 hours).\n   5.3. Overtime Policy: {{overtime_terms}}.\n\n6. ANNUAL LEAVE AND PUBLIC HOLIDAYS\n   6.1. The Employee is entitled to: {{holiday_entitlement}}.\n   6.2. The statutory annual leave year runs from 1st January to 31st December.\n   6.3. Unused statutory holiday allowance will be compensated pro-rata upon lawful termination of employment.\n\n7. SICKNESS ABSENCE AND STATUTORY SICK PAY (SSP)\n   7.1. In the event of incapacity due to illness or injury, the Employee must notify the Employer prior to the commencement of their scheduled shift.\n   7.2. Sickness exceeding seven consecutive calendar days requires an official NHS Statement of Fitness for Work (Fit Note).\n   7.3. Eligible employees will receive Statutory Sick Pay (SSP) in accordance with Part XI of the Social Security Contributions and Benefits Act 1992.\n\n8. PENSION SCHEME (AUTO-ENROLMENT)\n   8.1. Pursuant to the Pensions Act 2008, eligible jobholders will be automatically enrolled into the Employer's designated qualifying workplace pension scheme following the statutory postponement period.\n\n9. DISCIPLINARY & GRIEVANCE PROCEDURES\n   9.1. The disciplinary and grievance procedures applicable to this employment strictly mirror the ACAS statutory Code of Practice No. 1.\n   9.2. The Employee has an absolute statutory right under Section 10 of the Employment Relations Act 1999 to be accompanied at any formal hearing by a certified Trade Union representative or colleague.\n\n10. TERMINATION AND NOTICE PERIODS\n   10.1. The notice required to terminate this employment by either party is: {{notice_period}}.\n   10.2. Nothing in this clause prevents the Employer from summarily dismissing the Employee without notice in proven cases of gross misconduct.\n\n══════════════════════════════════════════════════════════════════════════════\nEXECUTION AND SIGNATURES\n══════════════════════════════════════════════════════════════════════════════\n\nIN WITNESS WHEREOF the parties have executed this Contract of Employment as a legally binding document on {{date}}:\n\nSigned on behalf of the Employer:\nSignature: _________________________________________\nName: HR Director / Authorised Officer ({{employer_name}})\nDate: {{date}}\n\nSigned by the Employee:\nSignature: _________________________________________\nName: {{employee_name}}\nDate: {{date}}"
+  },
+  {
+    "id": "ast_tenancy_agreement",
+    "titleEn": "Assured Shorthold Tenancy Agreement (AST Rental Agreement)",
+    "titlePl": "Standardowa Umowa Najmu Lokalu (Assured Shorthold Tenancy - AST)",
+    "titleRo": "Contract Standard de Închiriere Locuință (AST Tenancy Agreement)",
+    "statutoryReference": "Part I, Housing Act 1988 (as amended) & Tenant Fees Act 2019 (England & Wales)",
+    "category": "Rental Agreements",
+    "descriptionEn": "Comprehensive, compliant UK Assured Shorthold Tenancy (AST) agreement for residential rental properties. Complies with the Housing Act 1988, Tenant Fees Act 2019, and statutory deposit protection legislation.",
+    "descriptionPl": "Kompletna, zgodna z prawem brytyjskim umowa najmu mieszkania lub pokoju (AST) podlegająca Housing Act 1988. Zawiera klauzule kaucji (zabezpieczenie w DPS/TDS), czynszu, obowiązków naprawczych landlorda wg art. 11 oraz procedury wypowiedzenia.",
+    "descriptionRo": "Contract complet de închiriere rezidențială AST în Regatul Unit. Conform cu Housing Act 1988 și Tenant Fees Act 2019, cu protecție legală a depozitului în schemele DPS/TDS.",
+    "fields": [
+      {
+        "key": "landlord_name",
+        "labelEn": "Landlord / Letting Agent Full Name",
+        "labelPl": "Imię i Nazwisko Landlorda / Agencji",
+        "labelRo": "Nume Proprietar / Agenție",
+        "placeholder": "np. Apex Properties Group Ltd",
+        "defaultValue": "Apex Properties Group Ltd"
+      },
+      {
+        "key": "landlord_address",
+        "labelEn": "Landlord Notice Address (s.48 LTA 1987)",
+        "labelPl": "Adres Korespondencyjny Landlorda w UK",
+        "labelRo": "Adresa pentru Notificări a Proprietarului",
+        "placeholder": "np. 45 King Street, London, EC2V 8AU",
+        "defaultValue": "45 King Street, London, EC2V 8AU"
+      },
+      {
+        "key": "tenant_name",
+        "labelEn": "Tenant(s) Full Legal Name",
+        "labelPl": "Imię i Nazwisko Najemcy",
+        "labelRo": "Numele Complet al Chiriașului",
+        "placeholder": "np. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "property_address",
+        "labelEn": "Rented Property Full Address",
+        "labelPl": "Dokładny Adres Wynajmowanego Lokalu",
+        "labelRo": "Adresa Completă a Locuinței Închiriate",
+        "placeholder": "np. Flat 4, 12 High Street, London, E16 2AB",
+        "defaultValue": "Flat 4, 12 High Street, London, E16 2AB"
+      },
+      {
+        "key": "tenancy_term",
+        "labelEn": "Tenancy Term (Months)",
+        "labelPl": "Okres Najmu (Miesiące)",
+        "labelRo": "Perioada Contractului (Luni)",
+        "placeholder": "np. 12 months",
+        "defaultValue": "12 months"
+      },
+      {
+        "key": "start_date",
+        "labelEn": "Tenancy Start Date",
+        "labelPl": "Data Rozpoczęcia Najmu",
+        "labelRo": "Data Începerii Închirierii",
+        "placeholder": "np. 1st October 2026",
+        "defaultValue": "1st October 2026"
+      },
+      {
+        "key": "monthly_rent",
+        "labelEn": "Monthly Rent (£ per calendar month)",
+        "labelPl": "Miesięczny Czynsz (£/miesiąc)",
+        "labelRo": "Chiria Lunară (£)",
+        "placeholder": "np. 950.00",
+        "defaultValue": "950.00"
+      },
+      {
+        "key": "rent_due_day",
+        "labelEn": "Rent Due Date (Day of each month)",
+        "labelPl": "Dzień Płatności Czynszu w Miesiącu",
+        "labelRo": "Data Scadenței Chiriei",
+        "placeholder": "np. 1st day of each calendar month",
+        "defaultValue": "1st day of each calendar month"
+      },
+      {
+        "key": "deposit_amount",
+        "labelEn": "Security Deposit (£ capped at 5 weeks)",
+        "labelPl": "Kaucja Zwrotna (£ maks. 5 tygodni)",
+        "labelRo": "Garanția Locativă (£)",
+        "placeholder": "np. 1096.00",
+        "defaultValue": "1096.00"
+      },
+      {
+        "key": "deposit_scheme",
+        "labelEn": "Government Custodial Scheme (DPS / TDS / MyDeposits)",
+        "labelPl": "Rządowy Fundusz Ochrony Kaucji",
+        "labelRo": "Schema de Protecție a Garanției",
+        "placeholder": "np. Deposit Protection Service (DPS Custodial)",
+        "defaultValue": "Deposit Protection Service (DPS Custodial)"
+      },
+      {
+        "key": "bills_included",
+        "labelEn": "Utilities & Council Tax Included?",
+        "labelPl": "Media i Council Tax Wliczone?",
+        "labelRo": "Utilități și Taxe Incluse?",
+        "placeholder": "np. Water and high-speed broadband included; Council Tax and Electricity excluded",
+        "defaultValue": "Water and Broadband included; Council Tax excluded"
+      }
+    ],
+    "defaults": {
+      "landlord_name": "[Landlord Name]",
+      "landlord_address": "[Landlord Address in England & Wales]",
+      "tenant_name": "[Tenant Name]",
+      "property_address": "[Property Address]",
+      "tenancy_term": "12 months",
+      "start_date": "",
+      "monthly_rent": "950.00",
+      "rent_due_day": "1st day of each month",
+      "deposit_amount": "1096.00",
+      "deposit_scheme": "Deposit Protection Service (DPS)",
+      "bills_included": "Excluded"
+    },
+    "letter": "ASSURED SHORTHOLD TENANCY AGREEMENT (AST)\nFOR RESIDENTIAL PROPERTY IN ENGLAND & WALES\nPURSUANT TO PART I OF THE HOUSING ACT 1988 (AS AMENDED)\n\nDOCUMENT REFERENCE: UK-AST-SECURE-2026\nSTANDARD FORM LEASE COMPLIANT WITH THE TENANT FEES ACT 2019\nDATE OF EXECUTION: {{date}}\n\nTHIS AGREEMENT IS MADE BETWEEN:\n1. THE LANDLORD:\n   {{landlord_name}}\n   Notice Address (pursuant to s.48 Landlord and Tenant Act 1987): {{landlord_address}}\n\n2. THE TENANT(S):\n   {{tenant_name}}\n\n══════════════════════════════════════════════════════════════════════════════\nOPERATIVE TERMS OF THE TENANCY\n══════════════════════════════════════════════════════════════════════════════\n\n1. THE PROPERTY\n   The Landlord agrees to let and the Tenant agrees to take the residential dwelling known as:\n   Address: {{property_address}} (\"the Premises\"), together with all landlord fixtures, furniture, and fittings listed in the check-in inventory.\n\n2. TERM AND RENT\n   2.1. The Tenancy shall be for a fixed term of: {{tenancy_term}}, commencing on: {{start_date}}.\n   2.2. The Rent shall be: £{{monthly_rent}} per calendar month.\n   2.3. Rent is payable in advance on the: {{rent_due_day}}, by standing order into the Landlord's designated bank account.\n   2.4. Utility and Local Tax arrangements: {{bills_included}}.\n\n3. SECURITY DEPOSIT & STATUTORY PROTECTION\n   3.1. The Tenant shall pay a security deposit of: £{{deposit_amount}}.\n   3.2. Compliance with Housing Act 2004: In accordance with Sections 213-214 of the Housing Act 2004 and the Tenant Fees Act 2019, the Deposit will be secured within 30 days of receipt in an authorized government scheme:\n        Custodial Scheme: {{deposit_scheme}}.\n   3.3. Prescribed Information will be issued to the Tenant within 30 days of receiving the deposit.\n   3.4. The deposit cannot be withheld arbitrarily and will be refunded upon termination subject only to documented damage beyond reasonable wear and tear or rent arrears.\n\n4. TENANT'S OBLIGATIONS\n   4.1. Pay the rent punctually at the times specified.\n   4.2. Keep the interior of the Premises clean, well-ventilated, and in good order throughout the tenancy.\n   4.3. Not cause nuisance, annoyance, or anti-social behaviour to occupiers of neighbouring properties.\n   4.4. Not assign, underlet, or share possession of the Premises without prior written consent from the Landlord (consent not to be unreasonably withheld).\n   4.5. Permit the Landlord or their authorised contractors access to inspect or conduct statutory repairs upon at least 24 hours written notice, except in genuine emergencies.\n\n5. LANDLORD'S STATUTORY OBLIGATIONS\n   5.1. Repair Covenant: Pursuant to Section 11 of the Landlord and Tenant Act 1985 and the Homes (Fitness for Human Habitation) Act 2018, the Landlord shall keep in repair:\n        (a) The structure and exterior of the dwelling-house (including drains, gutters, and external pipes).\n        (b) The installations for the supply of water, gas, electricity, and sanitation (including basins, sinks, baths, and sanitary conveniences).\n        (c) The installations for space heating and heating water.\n   5.2. Safety Compliance: The Landlord warrants compliance with the Gas Safety (Installation and Use) Regulations 1998 (annual CP12 certificate) and the Electrical Safety Standards in the Private Rented Sector (England) Regulations 2020 (EICR report).\n   5.3. Quiet Enjoyment: The Landlord covenants that the Tenant paying the rent shall peaceably and quietly possess and enjoy the Premises without unlawful interruption.\n\n6. PROHIBITED PAYMENTS (TENANT FEES ACT 2019)\n   In compliance with the Tenant Fees Act 2019, the Landlord and Agent confirm that no prohibited fees (including administration fees, viewing fees, inventory fees, or renewal fees) have been or will be charged to the Tenant.\n\n7. DETERMINATION AND NOTICES\n   7.1. Any statutory notice served under Section 21 or Section 8 of the Housing Act 1988 must strictly comply with prescribed statutory notice periods.\n   7.2. The Tenant may terminate the tenancy at the expiration of the fixed term by serving not less than one calendar month's notice in writing.\n\n══════════════════════════════════════════════════════════════════════════════\nSIGNATURES OF THE PARTIES\n══════════════════════════════════════════════════════════════════════════════\n\nIN WITNESS of the above terms, the parties have executed this Agreement on {{date}}:\n\nSigned by or on behalf of the LANDLORD:\nSignature: _________________________________________\nPrint Name: {{landlord_name}}\nDate: {{date}}\n\nSigned by the TENANT:\nSignature: _________________________________________\nPrint Name: {{tenant_name}}\nDate: {{date}}"
+  },
+  {
+    "id": "subcontractor_services_agreement",
+    "titleEn": "Subcontractor & Self-Employed Services Agreement",
+    "titlePl": "Umowa o Świadczenie Usług Podwykonawczych / Samozatrudnienie (CIS / Trade)",
+    "titleRo": "Contract de Prestări Servicii Subcontractor / Lucrător Independent (CIS / Trade)",
+    "statutoryReference": "UK Common Law Contract for Services & HMRC Off-Payroll Working / IR35 Rules",
+    "category": "Contractor Agreements",
+    "descriptionEn": "Standard UK contract for independent trade, logistics, and construction subcontractors (CIS). Establishes genuine self-employed status with right of substitution and clear payment milestones.",
+    "descriptionPl": "Wzór umowy dla podwykonawców, kurierów, kierowców i fachowców (CIS/Self-employed) w UK. Zabezpiecza status samozatrudnionego, prawo do wyznaczenia zastępcy (substitution clause) oraz 14-dniowy termin płatności faktur.",
+    "descriptionRo": "Contract pentru subcontractori și lucrători independenți (CIS / Trade) în UK. Stabilește statutul de persoană fizică autorizată și dreptul de substituire.",
+    "fields": [
+      {
+        "key": "contractor_company",
+        "labelEn": "Principal Contractor / Client Name",
+        "labelPl": "Główny Wykonawca / Zleceniodawca",
+        "labelRo": "Antreprenor Principal / Client",
+        "placeholder": "np. FastTrack Couriers UK Ltd",
+        "defaultValue": "FastTrack Couriers UK Ltd"
+      },
+      {
+        "key": "subcontractor_name",
+        "labelEn": "Subcontractor Legal Name & UTR",
+        "labelPl": "Imię, Nazwisko i Numer UTR Podwykonawcy",
+        "labelRo": "Nume Subcontractor și Cod UTR",
+        "placeholder": "np. Artur Kowalski (UTR: 12345 67890)",
+        "defaultValue": "Artur Kowalski (UTR: 78912 34560)"
+      },
+      {
+        "key": "services_scope",
+        "labelEn": "Scope of Trade Services / Deliverables",
+        "labelPl": "Zakres Usług / Zadania",
+        "labelRo": "Descrierea Serviciilor",
+        "placeholder": "np. Multi-drop parcel delivery routes and freight logistics",
+        "defaultValue": "Multi-drop parcel transport and logistics delivery services"
+      },
+      {
+        "key": "fee_rate",
+        "labelEn": "Agreed Fee Rate (£ per day / route / hour)",
+        "labelPl": "Stawka Wynagrodzenia (£ za dzień/kurs/godz.)",
+        "labelRo": "Tarif Servicii (£/zi sau oră)",
+        "placeholder": "np. £185.00 per day route",
+        "defaultValue": "£185.00 per standard daily route"
+      },
+      {
+        "key": "payment_terms",
+        "labelEn": "Invoicing & Payment Terms (Days)",
+        "labelPl": "Termin Płatności Faktury (Dni)",
+        "labelRo": "Termen de Plată Factură (Zile)",
+        "placeholder": "np. 14 days from weekly invoice submission",
+        "defaultValue": "14 days from submission of valid invoice"
+      },
+      {
+        "key": "substitution_right",
+        "labelEn": "Right of Substitution Clause",
+        "labelPl": "Klauzula Prawa do Zastępstwa",
+        "labelRo": "Dreptul la Substituire",
+        "placeholder": "np. Full right to provide qualified substitute driver",
+        "defaultValue": "Subcontractor has absolute right to provide a qualified and vetted substitute driver"
+      }
+    ],
+    "defaults": {
+      "contractor_company": "[Client / Contractor Name]",
+      "subcontractor_name": "[Subcontractor Full Name & UTR]",
+      "services_scope": "[Scope of Services]",
+      "fee_rate": "£185.00 per day",
+      "payment_terms": "14 days",
+      "substitution_right": "Right to provide vetted substitute"
+    },
+    "letter": "CONTRACT FOR INDEPENDENT SERVICES\nSUB-CONTRACTOR AGREEMENT (ENGLAND & WALES)\nCOMMERCIALLY BINDING CONTRACT FOR SERVICES\n\nDOCUMENT REFERENCE: UK-CIS-SECURE-2026\nDATE: {{date}}\n\nPARTIES:\n1. THE PRINCIPAL CONTRACTOR:\n   {{contractor_company}} (\"the Client\")\n\n2. THE INDEPENDENT SUB-CONTRACTOR:\n   {{subcontractor_name}} (\"the Subcontractor\")\n\n══════════════════════════════════════════════════════════════════════════════\nTERMS OF ENGAGEMENT\n══════════════════════════════════════════════════════════════════════════════\n\n1. NATURE OF RELATIONSHIP (SELF-EMPLOYED STATUS)\n   1.1. The parties acknowledge and agree that this Agreement is a Contract for Services and does not establish a contract of employment or worker relationship.\n   1.2. The Subcontractor is solely responsible for all tax liabilities, National Insurance (Class 2 and Class 4), and CIS deductions where applicable.\n\n2. SCOPE OF SERVICES\n   The Subcontractor agrees to perform the following trade/logistics services:\n   {{services_scope}}.\n\n3. RIGHT OF SUBSTITUTION (IR35 COMPLIANCE)\n   3.1. {{substitution_right}}.\n   3.2. The Client will not object to a substitute provided they hold equivalent competence, valid driving license, and insurance credentials.\n\n4. FEES AND INVOICING\n   4.1. The agreed service fee shall be: {{fee_rate}}.\n   4.2. Invoices submitted by the Subcontractor shall be settled within: {{payment_terms}}.\n\n5. TERMINATION\n   Either party may terminate this agreement without penalty upon providing 7 calendar days written notice.\n\n══════════════════════════════════════════════════════════════════════════════\nEXECUTION\n══════════════════════════════════════════════════════════════════════════════\n\nSigned for the Client: _________________________ Date: {{date}}\nSigned by the Subcontractor: ____________________ Date: {{date}}"
+  },
+  {
+    "id": "holiday_pay",
+    "titleEn": "Holiday Pay & Annual Leave Entitlement Claim",
+    "titlePl": "Wezwanie: Zaległe Holiday Pay i Urlop",
+    "titleRo": "Cerere Plată Concediu de Odihnă (Holiday Pay)",
+    "statutoryReference": "Working Time Regulations 1998, regs 13, 13A, 14 & 16",
+    "category": "Leave & Holiday",
+    "descriptionEn": "Claim unpaid holiday pay or refused statutory leave (5.6 weeks), including regular overtime in the holiday rate.",
+    "descriptionPl": "Żądanie wypłaty zaległego holiday pay lub udzielenia ustawowego urlopu (5,6 tyg.) – z uwzględnieniem regularnych nadgodzin w stawce.",
+    "descriptionRo": "Cerere pentru plata concediului restant sau acordarea celor 5,6 săptămâni legale.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "leave_period",
+        "labelEn": "Holiday Year / Period",
+        "labelPl": "Rok / Okres Urlopowy",
+        "labelRo": "Perioada",
+        "placeholder": "e.g. 1 Jan 2026 – 31 Dec 2026",
+        "defaultValue": "1 Jan 2026 – 31 Dec 2026"
+      },
+      {
+        "key": "days_owed",
+        "labelEn": "Days Unpaid or Refused",
+        "labelPl": "Dni Niewypłacone / Odmówione",
+        "labelRo": "Zile Datorate",
+        "placeholder": "e.g. 8 days",
+        "defaultValue": "8 days"
+      },
+      {
+        "key": "amount_owed",
+        "labelEn": "Holiday Pay Owed (£)",
+        "labelPl": "Kwota Holiday Pay (£)",
+        "labelRo": "Suma Datorată (£)",
+        "placeholder": "e.g. 780.00",
+        "defaultValue": "780.00"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "leave_period": "[Holiday Year / Period]",
+      "days_owed": "[Days Unpaid or Refused]",
+      "amount_owed": "[Holiday Pay Owed (£)]"
+    },
+    "letter": "FORMAL CLAIM FOR HOLIDAY PAY AND ANNUAL LEAVE\nWORKING TIME REGULATIONS 1998\n\nDate: {{date}}\nTO: HR / Payroll, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: UNPAID HOLIDAY PAY – £{{amount_owed}}\n\nDear Sir or Madam,\n\nI am entitled to 5.6 weeks' paid annual leave per year under regulations 13 and 13A of the Working Time Regulations 1998. For the holiday period {{leave_period}} I have not been paid, or have been refused, {{days_owed}} of leave.\n\nUnder regulation 16 holiday must be paid at my normal week's pay. For at least the first 4 weeks this must include regular overtime, commission and shift premiums (Bear Scotland v Fulton; Harpur Trust v Brazel). Rolled-up holiday pay is only lawful where it is itemised on the payslip.\n\nI request that within 7 days you:\n1. Pay the outstanding holiday pay of £{{amount_owed}} in the next pay run;\n2. Provide a written breakdown of my accrued, taken and remaining leave;\n3. Confirm the rate used to calculate my holiday pay.\n\nIf this is not resolved, I will contact ACAS for Early Conciliation and may bring a claim to the Employment Tribunal for unlawful deduction from wages (s.23 ERA 1996) and breach of reg. 30 WTR 1998.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "resignation_notice",
+    "titleEn": "Resignation Letter with Notice Period",
+    "titlePl": "Wypowiedzenie Umowy przez Pracownika (Resignation)",
+    "titleRo": "Demisie cu Preaviz",
+    "statutoryReference": "Employment Rights Act 1996, s.86",
+    "category": "Dismissal & Discipline",
+    "descriptionEn": "Professional resignation giving contractual/statutory notice and requesting final pay, accrued holiday and P45.",
+    "descriptionPl": "Rezygnacja z pracy z zachowaniem okresu wypowiedzenia oraz żądaniem ostatniej wypłaty, ekwiwalentu za urlop i P45.",
+    "descriptionRo": "Demisie cu preaviz și cerere pentru ultimul salariu, concediu neefectuat și P45.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "job_title",
+        "labelEn": "Job Title",
+        "labelPl": "Stanowisko",
+        "labelRo": "Funcția",
+        "placeholder": "e.g. Warehouse Operative",
+        "defaultValue": "Warehouse Operative"
+      },
+      {
+        "key": "notice_length",
+        "labelEn": "Notice Period",
+        "labelPl": "Okres Wypowiedzenia",
+        "labelRo": "Preaviz",
+        "placeholder": "e.g. 1 week",
+        "defaultValue": "1 week"
+      },
+      {
+        "key": "last_day",
+        "labelEn": "Last Working Day",
+        "labelPl": "Ostatni Dzień Pracy",
+        "labelRo": "Ultima Zi",
+        "placeholder": "e.g. 14 November 2026",
+        "defaultValue": "14 November 2026"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "job_title": "[Job Title]",
+      "notice_length": "[Notice Period]",
+      "last_day": "[Last Working Day]"
+    },
+    "letter": "LETTER OF RESIGNATION\n\nDate: {{date}}\nTO: HR Department, {{employer_name}}\nFROM: {{employee_name}}, {{job_title}}\nSUBJECT: RESIGNATION – NOTICE OF {{notice_length}}\n\nDear Sir or Madam,\n\nPlease accept this letter as formal notice of my resignation from my position as {{job_title}}. In accordance with my contract and section 86 of the Employment Rights Act 1996, I am giving {{notice_length}} notice. My last working day will be {{last_day}}.\n\nPlease ensure that my final pay includes:\n1. All wages due up to and including my last working day;\n2. Payment in lieu of any accrued but untaken annual leave (reg. 14 Working Time Regulations 1998);\n3. Any outstanding overtime, bonuses or expenses.\n\nPlease also send me my P45 promptly after my final payment, and confirm in writing the date and amount of my final pay.\n\nThank you for the opportunity to work with {{employer_name}}.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "disciplinary_appeal",
+    "titleEn": "Appeal Against Dismissal or Disciplinary Sanction",
+    "titlePl": "Odwołanie od Zwolnienia Dyscyplinarnego / Kary",
+    "titleRo": "Contestație Împotriva Concedierii Disciplinare",
+    "statutoryReference": "ACAS Code of Practice on Disciplinary & Grievance Procedures, paras 26-29; ERA 1996 s.98",
+    "category": "Dismissal & Discipline",
+    "descriptionEn": "Appeal a dismissal or warning: unfair procedure, insufficient evidence or disproportionate sanction.",
+    "descriptionPl": "Odwołanie od zwolnienia lub ostrzeżenia: wadliwa procedura, brak dowodów lub nieproporcjonalna kara.",
+    "descriptionRo": "Contestație: procedură incorectă, lipsă de dovezi sau sancțiune disproporționată.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "decision_date",
+        "labelEn": "Date of Decision",
+        "labelPl": "Data Decyzji",
+        "labelRo": "Data Deciziei",
+        "placeholder": "e.g. 3 November 2026",
+        "defaultValue": "3 November 2026"
+      },
+      {
+        "key": "sanction",
+        "labelEn": "Sanction Given",
+        "labelPl": "Nałożona Kara",
+        "labelRo": "Sancțiunea",
+        "placeholder": "e.g. Summary dismissal for gross misconduct",
+        "defaultValue": "Summary dismissal for gross misconduct"
+      },
+      {
+        "key": "grounds",
+        "labelEn": "Grounds of Appeal",
+        "labelPl": "Podstawy Odwołania",
+        "labelRo": "Motivele Contestației",
+        "placeholder": "e.g. No investigation meeting, CCTV not shown to me, no right to be accompanied",
+        "defaultValue": "No investigation meeting, CCTV not shown to me, no right to be accompanied"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "decision_date": "[Date of Decision]",
+      "sanction": "[Sanction Given]",
+      "grounds": "[Grounds of Appeal]"
+    },
+    "letter": "APPEAL AGAINST DISCIPLINARY DECISION\n\nDate: {{date}}\nTO: Appeals Manager / HR, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: APPEAL AGAINST DECISION OF {{decision_date}}\n\nDear Sir or Madam,\n\nI wish to appeal against the decision made on {{decision_date}} to impose the following sanction: {{sanction}}.\n\nGROUNDS OF APPEAL:\n{{grounds}}\n\nThe ACAS Code of Practice requires a fair investigation, disclosure of the evidence in advance, a hearing with the right to be accompanied (s.10 Employment Relations Act 1999) and a sanction proportionate to the conduct. I believe these requirements were not met and that the decision falls outside the band of reasonable responses (s.98(4) ERA 1996).\n\nI request:\n1. An appeal hearing chaired by a manager not previously involved;\n2. Copies of all evidence relied upon, including statements and CCTV, at least 48 hours before the hearing;\n3. To be accompanied by my trade union representative.\n\nPlease note that an employer's unreasonable failure to follow the ACAS Code may increase any Tribunal award by up to 25% (s.207A TULRCA 1992).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "bullying_grievance",
+    "titleEn": "Grievance: Bullying and Harassment at Work",
+    "titlePl": "Skarga: Mobbing i Nękanie w Pracy",
+    "titleRo": "Plângere: Hărțuire la Locul de Muncă",
+    "statutoryReference": "Equality Act 2010 ss.26-27; Protection from Harassment Act 1997; Health and Safety at Work Act 1974",
+    "category": "Workplace Conduct",
+    "descriptionEn": "Formal grievance about bullying, harassment or discriminatory treatment by a manager or colleague.",
+    "descriptionPl": "Oficjalna skarga na mobbing, nękanie lub dyskryminację ze strony przełożonego lub współpracownika.",
+    "descriptionRo": "Plângere oficială privind hărțuirea sau tratamentul discriminatoriu.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "perpetrator",
+        "labelEn": "Person(s) Responsible",
+        "labelPl": "Osoba Odpowiedzialna",
+        "labelRo": "Persoana Responsabilă",
+        "placeholder": "e.g. Shift Manager J. Smith",
+        "defaultValue": "Shift Manager J. Smith"
+      },
+      {
+        "key": "incidents",
+        "labelEn": "Incidents (dates & what happened)",
+        "labelPl": "Zdarzenia (daty i opis)",
+        "labelRo": "Incidente",
+        "placeholder": "e.g. 2 Oct – shouted at me in front of the team; 9 Oct – mocked my accent",
+        "defaultValue": "2 Oct – shouted at me in front of the team; 9 Oct – mocked my accent"
+      },
+      {
+        "key": "witnesses",
+        "labelEn": "Witnesses",
+        "labelPl": "Świadkowie",
+        "labelRo": "Martori",
+        "placeholder": "e.g. M. Nowak, R. Popescu",
+        "defaultValue": "M. Nowak, R. Popescu"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "perpetrator": "[Person(s) Responsible]",
+      "incidents": "[Incidents (dates & what happened)]",
+      "witnesses": "[Witnesses]"
+    },
+    "letter": "FORMAL GRIEVANCE – BULLYING AND HARASSMENT\n\nDate: {{date}}\nTO: HR Department, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: FORMAL GRIEVANCE REGARDING {{perpetrator}}\n\nDear Sir or Madam,\n\nI am raising a formal grievance under your grievance procedure and the ACAS Code of Practice regarding bullying and harassment by {{perpetrator}}.\n\nDETAILS OF INCIDENTS:\n{{incidents}}\n\nWITNESSES: {{witnesses}}\n\nThis conduct has violated my dignity and created an intimidating, hostile and offensive working environment. Where it relates to a protected characteristic (including race or nationality), it constitutes harassment under section 26 of the Equality Act 2010. You also have a duty of care for my health and safety at work.\n\nI request:\n1. A grievance meeting without unreasonable delay, with the right to be accompanied;\n2. An impartial investigation, including interviews with the witnesses named above;\n3. Interim measures to prevent further contact with {{perpetrator}} while the matter is investigated;\n4. Assurance that I will not be victimised for raising this complaint (s.27 Equality Act 2010).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "flexible_working",
+    "titleEn": "Statutory Flexible Working Request",
+    "titlePl": "Wniosek o Elastyczny Czas Pracy (Flexible Working)",
+    "titleRo": "Cerere de Program Flexibil",
+    "statutoryReference": "Employment Rights Act 1996 s.80F; Flexible Working Regulations 2014 (as amended 2024)",
+    "category": "Leave & Family",
+    "descriptionEn": "Day-one right to request a change to hours, times or place of work; employer must respond within 2 months.",
+    "descriptionPl": "Prawo od pierwszego dnia pracy do wniosku o zmianę godzin lub miejsca pracy; pracodawca odpowiada w ciągu 2 miesięcy.",
+    "descriptionRo": "Drept din prima zi de a cere schimbarea programului; răspuns în 2 luni.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "current_pattern",
+        "labelEn": "Current Working Pattern",
+        "labelPl": "Obecny Grafik",
+        "labelRo": "Programul Actual",
+        "placeholder": "e.g. Mon–Fri 06:00–16:30, rotating nights",
+        "defaultValue": "Mon–Fri 06:00–16:30, rotating nights"
+      },
+      {
+        "key": "requested_pattern",
+        "labelEn": "Requested Working Pattern",
+        "labelPl": "Wnioskowany Grafik",
+        "labelRo": "Programul Solicitat",
+        "placeholder": "e.g. Mon–Thu 08:00–18:00, no nights",
+        "defaultValue": "Mon–Thu 08:00–18:00, no nights"
+      },
+      {
+        "key": "start_from",
+        "labelEn": "Requested Start Date",
+        "labelPl": "Od Kiedy",
+        "labelRo": "Data de Început",
+        "placeholder": "e.g. 1 December 2026",
+        "defaultValue": "1 December 2026"
+      },
+      {
+        "key": "impact",
+        "labelEn": "How the Business Can Cope",
+        "labelPl": "Jak Firma Sobie Poradzi",
+        "labelRo": "Impact asupra Firmei",
+        "placeholder": "e.g. A colleague has offered to swap night shifts with me",
+        "defaultValue": "A colleague has offered to swap night shifts with me"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "current_pattern": "[Current Working Pattern]",
+      "requested_pattern": "[Requested Working Pattern]",
+      "start_from": "[Requested Start Date]",
+      "impact": "[How the Business Can Cope]"
+    },
+    "letter": "STATUTORY FLEXIBLE WORKING REQUEST\nSECTION 80F EMPLOYMENT RIGHTS ACT 1996\n\nDate: {{date}}\nTO: HR Department, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: FLEXIBLE WORKING APPLICATION\n\nDear Sir or Madam,\n\nI am making a statutory request for flexible working under section 80F of the Employment Rights Act 1996.\n\nCURRENT PATTERN: {{current_pattern}}\nREQUESTED PATTERN: {{requested_pattern}}\nREQUESTED START DATE: {{start_from}}\n\nHOW ANY IMPACT CAN BE MANAGED:\n{{impact}}\n\nPlease note that you must deal with this request in a reasonable manner, consult with me before any refusal, and give your decision (including any appeal) within two months. A request may only be refused for one of the eight business reasons listed in s.80G(1)(b) ERA 1996.\n\nI confirm I have made no more than one other statutory request in the last 12 months.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "maternity_paternity",
+    "titleEn": "Notice of Maternity / Paternity Leave and Statutory Pay",
+    "titlePl": "Zawiadomienie o Urlopie Macierzyńskim / Ojcowskim",
+    "titleRo": "Notificare Concediu de Maternitate / Paternitate",
+    "statutoryReference": "Maternity & Parental Leave etc. Regulations 1999; Paternity and Adoption Leave Regulations 2002; SSCBA 1992",
+    "category": "Leave & Family",
+    "descriptionEn": "Formal notice of maternity or paternity leave with request for SMP/SPP and confirmation of return date.",
+    "descriptionPl": "Formalne zgłoszenie urlopu macierzyńskiego lub ojcowskiego z żądaniem SMP/SPP i potwierdzenia daty powrotu.",
+    "descriptionRo": "Notificare oficială și cerere pentru SMP/SPP.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "leave_type",
+        "labelEn": "Leave Type",
+        "labelPl": "Rodzaj Urlopu",
+        "labelRo": "Tipul Concediului",
+        "placeholder": "e.g. Maternity leave",
+        "defaultValue": "Maternity leave"
+      },
+      {
+        "key": "due_date",
+        "labelEn": "Expected Week of Childbirth",
+        "labelPl": "Przewidywany Termin Porodu",
+        "labelRo": "Data Estimată a Nașterii",
+        "placeholder": "e.g. week beginning 12 January 2027",
+        "defaultValue": "week beginning 12 January 2027"
+      },
+      {
+        "key": "leave_start",
+        "labelEn": "Leave Start Date",
+        "labelPl": "Początek Urlopu",
+        "labelRo": "Început Concediu",
+        "placeholder": "e.g. 29 December 2026",
+        "defaultValue": "29 December 2026"
+      },
+      {
+        "key": "evidence",
+        "labelEn": "Evidence Enclosed",
+        "labelPl": "Załączony Dowód",
+        "labelRo": "Dovezi Atașate",
+        "placeholder": "e.g. MATB1 certificate",
+        "defaultValue": "MATB1 certificate"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "leave_type": "[Leave Type]",
+      "due_date": "[Expected Week of Childbirth]",
+      "leave_start": "[Leave Start Date]",
+      "evidence": "[Evidence Enclosed]"
+    },
+    "letter": "NOTICE OF {{leave_type}} AND CLAIM FOR STATUTORY PAY\n\nDate: {{date}}\nTO: HR / Payroll, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: NOTICE OF {{leave_type}}\n\nDear Sir or Madam,\n\nI hereby give notice that I intend to take {{leave_type}}. The expected week of childbirth is {{due_date}} and I wish my leave to start on {{leave_start}}. Enclosed: {{evidence}}.\n\nPlease confirm in writing within 28 days:\n1. My leave start date and the date my leave will end if I take my full entitlement;\n2. My entitlement to Statutory Maternity Pay or Statutory Paternity Pay, or provide form SMP1 / SPP1 with reasons if you consider I am not eligible;\n3. That my contractual terms (other than pay) and holiday accrual continue during my leave.\n\nI remind you that I am protected from detriment and dismissal related to pregnancy, maternity or paternity leave (s.47C and s.99 ERA 1996; s.18 Equality Act 2010).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "redundancy_challenge",
+    "titleEn": "Challenge to Redundancy Selection and Pay",
+    "titlePl": "Odwołanie od Zwolnienia Grupowego / Redundancy",
+    "titleRo": "Contestație Concediere pentru Reducere de Personal",
+    "statutoryReference": "Employment Rights Act 1996 ss.135-165; TULRCA 1992 s.188",
+    "category": "Redundancy",
+    "descriptionEn": "Challenge unfair redundancy selection, lack of consultation or miscalculated statutory redundancy pay.",
+    "descriptionPl": "Kwestionowanie niesprawiedliwej selekcji, braku konsultacji lub błędnie wyliczonej odprawy redundancy.",
+    "descriptionRo": "Contestarea selecției, lipsei consultării sau calculului indemnizației.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "notice_date",
+        "labelEn": "Date You Were Told",
+        "labelPl": "Data Powiadomienia",
+        "labelRo": "Data Notificării",
+        "placeholder": "e.g. 20 October 2026",
+        "defaultValue": "20 October 2026"
+      },
+      {
+        "key": "years_service",
+        "labelEn": "Full Years of Service",
+        "labelPl": "Pełne Lata Pracy",
+        "labelRo": "Ani de Vechime",
+        "placeholder": "e.g. 4",
+        "defaultValue": "4"
+      },
+      {
+        "key": "concerns",
+        "labelEn": "Your Concerns",
+        "labelPl": "Twoje Zastrzeżenia",
+        "labelRo": "Obiecțiile Tale",
+        "placeholder": "e.g. Selection criteria not shared; agency staff kept on; no alternative roles offered",
+        "defaultValue": "Selection criteria not shared; agency staff kept on; no alternative roles offered"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "notice_date": "[Date You Were Told]",
+      "years_service": "[Full Years of Service]",
+      "concerns": "[Your Concerns]"
+    },
+    "letter": "CHALLENGE TO PROPOSED REDUNDANCY\n\nDate: {{date}}\nTO: HR Department, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: REDUNDANCY – REQUEST FOR INFORMATION AND APPEAL\n\nDear Sir or Madam,\n\nOn {{notice_date}} I was informed that my role is at risk of / selected for redundancy. I have {{years_service}} full years of continuous service.\n\nMY CONCERNS:\n{{concerns}}\n\nA fair redundancy requires genuine redundancy, meaningful individual (and where 20+ employees are affected, collective — s.188 TULRCA 1992) consultation, fair and objective selection criteria, and consideration of suitable alternative employment.\n\nI request within 7 days:\n1. The selection criteria, my individual scores and the scoring evidence;\n2. A list of current vacancies and alternative roles;\n3. A written calculation of my statutory redundancy pay (s.162 ERA 1996), notice pay and accrued holiday;\n4. The right to appeal, accompanied by my trade union representative.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "p45_p60_request",
+    "titleEn": "Request for P45 / P60 / Payslips",
+    "titlePl": "Wezwanie do Wydania P45 / P60 / Payslipów",
+    "titleRo": "Cerere Eliberare P45 / P60",
+    "statutoryReference": "Income Tax (PAYE) Regulations 2003, regs 36 & 67",
+    "category": "Wages & Hours",
+    "descriptionEn": "Demand the P45 after leaving, the annual P60 by 31 May, or missing itemised payslips.",
+    "descriptionPl": "Żądanie wydania P45 po odejściu z pracy, P60 do 31 maja lub brakujących payslipów.",
+    "descriptionRo": "Cerere pentru P45, P60 sau fluturași lipsă.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "document_needed",
+        "labelEn": "Document(s) Needed",
+        "labelPl": "Wymagane Dokumenty",
+        "labelRo": "Documente Necesare",
+        "placeholder": "e.g. P45 and P60 for tax year 2025/26",
+        "defaultValue": "P45 and P60 for tax year 2025/26"
+      },
+      {
+        "key": "ni_number",
+        "labelEn": "National Insurance Number",
+        "labelPl": "Numer National Insurance",
+        "labelRo": "Număr NI",
+        "placeholder": "e.g. QQ 12 34 56 C",
+        "defaultValue": "QQ 12 34 56 C"
+      },
+      {
+        "key": "end_date",
+        "labelEn": "Employment End Date (if left)",
+        "labelPl": "Data Zakończenia Pracy",
+        "labelRo": "Data Încetării",
+        "placeholder": "e.g. 30 September 2026",
+        "defaultValue": "30 September 2026"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "document_needed": "[Document(s) Needed]",
+      "ni_number": "[National Insurance Number]",
+      "end_date": "[Employment End Date (if left)]"
+    },
+    "letter": "REQUEST FOR STATUTORY TAX DOCUMENTS\n\nDate: {{date}}\nTO: Payroll Department, {{employer_name}}\nFROM: {{employee_name}} (NI No. {{ni_number}})\nSUBJECT: REQUEST FOR {{document_needed}}\n\nDear Payroll Manager,\n\nI request that you provide me with: {{document_needed}}.\n\nMy employment ended / relevant date: {{end_date}}.\n\nUnder the Income Tax (PAYE) Regulations 2003 you must issue a P45 on the day employment ends or without unreasonable delay thereafter (reg. 36), and a P60 to every employee employed on 5 April by 31 May (reg. 67). I am also entitled to an itemised pay statement for every payment of wages (s.8 Employment Rights Act 1996).\n\nPlease send the documents to me by email or post within 7 days. If they are not provided, I will report the matter to HMRC and, regarding missing payslips, may seek a declaration from the Employment Tribunal (s.11-12 ERA 1996).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "night_work",
+    "titleEn": "Night Work Limits and Free Health Assessment",
+    "titlePl": "Praca Nocna: Limity i Bezpłatne Badanie Lekarskie",
+    "titleRo": "Muncă de Noapte: Limite și Evaluare Medicală",
+    "statutoryReference": "Working Time Regulations 1998, regs 6, 7, 10, 11 & 12",
+    "category": "Wages & Hours",
+    "descriptionEn": "Assert the 8-hour average night work limit, rest breaks and the right to a free health assessment.",
+    "descriptionPl": "Egzekwowanie limitu średnio 8 godzin pracy nocnej, przerw i prawa do bezpłatnego badania zdrowia.",
+    "descriptionRo": "Limita de 8 ore de noapte, pauze și evaluare medicală gratuită.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "night_hours",
+        "labelEn": "Your Night Shift Pattern",
+        "labelPl": "Twój Grafik Nocny",
+        "labelRo": "Programul de Noapte",
+        "placeholder": "e.g. 4 x 12-hour nights (19:00–07:00) per week",
+        "defaultValue": "4 x 12-hour nights (19:00–07:00) per week"
+      },
+      {
+        "key": "issues",
+        "labelEn": "Problems Experienced",
+        "labelPl": "Problemy",
+        "labelRo": "Probleme",
+        "placeholder": "e.g. No 20-minute break, less than 11 hours rest between shifts, no health assessment offered",
+        "defaultValue": "No 20-minute break, less than 11 hours rest between shifts, no health assessment offered"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "night_hours": "[Your Night Shift Pattern]",
+      "issues": "[Problems Experienced]"
+    },
+    "letter": "NIGHT WORK – WORKING TIME REGULATIONS 1998\n\nDate: {{date}}\nTO: HR / Site Management, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: NIGHT WORK LIMITS, REST BREAKS AND HEALTH ASSESSMENT\n\nDear Sir or Madam,\n\nI work as a night worker on the following pattern: {{night_hours}}.\n\nISSUES:\n{{issues}}\n\nUnder the Working Time Regulations 1998:\n1. A night worker's normal hours must not exceed an average of 8 hours in each 24 hours (reg. 6);\n2. I am entitled to a free health assessment before starting night work and at regular intervals (reg. 7);\n3. I am entitled to 11 consecutive hours' rest in each 24-hour period (reg. 10) and a 20-minute break when working more than 6 hours (reg. 12).\n\nI request within 7 days a written confirmation that my rota will comply with these limits, the arrangement of a free health assessment, and the reference period used for averaging. Failure to provide rest may be enforced through the Employment Tribunal (reg. 30) and the HSE / local authority.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "whistleblowing",
+    "titleEn": "Protected Disclosure (Whistleblowing) Report",
+    "titlePl": "Zgłoszenie Sygnalisty (Whistleblowing)",
+    "titleRo": "Raportare Avertizor de Integritate",
+    "statutoryReference": "Public Interest Disclosure Act 1998; Employment Rights Act 1996 ss.43A-43L, 47B & 103A",
+    "category": "Workplace Conduct",
+    "descriptionEn": "Report wrongdoing (safety risks, illegal practices, fraud) as a protected disclosure to secure legal protection.",
+    "descriptionPl": "Zgłoszenie nieprawidłowości (zagrożenia BHP, nielegalne praktyki, oszustwa) jako ujawnienie chronione prawem.",
+    "descriptionRo": "Raportarea neregulilor ca dezvăluire protejată.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "concern",
+        "labelEn": "What You Are Reporting",
+        "labelPl": "Co Zgłaszasz",
+        "labelRo": "Ce Raportezi",
+        "placeholder": "e.g. Fire exits blocked with pallets in Zone B; forklift checks falsified",
+        "defaultValue": "Fire exits blocked with pallets in Zone B; forklift checks falsified"
+      },
+      {
+        "key": "when_where",
+        "labelEn": "When and Where",
+        "labelPl": "Kiedy i Gdzie",
+        "labelRo": "Când și Unde",
+        "placeholder": "e.g. Daily since 1 October 2026, Zone B loading bay",
+        "defaultValue": "Daily since 1 October 2026, Zone B loading bay"
+      },
+      {
+        "key": "evidence",
+        "labelEn": "Evidence Available",
+        "labelPl": "Dostępne Dowody",
+        "labelRo": "Dovezi",
+        "placeholder": "e.g. Photos dated 3 and 10 October 2026",
+        "defaultValue": "Photos dated 3 and 10 October 2026"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "concern": "[What You Are Reporting]",
+      "when_where": "[When and Where]",
+      "evidence": "[Evidence Available]"
+    },
+    "letter": "PROTECTED DISCLOSURE – PUBLIC INTEREST DISCLOSURE ACT 1998\n\nDate: {{date}}\nTO: Whistleblowing Officer / Senior Management, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: PROTECTED DISCLOSURE – CONFIDENTIAL\n\nDear Sir or Madam,\n\nI am making a protected disclosure under Part IVA of the Employment Rights Act 1996. I reasonably believe the information below tends to show that the health and safety of individuals is being endangered and/or a legal obligation is not being complied with, and that this disclosure is in the public interest.\n\nCONCERN:\n{{concern}}\n\nWHEN AND WHERE: {{when_where}}\nEVIDENCE: {{evidence}}\n\nPlease confirm receipt, keep my identity confidential, and inform me of the steps taken to investigate and remedy the matter.\n\nI remind you that I have the right not to be subjected to any detriment (s.47B ERA 1996) and that dismissal for making a protected disclosure is automatically unfair, with no qualifying service and uncapped compensation (s.103A ERA 1996). If the matter is not addressed I may report it to a prescribed person such as the Health and Safety Executive.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "acas_early_conciliation",
+    "titleEn": "Letter Before Claim – ACAS Early Conciliation",
+    "titlePl": "Ostateczne Wezwanie przed ACAS / Tribunal",
+    "titleRo": "Notificare Înainte de ACAS / Tribunal",
+    "statutoryReference": "Employment Tribunals Act 1996 s.18A; ACAS Early Conciliation",
+    "category": "Union & Disciplinary",
+    "descriptionEn": "Final letter before action informing the employer you are starting ACAS Early Conciliation (mandatory before a Tribunal claim).",
+    "descriptionPl": "Ostateczne wezwanie informujące pracodawcę o rozpoczęciu ACAS Early Conciliation (obowiązkowe przed pozwem do Tribunal).",
+    "descriptionRo": "Ultima notificare înainte de conciliere ACAS (obligatorie înainte de Tribunal).",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "issue",
+        "labelEn": "Issue in Dispute",
+        "labelPl": "Przedmiot Sporu",
+        "labelRo": "Problema",
+        "placeholder": "e.g. Unpaid wages and holiday pay",
+        "defaultValue": "Unpaid wages and holiday pay"
+      },
+      {
+        "key": "previous_letter",
+        "labelEn": "Previous Letter Sent",
+        "labelPl": "Wcześniejsze Pismo",
+        "labelRo": "Scrisoare Anterioară",
+        "placeholder": "e.g. Formal demand of 1 November 2026 (no reply)",
+        "defaultValue": "Formal demand of 1 November 2026 (no reply)"
+      },
+      {
+        "key": "amount_claimed",
+        "labelEn": "Amount Claimed (£)",
+        "labelPl": "Dochodzona Kwota (£)",
+        "labelRo": "Suma Cerută (£)",
+        "placeholder": "e.g. 1,004.22",
+        "defaultValue": "1,004.22"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "issue": "[Issue in Dispute]",
+      "previous_letter": "[Previous Letter Sent]",
+      "amount_claimed": "[Amount Claimed (£)]"
+    },
+    "letter": "LETTER BEFORE CLAIM – NOTICE OF ACAS EARLY CONCILIATION\n\nDate: {{date}}\nTO: Managing Director / HR, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: {{issue}} – FINAL NOTICE BEFORE TRIBUNAL PROCEEDINGS\n\nDear Sir or Madam,\n\nI refer to {{previous_letter}}. Despite that letter, the matter of {{issue}} remains unresolved and the sum of £{{amount_claimed}} is still outstanding.\n\nPlease treat this as my final letter before action. Unless this matter is resolved in full within 7 days of the date of this letter, I will notify ACAS to begin Early Conciliation under section 18A of the Employment Tribunals Act 1996 without further notice. If conciliation fails, I will present a claim to the Employment Tribunal.\n\nACAS will contact you to discuss settlement. I would prefer to resolve this directly and invite you to make payment or propose a meeting within the next 7 days.\n\nI reserve the right to refer to this letter on the question of costs and on any uplift of up to 25% for unreasonable failure to comply with the ACAS Code of Practice.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "unlawful_deductions",
+    "titleEn": "Challenge to Unlawful Deductions from Wages",
+    "titlePl": "Sprzeciw: Nielegalne Potrącenia z Wypłaty",
+    "titleRo": "Contestare Rețineri Ilegale din Salariu",
+    "statutoryReference": "Employment Rights Act 1996 ss.13-27",
+    "category": "Wages & Hours",
+    "descriptionEn": "Challenge deductions for uniforms, PPE, transport, accommodation, breakages or 'admin fees' not agreed in writing.",
+    "descriptionPl": "Sprzeciw wobec potrąceń za odzież, PPE, transport, zakwaterowanie, szkody lub 'opłaty administracyjne' bez pisemnej zgody.",
+    "descriptionRo": "Contestare rețineri pentru uniformă, transport, cazare sau taxe neaprobate.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "deduction",
+        "labelEn": "Deduction Description",
+        "labelPl": "Opis Potrącenia",
+        "labelRo": "Descrierea Reținerii",
+        "placeholder": "e.g. £35/week 'transport fee' and £20 hi-vis charge",
+        "defaultValue": "£35/week 'transport fee' and £20 hi-vis charge"
+      },
+      {
+        "key": "pay_dates",
+        "labelEn": "Affected Pay Dates",
+        "labelPl": "Daty Wypłat",
+        "labelRo": "Datele Plăților",
+        "placeholder": "e.g. 2, 9, 16 and 23 October 2026",
+        "defaultValue": "2, 9, 16 and 23 October 2026"
+      },
+      {
+        "key": "amount_owed",
+        "labelEn": "Total Deducted (£)",
+        "labelPl": "Łącznie Potrącono (£)",
+        "labelRo": "Total Reținut (£)",
+        "placeholder": "e.g. 160.00",
+        "defaultValue": "160.00"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "deduction": "[Deduction Description]",
+      "pay_dates": "[Affected Pay Dates]",
+      "amount_owed": "[Total Deducted (£)]"
+    },
+    "letter": "UNLAWFUL DEDUCTION FROM WAGES – PART II EMPLOYMENT RIGHTS ACT 1996\n\nDate: {{date}}\nTO: Payroll Department, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: REFUND OF UNAUTHORISED DEDUCTIONS – £{{amount_owed}}\n\nDear Payroll Manager,\n\nThe following deductions were made from my wages: {{deduction}}, on the pay dates {{pay_dates}}, totalling £{{amount_owed}}.\n\nUnder section 13 of the Employment Rights Act 1996 you may not make a deduction from my wages unless it is required by statute, authorised by a relevant provision of my contract notified to me in writing beforehand, or I have given prior written consent. I have not given such consent. In addition, deductions for items connected with my job must not reduce my pay below the National Minimum Wage, and charges for PPE required by law are prohibited (s.9 HSWA 1974).\n\nI request repayment of £{{amount_owed}} in the next pay run and confirmation that these deductions will stop. Otherwise I will commence ACAS Early Conciliation and bring a claim under section 23 ERA 1996 (time limit: 3 months less one day from the last deduction).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "written_statement_request",
+    "titleEn": "Request for Written Statement of Employment Particulars",
+    "titlePl": "Żądanie Pisemnych Warunków Zatrudnienia",
+    "titleRo": "Cerere Declarație Scrisă a Condițiilor de Muncă",
+    "statutoryReference": "Employment Rights Act 1996 ss.1-12 (as amended 2020)",
+    "category": "Employment Contracts",
+    "descriptionEn": "Day-one right to a written statement of terms (pay, hours, holiday, notice); for workers without a proper contract.",
+    "descriptionPl": "Prawo od pierwszego dnia do pisemnych warunków zatrudnienia (stawka, godziny, urlop, wypowiedzenie) – gdy brak umowy.",
+    "descriptionRo": "Drept din prima zi la condițiile de muncă în scris.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "job_title",
+        "labelEn": "Job Title",
+        "labelPl": "Stanowisko",
+        "labelRo": "Funcția",
+        "placeholder": "e.g. Warehouse Operative",
+        "defaultValue": "Warehouse Operative"
+      },
+      {
+        "key": "start_date",
+        "labelEn": "Start Date",
+        "labelPl": "Data Rozpoczęcia",
+        "labelRo": "Data Începerii",
+        "placeholder": "e.g. 12 January 2026",
+        "defaultValue": "12 January 2026"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "job_title": "[Job Title]",
+      "start_date": "[Start Date]"
+    },
+    "letter": "REQUEST FOR WRITTEN STATEMENT OF EMPLOYMENT PARTICULARS\n\nDate: {{date}}\nTO: HR Department, {{employer_name}}\nFROM: {{employee_name}}, {{job_title}}\nSUBJECT: WRITTEN STATEMENT UNDER SECTION 1 ERA 1996\n\nDear Sir or Madam,\n\nI started working for {{employer_name}} on {{start_date}} as {{job_title}}. I have not received a written statement of my main terms and conditions.\n\nSince 6 April 2020, all employees and workers are entitled to a written statement on or before their first day of work (s.1 Employment Rights Act 1996). It must include, among other things: the employer's name, start date, rate of pay and pay intervals, normal hours and days of work, holiday entitlement and pay, sick pay, notice periods, job title, place of work, probation, and training requirements.\n\nPlease provide the written statement within 7 days. If it is not provided, the Employment Tribunal may award 2 to 4 weeks' pay when I bring any other claim (s.38 Employment Act 2002) and may determine the particulars itself (s.11 ERA 1996).\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "return_to_work_adjustments",
+    "titleEn": "Request for Reasonable Adjustments / Return to Work",
+    "titlePl": "Wniosek o Rozsądne Dostosowania po Chorobie",
+    "titleRo": "Cerere Adaptări Rezonabile la Revenire",
+    "statutoryReference": "Equality Act 2010 ss.6, 20-21; Health and Safety at Work Act 1974",
+    "category": "Sick Pay & Health",
+    "descriptionEn": "Ask for reasonable adjustments (lighter duties, phased return, equipment) after illness, injury or for a disability.",
+    "descriptionPl": "Wniosek o dostosowania (lżejsze obowiązki, stopniowy powrót, sprzęt) po chorobie, urazie lub z powodu niepełnosprawności.",
+    "descriptionRo": "Cerere pentru sarcini ușoare sau revenire treptată după boală.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "condition",
+        "labelEn": "Condition / Injury",
+        "labelPl": "Schorzenie / Uraz",
+        "labelRo": "Afecțiune",
+        "placeholder": "e.g. Lower back injury (herniated disc)",
+        "defaultValue": "Lower back injury (herniated disc)"
+      },
+      {
+        "key": "adjustments",
+        "labelEn": "Adjustments Requested",
+        "labelPl": "Wnioskowane Dostosowania",
+        "labelRo": "Adaptări Solicitate",
+        "placeholder": "e.g. No lifting over 10 kg for 8 weeks; phased return 4h/day for 2 weeks",
+        "defaultValue": "No lifting over 10 kg for 8 weeks; phased return 4h/day for 2 weeks"
+      },
+      {
+        "key": "fit_note",
+        "labelEn": "Fit Note / Medical Advice",
+        "labelPl": "Fit Note / Zalecenia",
+        "labelRo": "Recomandare Medicală",
+        "placeholder": "e.g. GP fit note 'may be fit for work' dated 20 October 2026",
+        "defaultValue": "GP fit note 'may be fit for work' dated 20 October 2026"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "condition": "[Condition / Injury]",
+      "adjustments": "[Adjustments Requested]",
+      "fit_note": "[Fit Note / Medical Advice]"
+    },
+    "letter": "REQUEST FOR REASONABLE ADJUSTMENTS AND PHASED RETURN\n\nDate: {{date}}\nTO: HR / Line Manager, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: RETURN TO WORK – ADJUSTMENTS REQUEST\n\nDear Sir or Madam,\n\nI am returning to work following: {{condition}}. Medical advice: {{fit_note}}.\n\nI request the following adjustments: {{adjustments}}.\n\nWhere my condition has a substantial and long-term adverse effect on my day-to-day activities, it is a disability under section 6 of the Equality Act 2010, and you are under a duty to make reasonable adjustments (ss.20-21). Regardless, you must assess the risks to my health under the Management of Health and Safety at Work Regulations 1999 and follow the recommendations in my fit note where reasonably practicable.\n\nPlease arrange a return-to-work meeting, consider an Occupational Health referral, and confirm the agreed adjustments in writing before my return.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  },
+  {
+    "id": "agency_fees_notice",
+    "titleEn": "Demand Refund of Unlawful Agency Fees",
+    "titlePl": "Zwrot Nielegalnych Opłat Pobranych przez Agencję",
+    "titleRo": "Restituirea Taxelor Ilegale ale Agenției",
+    "statutoryReference": "Conduct of Employment Agencies and Employment Businesses Regulations 2003, regs 13-15; Employment Agencies Act 1973 s.6",
+    "category": "Agency Workers",
+    "descriptionEn": "Agencies cannot charge for finding you work (registration, CV, training 'deposits'). Demand a refund.",
+    "descriptionPl": "Agencje nie mogą pobierać opłat za znalezienie pracy (rejestracja, CV, 'depozyty' szkoleniowe). Żądanie zwrotu.",
+    "descriptionRo": "Agențiile nu pot taxa găsirea unui loc de muncă. Cerere de restituire.",
+    "fields": [
+      {
+        "key": "employee_name",
+        "labelEn": "Your Full Name",
+        "labelPl": "Twoje Imię i Nazwisko",
+        "labelRo": "Numele Tău",
+        "placeholder": "e.g. Artur Kowalski",
+        "defaultValue": "Artur Kowalski"
+      },
+      {
+        "key": "employer_name",
+        "labelEn": "Employer / Agency Name",
+        "labelPl": "Nazwa Pracodawcy / Agencji",
+        "labelRo": "Numele Angajatorului",
+        "placeholder": "e.g. Logistics Staffing UK Ltd",
+        "defaultValue": "Logistics Staffing UK Ltd"
+      },
+      {
+        "key": "fee_details",
+        "labelEn": "Fees Charged",
+        "labelPl": "Pobrane Opłaty",
+        "labelRo": "Taxe Percepute",
+        "placeholder": "e.g. £150 'registration fee' and £60 induction charge",
+        "defaultValue": "£150 'registration fee' and £60 induction charge"
+      },
+      {
+        "key": "amount_owed",
+        "labelEn": "Total to Refund (£)",
+        "labelPl": "Kwota do Zwrotu (£)",
+        "labelRo": "Suma de Returnat (£)",
+        "placeholder": "e.g. 210.00",
+        "defaultValue": "210.00"
+      }
+    ],
+    "defaults": {
+      "employee_name": "[Your Full Name]",
+      "employer_name": "[Employer / Agency Name]",
+      "fee_details": "[Fees Charged]",
+      "amount_owed": "[Total to Refund (£)]"
+    },
+    "letter": "DEMAND FOR REFUND OF PROHIBITED AGENCY FEES\n\nDate: {{date}}\nTO: Branch Manager / Compliance, {{employer_name}}\nFROM: {{employee_name}}\nSUBJECT: REFUND OF £{{amount_owed}} – PROHIBITED FEES\n\nDear Sir or Madam,\n\nI was charged the following by your agency: {{fee_details}}, totalling £{{amount_owed}}.\n\nUnder section 6 of the Employment Agencies Act 1973 and regulation 13 of the Conduct of Employment Agencies and Employment Businesses Regulations 2003, an agency or employment business must not charge a work-seeker any fee for finding or seeking to find them work. You may also not make the use of other paid services (such as training, transport or accommodation) a condition of finding me work (reg. 5).\n\nPlease refund £{{amount_owed}} within 7 days. If not, I will report the matter to the Employment Agency Standards Inspectorate (EAS) and the Gangmasters and Labour Abuse Authority (GLAA), and seek recovery through ACAS and the courts.\n\nYours faithfully,\n\n{{employee_name}}\n"
+  }
+]

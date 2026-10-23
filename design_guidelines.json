@@ -1,0 +1,163 @@
+{
+  "app_name": "UNION Elon",
+  "personality": "1 iOS-Native Clean",
+  "personality_one_liner": "A highly trusted, utilitarian legal assistant and trade union companion, prioritizing clear navigation and professional clarity over decorative flair.",
+  "color": {
+    "surface": "#FBF8F3",
+    "onSurface": "#0F1A24",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#0F1A24",
+    "surfaceTertiary": "#F6F3EC",
+    "onSurfaceTertiary": "#132B41",
+    "surfaceInverse": "#0F1A24",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#1D4F3C",
+    "onBrand": "#FFFFFF",
+    "brandPrimary": "#1D4F3C",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#132B41",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#F97316",
+    "onBrandTertiary": "#FFFFFF",
+    "success": "#10B981",
+    "onSuccess": "#FFFFFF",
+    "warning": "#D97706",
+    "onWarning": "#FFFFFF",
+    "error": "#EF4444",
+    "onError": "#FFFFFF",
+    "border": "#E6E1D6",
+    "borderStrong": "#D1D5DB",
+    "divider": "#E6E1D6",
+    "muted": "#526B7A"
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous vertical breathing room for readability. Clear grouping of form elements.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs",
+  "icon_set": "Ionicons",
+  "glassmorphism": {
+    "enabled": "true",
+    "do's": [
+      "Bottom tab bar",
+      "Sticky header background",
+      "FAB"
+    ],
+    "dont's": [
+      "Every list row",
+      "Form fields",
+      "Body text regions"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Chat",
+      "purpose": "Primary interaction point with AI Elon for legal/workplace advice.",
+      "states": {
+        "loading": "Centered spinner while connecting to AI.",
+        "empty": "Welcome message with quick action chips (e.g., 'I have a workplace dispute').",
+        "error": "Failed to load chat history. Retry button."
+      },
+      "layout": "Full-screen conversational interface. Glass sticky header. Scrollable chat area with inverted message bubbles (user = brandPrimary, AI = surfaceSecondary). Sticky bottom text input wrapped in KeyboardAvoidingView with safe area clearance."
+    },
+    {
+      "name": "Cases",
+      "purpose": "List of active and resolved workplace dispute cases.",
+      "states": {
+        "loading": "Skeleton list rows.",
+        "empty": "Illustration with 'No active cases' and CTA to chat with Elon.",
+        "error": "Unable to load cases. Retry button."
+      },
+      "layout": "Standard iOS-native list layout. Cards for each case displaying title, sector, and a pill-shaped status indicator (Open = warning, Resolved = success). Cards sit on surfaceSecondary against the cream surface background."
+    },
+    {
+      "name": "Case Detail",
+      "purpose": "View full details, updates, and sector information of a specific case.",
+      "states": {
+        "loading": "Skeleton text blocks.",
+        "empty": "No details available.",
+        "error": "Error loading case details. Retry button."
+      },
+      "layout": "Scrollable view with a large title. Top metadata row with sector and status. Main body containing the full description. Bottom sticky CTA to 'Ask Elon about this case'."
+    },
+    {
+      "name": "Templates",
+      "purpose": "Library of UK legal templates (Grievance, Unpaid Wages, etc.).",
+      "states": {
+        "loading": "Skeleton grid/list.",
+        "empty": "No templates match the category filter.",
+        "error": "Failed to load templates. Retry button."
+      },
+      "layout": "Top scrollable chip row for category filters. Vertical list of template cards. Tapping a card opens a form (labels above inputs, single column) leading to a generated letter preview screen."
+    },
+    {
+      "name": "Profile",
+      "purpose": "Manage user details, employer info, and app language.",
+      "states": {
+        "loading": "Skeleton fields.",
+        "empty": "Profile incomplete.",
+        "error": "Failed to load profile."
+      },
+      "layout": "Hero section with user avatar/initials. Form fields for name, employer, and job title. Distinct section for Language switch (PL / EN / RO) using a segmented control or checkmark list."
+    }
+  ],
+  "images": {
+    "home_hero": {
+      "url": "https://images.unsplash.com/photo-1672380135241-c024f7fbfa13?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMG1lZXRpbmclMjBoYW5kc2hha2V8ZW58MHx8fHwxNzkxMTgwNDkzfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "two people shaking hands in front of a laptop"
+    },
+    "templates_empty": {
+      "url": "https://images.unsplash.com/photo-1668630491137-6f39aec7ea33?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxsZWdhbCUyMGRvY3VtZW50cyUyMGRlc2slMjB0b3AlMjB2aWV3fGVufDB8fHx8MTc5MTE4MDQ5M3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "a laptop and a cup on a table"
+    },
+    "profile_bg": {
+      "url": "https://images.unsplash.com/photo-1637393932938-b9c209e67d5c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDB8fHx8MTc5MTE4MDQ5M3ww&ixlib=rb-4.1.0&q=85",
+      "alt": "a very tall building with a lot of windows"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Apply the explicitly provided color palette (cream #FBF8F3 bg, green #1D4F3C CTA, navy #132B41 top bar).",
+    "This app is LIGHT THEME ONLY as per the problem statement.",
+    "Implement bottom tabs navigation for Chat, Cases, Templates, and Profile.",
+    "For the AI Chat with Elon, build a polished scrolling feed with sticky bottom input and quick action chips below the AI's initial greeting.",
+    "Templates feature requires a two-step flow: 1) Fill form fields based on the selected template, 2) View/Copy the generated letter preview.",
+    "Profile screen must include a language toggle (PL / EN / RO). Ensure the UI anticipates varying string lengths for these languages.",
+    "Use standard native iOS styling rules (safe area, 44pt touch targets, clean borders) combined with the provided brand colors."
+  ]
+}
