@@ -46,8 +46,9 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   return res.json();
 }
 
-// Streams SSE events from /chat/stream. Calls onDelta per token chunk.
-export async function streamChat(text: string, threadId: string, onDelta: (d: string) => void): Promise<string | null> {
+// Streams SSE events from /chat/stream. Calls onDelta per token chunk; onEvent gets every other event
+// (document / document_error / done with the final cleaned text when Elon wrote a document).
+export async function streamChat(text: string, threadId: string, onDelta: (d: string) => void, onEvent?: (ev: any) => void): Promise<string | null> {
   let messageId: string | null = null;
   const res = await expoFetch(`${API_BASE}/chat/stream`, {
     method: "POST",
@@ -70,6 +71,7 @@ export async function streamChat(text: string, threadId: string, onDelta: (d: st
       const ev = JSON.parse(line.slice(5));
       if (ev.error) throw new Error(ev.error);
       if (ev.delta) onDelta(ev.delta);
+      else onEvent?.(ev);
       if (ev.done) messageId = ev.message_id;
     }
   }

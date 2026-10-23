@@ -1,5 +1,6 @@
 // Notes ("Notatki"): header button + right-side drawer with a grid of note tiles and an in-drawer editor.
 // Notes live in MongoDB per user (/api/notes) and are added to Elon's chat context on every message.
+// Second tab "Dokumenty od Elona": PDFs Elon wrote in the chat (ElonDocumentsPanel) + storage usage.
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
@@ -8,6 +9,8 @@ import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 
 import { api } from "@/src/api";
 import { useAuth } from "@/src/auth";
 import { useT } from "@/src/i18n";
+import { ChatDocumentViewer } from "@/src/components/ChatDocumentViewer";
+import { ElonDocumentsPanel } from "@/src/components/ElonDocumentsPanel";
 import { RightDrawer } from "@/src/components/RightDrawer";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 
@@ -40,12 +43,20 @@ export function NotesButton() {
   );
 }
 
-export function NotesDrawer({ onClose }: { onClose: () => void }) {
+type DrawerTab = "notes" | "docs";
+let lastTab: DrawerTab = "notes"; // the drawer reopens on the tab the user left it on
+const rememberTab = (v: DrawerTab) => { lastTab = v; };
+const savedTab = () => lastTab;
+
+export function NotesDrawer({ onClose, initialTab }: { onClose: () => void; initialTab?: DrawerTab }) {
   const styles = useStyles();
   const { colors } = useTheme();
   const t = useT();
   const [editing, setEditing] = useState<Note | "new" | null>(null);
-  const notes = useNotes(true);
+  const [tab, setTabState] = useState<DrawerTab>(initialTab ?? savedTab);
+  const setTab = (v: DrawerTab) => { rememberTab(v); setTabState(v); setEditing(null); };
+  const [openDoc, setOpenDoc] = useState<string | null>(null);
+  const notes = useNotes(tab === "notes");
   const list = notes.data ?? [];
 
   // Escape (web) / Android back: leave the editor first, then close the drawer.
@@ -53,26 +64,41 @@ export function NotesDrawer({ onClose }: { onClose: () => void }) {
     <RightDrawer
       onClose={onClose}
       idBase="notes"
-      title={editing ? (editing === "new" ? t("notesNew") : t("notesEdit")) : t("notesTitle")}
+      title={editing ? (editing === "new" ? t("notesNew") : t("notesEdit")) : tab === "docs" ? t("edTitle") : t("notesTitle")}
       closeLabel={t("notesClose")}
-      onBack={() => (editing ? (setEditing(null), true) : false)}
+      onBack={() => (openDoc ? (setOpenDoc(null), true) : editing ? (setEditing(null), true) : false)}
       leading={
         editing ? (
           <Pressable onPress={() => setEditing(null)} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notesBack")} testID="notes-editor-back">
             <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
           </Pressable>
         ) : (
-          <Ionicons name="document-text-outline" size={22} color={colors.askOrange} style={{ marginLeft: 4 }} />
+          <Ionicons name={tab === "docs" ? "documents-outline" : "document-text-outline"} size={22} color={colors.askOrange} style={{ marginLeft: 4 }} />
         )
       }
     >
       {() => (
         <>
-          <View style={styles.hint} testID="notes-hint">
-            <Ionicons name="eye-outline" size={15} color={colors.warning} />
-            <Text style={styles.hintText}>{t("notesHint")}</Text>
-          </View>
-          {editing ? (
+          {!editing && (
+            <View style={styles.tabs} role="tablist" aria-label={t("edTabsLabel")} testID="drawer-tabs">
+              {(["notes", "docs"] as const).map((k) => (
+                <Pressable key={k} onPress={() => setTab(k)} style={[styles.tab, tab === k && styles.tabOn]} role="tab"
+                  accessibilityRole="tab" accessibilityState={{ selected: tab === k }} aria-selected={tab === k} testID={`drawer-tab-${k}`}>
+                  <Ionicons name={k === "docs" ? "documents-outline" : "document-text-outline"} size={15} color={tab === k ? colors.onAccent : colors.muted} />
+                  <Text style={[styles.tabText, tab === k && styles.tabTextOn]} numberOfLines={1}>{k === "docs" ? t("edTab") : t("edTabNotes")}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {tab === "notes" && (
+            <View style={styles.hint} testID="notes-hint">
+              <Ionicons name="eye-outline" size={15} color={colors.warning} />
+              <Text style={styles.hintText}>{t("notesHint")}</Text>
+            </View>
+          )}
+          {tab === "docs" ? (
+            <ElonDocumentsPanel onOpen={setOpenDoc} />
+          ) : editing ? (
             <NoteEditor key={editing === "new" ? "new" : editing.note_id} note={editing === "new" ? null : editing} onDone={() => setEditing(null)} />
           ) : notes.isLoading ? (
             <View style={styles.center} testID="notes-loading"><ActivityIndicator color={colors.askOrange} /></View>
@@ -106,6 +132,7 @@ export function NotesDrawer({ onClose }: { onClose: () => void }) {
               {list.length >= NOTES_MAX && <Text style={[styles.muted, styles.empty]}>{t("notesLimit", { n: String(NOTES_MAX) })}</Text>}
             </ScrollView>
           )}
+          {openDoc && <ChatDocumentViewer id={openDoc} onClose={() => setOpenDoc(null)} />}
         </>
       )}
     </RightDrawer>
@@ -175,6 +202,11 @@ function NoteEditor({ note, onDone }: { note: Note | null; onDone: () => void })
 }
 
 const useStyles = makeStyles((c) => ({
+  tabs: { flexDirection: "row", gap: 4, padding: 4, borderRadius: 12, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border, marginBottom: 10 },
+  tab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, minHeight: 38, borderRadius: 9, paddingHorizontal: 6 },
+  tabOn: { backgroundColor: c.askOrange },
+  tabText: { color: c.muted, fontSize: 13, fontWeight: "800", flexShrink: 1 },
+  tabTextOn: { color: c.onAccent },
   iconBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   hint: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: c.warningSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7, marginBottom: 12 },
   hintText: { color: c.warning, fontSize: 12.5, fontWeight: "600", flex: 1 },

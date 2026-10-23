@@ -8,6 +8,9 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { withBrand } from "@/src/components/BrandName";
+import { ChatDocCard, markFresh, splitStreamText } from "@/src/chatDocuments";
+import { ChatDocumentCard } from "@/src/components/ChatDocumentCard";
+import { ChatDocumentViewer } from "@/src/components/ChatDocumentViewer";
 import { api, streamChat } from "@/src/api";
 import { primeAudio, speakMessage, stopSpeaking } from "@/src/audio";
 import { storage } from "@/src/utils/storage";
@@ -24,7 +27,7 @@ import { useT } from "@/src/i18n";
 import { fx, makeStyles, useTheme } from "@/src/theme";
 import { useWebKeyboardOpen } from "@/src/webKeyboard";
 
-type Msg = { message_id: string; role: "user" | "assistant"; text: string };
+type Msg = { message_id: string; role: "user" | "assistant"; text: string; documents?: ChatDocCard[]; docError?: string };
 export type ChatCase = { case_id: string; title: string; description: string; sector: string; status: string; created_at: string; updated_at: string };
 
 // Renders **bold** segments from AI markdown.
@@ -140,6 +143,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
   const [overdue, setOverdue] = useState<Letter | null>(null);
   const [broadcasts, setBroadcasts] = useState<{ broadcast_id: string; text: string; author: string }[]>([]);
   const [speaking, setSpeaking] = useState<{ id: string; phase: "loading" | "playing" } | null>(null);
+  const [openDoc, setOpenDoc] = useState<string | null>(null);
   const isPro = usePro();
   const [usage, setUsage] = useState<{ today: number; days_since_signup: number; free_daily: number; trial_days: number } | null>(null);
   const trialOver = !!usage && usage.days_since_signup >= usage.trial_days;
@@ -244,9 +248,20 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
     setStreaming(true);
     try {
       let replyText = "";
+      const patch = (p: Partial<Msg>) => setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, ...p } : x)));
       const realId = await streamChat(msg, threadId, (d) => {
         replyText += d;
         setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, text: x.text + d } : x)));
+      }, (ev) => {
+        // A letter Elon wrote: the server turned it into a saved PDF (the card animates in once).
+        if (ev.document) {
+          markFresh(ev.document.chat_doc_id);
+          patch({ documents: [ev.document] });
+        } else if (ev.document_error) patch({ docError: ev.code === "storage_full" && ev.detail ? ev.detail : t("edGenError") });
+        else if (ev.done && typeof ev.text === "string") {
+          replyText = ev.text; // cleaned text (document block cut out) – also what auto-read speaks
+          patch({ text: ev.text });
+        }
       });
       if (realId) {
         setMessages((m) => m.map((x) => (x.message_id === aiId ? { ...x, message_id: realId } : x)));
@@ -401,9 +416,24 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
           ) : (
             <Animated.View entering={FadeInUp.duration(250)} style={[styles.bubble, styles.ai]} testID="chat-ai-message">
               <ElonTag styles={styles} />
-              {item.text ? (
+              {item.text || item.documents?.length || item.docError ? (
                 <>
-                  <RichText text={item.text} style={styles.aiText} boldStyle={styles.bold} />
+                  {(() => {
+                    const view = splitStreamText(item.text);
+                    const doc = item.documents?.[0];
+                    return (
+                      <>
+                        {!!view.text && <RichText text={view.text} style={styles.aiText} boldStyle={styles.bold} />}
+                        {doc ? (
+                          <ChatDocumentCard key="doc" doc={doc} phase={doc.deleted ? "gone" : "ready"} onOpen={() => setOpenDoc(doc.chat_doc_id)} />
+                        ) : item.docError ? (
+                          <ChatDocumentCard key="doc" phase="error" errorText={item.docError} />
+                        ) : view.drafting ? (
+                          <ChatDocumentCard key="doc" phase="drafting" />
+                        ) : null}
+                      </>
+                    );
+                  })()}
                   {item.message_id.startsWith("msg_") && (
                     <Pressable
                       testID={`chat-listen-button-${item.message_id}`}
@@ -486,6 +516,7 @@ function ChatInner({ threadId, bottomOffset, isMain, onSavedAsCase, caseId, onCa
         </View>
       </KeyboardStickyView>
       )}
+      {openDoc && <ChatDocumentViewer id={openDoc} onClose={() => setOpenDoc(null)} />}
     </View>
   );
 }

@@ -38,6 +38,8 @@ import storage  # noqa: E402
 import lookup  # noqa: E402
 import notes  # noqa: E402
 import account_ids  # noqa: E402
+import chat_documents  # noqa: E402
+import storage_quota  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -500,6 +502,8 @@ async def case_from_thread(body: FromThreadIn, request: Request):
            "sector": user.get("industry") or "", "status": "open", "created_at": now(), "updated_at": now()}
     await db.cases.insert_one(dict(doc))
     await db.messages.update_many({"user_id": uid, "thread_id": body.thread_id}, {"$set": {"thread_id": doc["case_id"]}})
+    await db.chat_documents.update_many({"user_id": uid, "thread_id": body.thread_id},
+                                        {"$set": {"thread_id": doc["case_id"], "case_id": doc["case_id"]}})
     doc.pop("_id", None)
     return doc
 
@@ -534,8 +538,9 @@ class ChatIn(BaseModel):
 @api.get("/chat/messages")
 async def chat_messages(request: Request, thread_id: str = "main"):
     user = await current_user(request)
-    return await db.messages.find({"user_id": user["user_id"], "thread_id": thread_id}, {"_id": 0}) \
+    msgs = await db.messages.find({"user_id": user["user_id"], "thread_id": thread_id}, {"_id": 0}) \
         .sort("created_at", 1).to_list(500)
+    return await chat_docs.enrich_messages(user["user_id"], msgs)
 
 
 @api.delete("/chat/messages")
@@ -594,7 +599,8 @@ async def chat_stream(body: ChatIn, request: Request):
             context += f"\nROZMOWA DOTYCZY SPRAWY: \"{c['title']}\" ({c['sector']}). Opis: {c['description']}"
     system = ELON_PROMPT + context
     history = await db.messages.find({"user_id": uid, "thread_id": tid}, {"_id": 0}).sort("created_at", -1).to_list(30)
-    initial = [{"role": m["role"], "content": m["text"]} for m in reversed(history)]
+    initial = [{"role": m["role"], "content": m["text"] + "".join(
+        f"\n\n[Przygotowano dokument PDF: {d.get('title')}]" for d in (m.get("documents") or []))} for m in reversed(history)]
 
     await db.messages.insert_one({"message_id": new_id("msg"), "user_id": uid, "thread_id": tid,
                                   "role": "user", "text": text, "created_at": now()})
@@ -609,10 +615,34 @@ async def chat_stream(body: ChatIn, request: Request):
             logger.exception("LLM error")
             yield f"data: {json.dumps({'error': 'Elon is temporarily unavailable. Please try again in a moment.'})}\n\n"
         if full:
-            msg = {"message_id": new_id("msg"), "user_id": uid, "thread_id": tid,
-                   "role": "assistant", "text": full, "created_at": now()}
+            mid = new_id("msg")
+            # A letter/document block in the answer becomes a stored PDF; the block itself is cut out of the message.
+            text_out, spec = chat_documents.split_document(full)
+            docs, done = [], {"done": True, "message_id": mid}
+            if text_out != full or spec:
+                done["text"] = text_out
+            if spec:
+                try:
+                    d, err = await chat_docs.create(user, spec, tid, mid), None
+                except storage_quota.StorageFull as e:
+                    d, err = None, {"document_error": True, "code": "storage_full", "detail": e.message()}
+                except Exception:
+                    logger.exception("chat document failed")
+                    d, err = None, None
+                if d:
+                    docs = [chat_documents.card(d)]
+                    yield f"data: {json.dumps({'document': chat_documents.public(d, JWT_SECRET)}, default=lambda o: o.isoformat() if hasattr(o, 'isoformat') else str(o))}\n\n"
+                else:
+                    # No PDF (storage full / limit / error): keep the letter as plain text so nothing is lost.
+                    text_out = "\n\n".join(x for x in (text_out, spec.get("subject"), spec["body"]) if x)
+                    done["text"] = text_out
+                    yield f"data: {json.dumps(err or {'document_error': True})}\n\n"
+            msg = {"message_id": mid, "user_id": uid, "thread_id": tid,
+                   "role": "assistant", "text": text_out if (spec or text_out) else full, "created_at": now()}
+            if docs:
+                msg["documents"] = docs
             await db.messages.insert_one(msg)
-            yield f"data: {json.dumps({'done': True, 'message_id': msg['message_id']})}\n\n"
+            yield f"data: {json.dumps(done)}\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
@@ -753,6 +783,7 @@ DOC_MIME = {"application/pdf": "pdf", "image/png": "png", "image/jpeg": "jpg", "
 DOC_MAX = 20 * 1024 * 1024
 MAGIC = {"application/pdf": b"%PDF", "image/png": b"\x89PNG", "image/jpeg": b"\xff\xd8", "image/jpg": b"\xff\xd8"}
 DOC_CATEGORIES = ["contract", "annex", "policy", "correspondence", "payslip", "other"]
+chat_docs = chat_documents.Service(db, JWT_SECRET, new_id, now, STORAGE_APP)  # PDFs Elon writes in the chat
 
 
 def make_thumbnail(data: bytes, mime: str) -> Optional[bytes]:
@@ -888,6 +919,7 @@ async def user_from_token_or_header(request: Request, token: str) -> dict:
 async def upload_document(request: Request, file: UploadFile = File(...), category: str = Form("")):
     user = await current_user(request)
     rate_limit(f"upload:{user['user_id']}", 30, 3600)
+    await storage_quota.ensure_room(db, user, 1)  # full storage: refuse before reading the file
     mime = (file.content_type or "").lower()
     if mime not in DOC_MIME:
         name = (file.filename or "").lower()
@@ -906,6 +938,7 @@ async def upload_document(request: Request, file: UploadFile = File(...), catego
 
 
 async def store_document(user: dict, data: bytes, mime: str, filename: str, category: str) -> dict:
+    await storage_quota.ensure_room(db, user, len(data))  # 507 storage_full, nothing stored
     doc_id = new_id("doc")
     base = f"{STORAGE_APP}/uploads/{user['user_id']}/{uuid.uuid4().hex}"
     try:
@@ -959,6 +992,7 @@ async def upload_scan(request: Request, files: List[UploadFile] = File(...), cat
     rate_limit(f"upload:{user['user_id']}", 30, 3600)
     if not 1 <= len(files) <= 15:
         raise HTTPException(400, "1-15 pages allowed")
+    await storage_quota.ensure_room(db, user, 1)
     import pymupdf
     pages = [await f.read() for f in files]
     if sum(len(p) for p in pages) > DOC_MAX:
@@ -977,6 +1011,13 @@ async def upload_scan(request: Request, files: List[UploadFile] = File(...), cat
         raise HTTPException(400, "Could not read the photos")
     name = f"scan_{now().strftime('%Y-%m-%d_%H%M')}.pdf"
     return await store_document(user, pdf, "application/pdf", name, category)
+
+
+@api.get("/storage/usage")
+async def storage_usage(request: Request):
+    """Used / limit / percent of the user's storage (uploaded files + PDFs written by Elon)."""
+    user = await current_user(request)
+    return await storage_quota.usage(db, user)
 
 
 @api.get("/documents")
@@ -1679,6 +1720,7 @@ async def startup():
     await notes.ensure_indexes(db)
     await account_ids.backfill(db, logger)
     await account_ids.ensure_indexes(db)
+    await chat_documents.ensure_indexes(db)
     try:
         await run_in_threadpool(storage.init_storage)
     except Exception:
@@ -1713,8 +1755,10 @@ async def unhandled_error(request: Request, exc: Exception):
     return JSONResponse({"detail": "Internal server error"}, status_code=500)
 
 
+app.add_exception_handler(storage_quota.StorageFull, storage_quota.storage_full_handler)
 app.include_router(api)
 app.include_router(notes.build_router(db, current_user, rate_limit, new_id, now))
+app.include_router(chat_documents.build_router(chat_docs, current_user, rate_limit))
 app.add_middleware(CORSMiddleware, allow_credentials=False, allow_origins=ALLOWED_ORIGINS,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
                    allow_headers=["Authorization", "Content-Type", "Accept"])
