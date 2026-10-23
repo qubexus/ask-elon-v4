@@ -156,7 +156,8 @@ Pełna lista z opisami jest w `backend/.env.example` i `frontend/.env.example`.
    (Billing), wtedy płacisz Google za użycie, a nie Emergent.
 
 Modele (domyślne zwykle wystarczą):
-- `GEMINI_MODEL=gemini-2.5-flash`: czat (i domyślnie dokumenty oraz dyktowanie),
+- `GEMINI_MODEL=gemini-3.5-flash`: czat (i domyślnie dokumenty oraz dyktowanie). Uwaga: nowe klucze Google nie mają już dostępu do `gemini-2.5-flash` (błąd 404 „no longer available to new users”),
+- `GEMINI_FALLBACK_MODEL=gemini-flash-lite-latest`: model zapasowy, gdy główny odpowiada „high demand” (503). Serwer sam ponawia próbę kilka razy, a potem używa zapasowego,
 - `GEMINI_TTS_MODEL=gemini-2.5-flash-preview-tts`: czytanie odpowiedzi na głos, głos `GEMINI_TTS_VOICE=Charon`,
 - opcjonalnie `GEMINI_DOC_MODEL`, `GEMINI_STT_MODEL`.
 - Opcjonalnie głos przez OpenAI: `OPENAI_API_KEY` + `STT_PROVIDER=openai` / `TTS_PROVIDER=openai`. Domyślnie wszystko idzie przez Gemini.

@@ -3,6 +3,7 @@
 Everything works with one key: GEMINI_API_KEY (Google AI Studio).
 Optionally speech can use OpenAI instead (STT_PROVIDER=openai / TTS_PROVIDER=openai + OPENAI_API_KEY).
 """
+import asyncio
 import io
 import os
 import wave
@@ -19,7 +20,7 @@ def _env(name: str, default: str = "") -> str:
 
 
 GEMINI_API_KEY = _env("GEMINI_API_KEY") or _env("GOOGLE_API_KEY")
-GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-2.5-flash")              # chat
+GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-3.5-flash")              # chat
 GEMINI_DOC_MODEL = _env("GEMINI_DOC_MODEL", GEMINI_MODEL)            # documents, payslip audit, photo check
 GEMINI_STT_MODEL = _env("GEMINI_STT_MODEL", GEMINI_MODEL)            # dictation (audio -> text)
 GEMINI_TTS_MODEL = _env("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
@@ -73,19 +74,47 @@ def _history_contents(history: Iterable[dict], text: Optional[str] = None):
     return out
 
 
+# Google sometimes answers 503 "high demand" / 429 for a few seconds. Retry those, then try the
+# optional fallback model (GEMINI_FALLBACK_MODEL), before giving up.
+GEMINI_FALLBACK_MODEL = _env("GEMINI_FALLBACK_MODEL", "")
+RETRY_DELAYS = (2, 5)
+
+
+def _retryable(e: Exception) -> bool:
+    code = getattr(e, "code", None) or getattr(e, "status_code", None)
+    return code in (429, 500, 502, 503, 504)
+
+
+def _models(primary: str) -> List[str]:
+    return [primary] + ([GEMINI_FALLBACK_MODEL] if GEMINI_FALLBACK_MODEL and GEMINI_FALLBACK_MODEL != primary else [])
+
+
 async def stream_chat(system: str, history: List[dict], text: str) -> AsyncIterator[str]:
     """Streams text deltas. `history` = [{"role": "user"|"assistant", "content": str}] oldest first."""
     types = _types()
     cfg = types.GenerateContentConfig(system_instruction=system)
-    stream = await client().aio.models.generate_content_stream(
-        model=GEMINI_MODEL, contents=_history_contents(history, text), config=cfg)
-    async for chunk in stream:
+    contents = _history_contents(history, text)
+    attempts = [(m, d) for m in _models(GEMINI_MODEL) for d in (0,) + RETRY_DELAYS]
+    for i, (model, delay) in enumerate(attempts):
+        if delay:
+            await asyncio.sleep(delay)
+        started = False
         try:
-            delta = chunk.text
-        except Exception:  # chunks without text parts (e.g. safety metadata)
-            delta = None
-        if delta:
-            yield delta
+            stream = await client().aio.models.generate_content_stream(model=model, contents=contents, config=cfg)
+            async for chunk in stream:
+                try:
+                    delta = chunk.text
+                except Exception:  # chunks without text parts (e.g. safety metadata)
+                    delta = None
+                if delta:
+                    started = True
+                    yield delta
+            return
+        except Exception as e:
+            # Only retry if nothing was sent to the user yet.
+            if started or not _retryable(e) or i == len(attempts) - 1:
+                raise
+            logger.warning("Gemini %s busy (%s), retrying", model, getattr(e, "code", e))
 
 
 async def generate(system: str, prompt: str, files: Optional[List[Tuple[bytes, str]]] = None,
@@ -96,9 +125,19 @@ async def generate(system: str, prompt: str, files: Optional[List[Tuple[bytes, s
     parts.append(types.Part.from_text(text=prompt))
     cfg = types.GenerateContentConfig(system_instruction=system,
                                       response_mime_type="application/json" if json_output else None)
-    resp = await client().aio.models.generate_content(
-        model=model or GEMINI_DOC_MODEL, contents=[types.Content(role="user", parts=parts)], config=cfg)
-    return resp.text or ""
+    attempts = [(m, d) for m in _models(model or GEMINI_DOC_MODEL) for d in (0,) + RETRY_DELAYS]
+    for i, (m, delay) in enumerate(attempts):
+        if delay:
+            await asyncio.sleep(delay)
+        try:
+            resp = await client().aio.models.generate_content(
+                model=m, contents=[types.Content(role="user", parts=parts)], config=cfg)
+            return resp.text or ""
+        except Exception as e:
+            if not _retryable(e) or i == len(attempts) - 1:
+                raise
+            logger.warning("Gemini %s busy (%s), retrying", m, getattr(e, "code", e))
+    return ""
 
 
 # ---------------- Speech-to-text ----------------
