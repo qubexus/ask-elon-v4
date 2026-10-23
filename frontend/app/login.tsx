@@ -34,7 +34,7 @@ function Field({ icon, right, ...props }: { icon: any; right?: React.ReactNode }
 }
 
 export default function Login() {
-  const { signIn, emailLogin, emailRegister, demoLogin, resetPassword, locale, setLocale } = useAuth();
+  const { signIn, emailLogin, emailRegister, googleEnabled, resetPassword, locale, setLocale } = useAuth();
   const t = useT();
   const toast = useToast();
   const insets = useSafeAreaInsets();
@@ -180,28 +180,23 @@ export default function Login() {
           </Pressable>
         ) : (
           <>
-            <View style={styles.dividerRow}>
-              <View style={styles.line} />
-              <Text style={styles.dividerText}>{t("orVia").toUpperCase()}</Text>
-              <View style={styles.line} />
-            </View>
-            <Pressable testID="google-signin-button" onPress={() => run("google", signIn)} disabled={!!busy} style={({ pressed }) => [styles.social, pressed && { opacity: 0.8 }]}>
-              {busy === "google" ? <ActivityIndicator color={colors.askGreen} /> : (
-                <>
-                  <Ionicons name="logo-google" size={22} color="#4285F4" />
-                  <Text style={styles.socialText}>{t("google")}</Text>
-                </>
-              )}
-            </Pressable>
-            <Pressable testID="demo-login-button" onPress={() => run("demo", demoLogin)} disabled={!!busy} style={({ pressed }) => [styles.demo, pressed && { opacity: 0.8 }]}>
-              {busy === "demo" ? <ActivityIndicator color={colors.askOrange} /> : (
-                <>
-                  <Ionicons name="flash" size={18} color={colors.askOrange} />
-                  <Text style={styles.demoText}>{t("demo")}</Text>
-                  <Ionicons name="flash" size={18} color={colors.askOrange} />
-                </>
-              )}
-            </Pressable>
+            {googleEnabled ? (
+              <>
+                <View style={styles.dividerRow}>
+                  <View style={styles.line} />
+                  <Text style={styles.dividerText}>{t("orVia").toUpperCase()}</Text>
+                  <View style={styles.line} />
+                </View>
+                <Pressable testID="google-signin-button" onPress={() => run("google", signIn)} disabled={!!busy} style={({ pressed }) => [styles.social, pressed && { opacity: 0.8 }]}>
+                  {busy === "google" ? <ActivityIndicator color={colors.askGreen} /> : (
+                    <>
+                      <Ionicons name="logo-google" size={22} color="#4285F4" />
+                      <Text style={styles.socialText}>{t("google")}</Text>
+                    </>
+                  )}
+                </Pressable>
+              </>
+            ) : null}
             <Text style={styles.disclaimer} testID="login-disclaimer">{t("authDisclaimer")}</Text>
           </>
         )}
@@ -252,8 +247,6 @@ const useStyles = makeStyles((c) => ({
   dividerText: { color: c.muted, fontWeight: "800", fontSize: 11, letterSpacing: 1.2 },
   social: { minHeight: 54, borderRadius: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: c.askField, borderWidth: 1.5, borderColor: c.askBorder },
   socialText: { color: c.askInk, fontWeight: "700", fontSize: 16 },
-  demo: { minHeight: 52, borderRadius: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderWidth: 1.5, borderColor: c.askOrange, backgroundColor: "transparent" },
-  demoText: { color: c.askInk, fontWeight: "700", fontSize: 15 },
   disclaimer: { color: c.muted, fontSize: 11, textAlign: "center", lineHeight: 16, marginTop: -8 },
   backLink: { alignSelf: "center", minHeight: 44, justifyContent: "center" },
   backText: { color: c.askOrange, fontWeight: "700", fontSize: 14 },
