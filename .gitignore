@@ -89,3 +89,17 @@ credentials.json
 
 # Pliki wgrane lokalnie (STORAGE_BACKEND=local)
 backend/uploads/
+
+# Sekrety i dane wersji testowej (nigdy do repozytorium)
+!*.env.example
+.jwt
+.gemini
+*.pem
+uploads/
+logs/
+logi/
+*.log
+test-na-zywo/dane/
+test-na-zywo/run/
+test-na-zywo/dist/
+test-na-zywo/node_modules/

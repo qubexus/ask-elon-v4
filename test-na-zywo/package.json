@@ -1,0 +1,8 @@
+{
+  "name": "ask-elon-test-na-zywo",
+  "private": true,
+  "description": "Tunel pinggy dla wersji testowej na żywo (npm install w tym folderze)",
+  "dependencies": {
+    "pinggy": "0.6.1"
+  }
+}

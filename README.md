@@ -281,3 +281,49 @@ częściowo wymagają kont testowych i kluczy (`TEST_PRO_EMAIL`, `GEMINI_API_KEY
 - `frontend/app.json`: identyfikator `uk.askelon.app`, schemat linków `askelon`.
 - Testy łączą się z `http://localhost:8001` zamiast podglądu Emergent; doszły `test_local_security.py` i `test_ai_unit.py`.
 - Wcześniej (przygotowanie paczki): usunięte pliki `.env`, raporty i notatki agenta Emergent, blokada poleceń Emergent w `frontend/`.
+
+## 9. Wersja testowa na żywo
+
+Wersja testowa działa na komputerze Grok Bota i jest dostępna z telefonu przez darmowy tunel **pinggy**
+(bez konta). Wszystko uruchamia się z folderu projektu: `/workspace/projekty/ask-elon`.
+
+### Co gdzie leży
+- `start-test.sh` – uruchamia całość jednym poleceniem (backend, serwer aplikacji, tunel),
+- `stop-test.sh` – zatrzymuje całość (baza MongoDB zostaje włączona),
+- `backend/.env` – **wszystkie ustawienia i sekrety** (klucz Gemini, JWT_SECRET, baza `ask_elon_live`).
+  Plik ma uprawnienia 600, jest w `.gitignore` i **nigdy** nie trafia do gita ani do zipa,
+- `test-na-zywo/serve.py` – serwuje zbudowaną aplikację webową i przekazuje `/api` do backendu (jeden adres),
+- `test-na-zywo/tunnel-keeper.sh` – pilnuje tunelu pinggy i zapisuje aktualne adresy,
+- `test-na-zywo/package.json` – pakiet `pinggy` (instaluje się sam przy pierwszym starcie),
+- tworzone automatycznie (poza gitem): `test-na-zywo/dist/` (zbudowana aplikacja), `test-na-zywo/logi/`
+  (logi), `test-na-zywo/run/` (numery procesów i `adres.txt`), `test-na-zywo/dane/uploads/` (pliki użytkowników).
+
+### Uruchomienie
+```bash
+cd /workspace/projekty/ask-elon
+./start-test.sh            # start
+./start-test.sh --build    # start po zmianach w folderze frontend/ (przebudowuje aplikację)
+./stop-test.sh             # stop
+cat test-na-zywo/run/adres.txt   # aktualne adresy publiczne
+```
+Python: skrypt używa `backend/.venv` (po `bash setup.sh`), a jeśli go nie ma, wspólnego środowiska
+`/workspace/ae-venv` na tym komputerze (można też podać własne: `VENV=/ścieżka ./start-test.sh`).
+MongoDB: musi działać na `localhost:27017`; jeśli nie działa, skrypt uruchamia `mongod` z `/tmp/mongodb-...`
+z danymi w `/tmp/mongodata` (ścieżki można zmienić zmiennymi `MONGOD` i `MONGO_DATA`).
+
+### Adres dla telefonu – ważne
+- Tunel daje **dwa równoważne adresy**: `https://….run.pinggy-free.link` i `https://….free.pinggy.net`.
+  Jeśli jeden nie otwiera się w danej sieci, użyj drugiego.
+- Darmowy tunel **wygasa po ok. 60 minutach**. Tunel łączy się wtedy sam ponownie, ale pod **nowym adresem**
+  (zawsze aktualny w `test-na-zywo/run/adres.txt`, historia w `test-na-zywo/logi/adresy-historia.txt`).
+- Stary, wygasły adres daje w telefonie błąd **ERR_SSL_PROTOCOL_ERROR**. To nie usterka aplikacji, tylko znak,
+  że trzeba wziąć nowy adres.
+- Przy pierwszym wejściu pinggy pokazuje angielską stronę „Caution…” – kliknij **Enter site** (raz).
+- Pinggy może podglądać ruch w darmowych tunelach: w wersji testowej używaj wymyślonych haseł
+  i nie wgrywaj prawdziwych dokumentów.
+
+### Logowanie w wersji testowej
+Załóż konto w aplikacji: **Utwórz konto** → imię, e-mail, hasło (min. 8 znaków). Potwierdzenie e-mailem
+nie jest potrzebne. Logowanie Google jest wyłączone (brak klienta OAuth), reset hasła mailem nie działa
+(brak SMTP), płatności PayPal nie są skonfigurowane.
+
