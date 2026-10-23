@@ -9,12 +9,16 @@ import { AuthProvider, useAuth } from "@/src/auth";
 import { ErrorBoundary } from "@/src/components/error-boundary";
 import { ToastProvider } from "@/src/components/Toast";
 import { queryClient } from "@/src/query-client";
+import { registerServiceWorker } from "@/src/registerServiceWorker";
 import { initializeRevenueCat, SubscriptionProvider } from "@/src/revenuecat";
 import { useTheme } from "@/src/theme";
 
 // Disable logbox errors etc so that users can see the app
 // and agent works as expected.
 LogBox.ignoreAllLogs(true);
+
+// PWA (web build only): offline start page + installable app, see public/sw.js.
+registerServiceWorker();
 
 try {
   initializeRevenueCat();

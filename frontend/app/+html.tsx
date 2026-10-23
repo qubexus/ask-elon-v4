@@ -21,6 +21,14 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="color-scheme" content="dark" />
         <title>ask Elon</title>
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        {/* PWA – same tags as public/index.html (used by the "single" web output). */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="ask Elon" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="application-name" content="ask Elon" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{
